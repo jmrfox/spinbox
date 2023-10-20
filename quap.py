@@ -737,10 +737,10 @@ def test_product_states():
 
 if __name__ == "__main__":
     print('BEGIN MODULE TEST')
-    # test_states()
-    # test_operators()
-    # test_propagator_easy()
-    # test_product_states()
+    test_states()
+    test_operators()
+    test_propagator_easy()
+    test_product_states()
     x = read_sp('data\sp.dat')
     print(x)
 
