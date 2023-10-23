@@ -211,36 +211,61 @@ class OneBodyBasisSpinState(State):
         elif self.orientation == 'bra':
             return [self.coefficients[0, i*2:(i+1)*2] for i in range(self.num_particles)]
 
+#    def __mul__(self, other):
+#        """
+#        target must be another OBBSS state
+#        if multiplying by another OBBSS state, orientations have to be the opposite (either inner or outer product)
+#        """
+#        if isinstance(other, OneBodyBasisSpinState):
+#            if self.orientation == 'bra':  # inner product
+#                assert other.orientation == 'ket'
+#                c0 = self.to_list()
+#                c1 = other.to_list()
+#                return np.prod(
+#                    [np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
+#            elif self.orientation == 'ket':  # outer product
+#                assert other.orientation == 'bra'
+#                out = OneBodyBasisSpinOperator(num_particles=self.num_particles)
+#                for i in range(self.num_particles):
+#                    idx_i = i * 2
+#                    idx_f = (i + 1) * 2
+#                    out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
+#                return out
+#        else:
+#            raise ValueError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+ 
     def __mul__(self, other):
         """
-        target must be another OBBSS state
-        if multiplying by another OBBSS state, orientations have to be the opposite (either inner or outer product)
+        bra can multiply a ket or a operator, ket can only multiply a bra
         """
-        if isinstance(other, OneBodyBasisSpinState):
-            if self.orientation == 'bra':  # inner product
+        if self.orientation == 'bra':  # inner product
+            if isinstance(other, OneBodyBasisSpinState):
                 assert other.orientation == 'ket'
                 c0 = self.to_list()
                 c1 = other.to_list()
-                return np.prod(
-                    [np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
-            elif self.orientation == 'ket':  # outer product
-                assert other.orientation == 'bra'
-                out = OneBodyBasisSpinOperator(num_particles=self.num_particles)
-                for i in range(self.num_particles):
-                    idx_i = i * 2
-                    idx_f = (i + 1) * 2
-                    out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
-                return out
-        else:
-            raise ValueError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+                out = np.prod([np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
+            elif isinstance(other, OneBodyBasisSpinOperator):
+                out = self.copy()
+                out.coefficients = np.matmul(self.coefficients,other.matrix)
+            else:
+                raise ValueError(f'{self.__class__.__name__} * {other__class__.__name__}, invalid multiplication')
+            return out 
+        elif self.orientation == 'ket':  # outer product
+            assert isinstance(other, OneBodyBasisSpinState) and other.orientation == 'bra'
+            out = OneBodyBasisSpinOperator(num_particles=self.num_particles)
+            for i in range(self.num_particles):
+                idx_i = i * 2
+                idx_f = (i + 1) * 2
+                out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
+            return out
 
 
-    def transpose(self):
+    def dagger(self):
         if self.orientation == 'bra':
-            out = OneBodyBasisSpinState(self.num_particles, 'ket', self.coefficients.T)
+            out = OneBodyBasisSpinState(self.num_particles, 'ket', self.coefficients.conj().T)
             return out
         elif self.orientation == 'ket':
-            out = OneBodyBasisSpinState(self.num_particles, 'bra', self.coefficients.T)
+            out = OneBodyBasisSpinState(self.num_particles, 'bra', self.coefficients.conj().T)
             return out
 
     def __str__(self):
@@ -318,35 +343,61 @@ class OneBodyBasisSpinIsospinState(State):
             return [self.coefficients[0, i * 4:(i + 1) * 4] for i in
                     range(self.num_particles)]
 
+#    def __mul__(self, other):
+#        """
+#        target must be another OBBSIS state
+#        if multiplying by another OBBSIS state, orientations have to be the opposite (either inner or outer product)
+#        """
+#        if isinstance(other, OneBodyBasisSpinIsospinState):
+#            if self.orientation == 'bra':  # inner product
+#                assert other.orientation == 'ket'
+#                c0 = self.to_list()
+#                c1 = other.to_list()
+#                return np.prod(
+#                    [np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
+#            elif self.orientation == 'ket':  # outer product
+#                assert other.orientation == 'bra'
+#                out = OneBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
+#                for i in range(self.num_particles):
+#                    idx_i = i * 4
+#                    idx_f = (i + 1) * 4
+#                    out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
+#                return out
+#        else:
+#            raise ValueError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+    
     def __mul__(self, other):
         """
-        target must be another OBBSIS state
-        if multiplying by another OBBSIS state, orientations have to be the opposite (either inner or outer product)
+        bra can multiply a ket or a operator, ket can only multiply a bra
         """
-        if isinstance(other, OneBodyBasisSpinIsospinState):
-            if self.orientation == 'bra':  # inner product
+        if self.orientation == 'bra':  # inner product
+            if isinstance(other, OneBodyBasisSpinIsospinState):
                 assert other.orientation == 'ket'
                 c0 = self.to_list()
                 c1 = other.to_list()
                 return np.prod(
                     [np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
-            elif self.orientation == 'ket':  # outer product
-                assert other.orientation == 'bra'
-                out = OneBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
-                for i in range(self.num_particles):
-                    idx_i = i * 4
-                    idx_f = (i + 1) * 4
-                    out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
-                return out
+            elif isinstance(other, OneBodyBasisSpinIsospinOperator):
+                out = self.copy()
+                out.coefficients = np.matmul(self.coefficients,other.matrix)
+                return out 
+        elif self.orientation == 'ket':  # outer product
+            assert isinstance(other, OneBodyBasisSpinIsospinState) and other.orientation == 'bra'
+            out = OneBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
+            for i in range(self.num_particles):
+                idx_i = i * 4
+                idx_f = (i + 1) * 4
+                out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1], other.coefficients[0:1, idx_i:idx_f], dtype=complex)
+            return out
         else:
-            raise ValueError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+            raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
 
-    def transpose(self):
+    def dagger(self):
         if self.orientation == 'bra':
-            out = OneBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.T)
+            out = OneBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.conj().T)
             return out
         elif self.orientation == 'ket':
-            out = OneBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.T)
+            out = OneBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.conj().T)
             return out
 
     def __str__(self):
@@ -407,19 +458,37 @@ class ManyBodyBasisSpinState(State):
     def copy(self):
         return ManyBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients)
 
+#    def __mul__(self, other):
+#        if isinstance(other, ManyBodyBasisSpinState):
+#            if self.orientation == 'bra':  # inner product
+#                assert other.orientation == 'ket'
+#                out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
+#            elif self.orientation == 'ket':  # outer product
+#                assert other.orientation == 'bra'
+#                c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
+#                out = ManyBodyBasisSpinOperator(self.num_particles)
+#                out.matrix = c
+#            return out
+#        else:
+#            raise TypeError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+
     def __mul__(self, other):
-        if isinstance(other, ManyBodyBasisSpinState):
-            if self.orientation == 'bra':  # inner product
+        if self.orientation == 'bra':  # inner product
+            if isinstance(other,ManyBodyBasisSpinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
-            elif self.orientation == 'ket':  # outer product
-                assert other.orientation == 'bra'
-                c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
-                out = ManyBodyBasisSpinOperator(self.num_particles)
-                out.matrix = c
+            elif isinstance(other,ManyBodyBasisSpinOperator):
+                out = self.copy()
+                out.coefficients = np.matmul(self.coefficients,other.matrix)
+            else:
+                raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
+            return out 
+        elif self.orientation == 'ket':  # outer product
+            assert other.orientation == 'bra'
+            c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
+            out = ManyBodyBasisSpinOperator(self.num_particles)
+            out.matrix = c
             return out
-        else:
-            raise TypeError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
 
     def __rmul__(self, other):
         if np.isscalar(other):
@@ -429,12 +498,12 @@ class ManyBodyBasisSpinState(State):
             raise TypeError(f'Not supported: {type(other)} * {self.__class__.__name__}')
         return out
 
-    def transpose(self):
+    def dagger(self):
         if self.orientation == 'bra':
-            out = ManyBodyBasisSpinState(self.num_particles, 'ket', self.coefficients.T)
+            out = ManyBodyBasisSpinState(self.num_particles, 'ket', self.coefficients.conj().T)
             return out
         elif self.orientation == 'ket':
-            out = ManyBodyBasisSpinState(self.num_particles, 'bra', self.coefficients.T)
+            out = ManyBodyBasisSpinState(self.num_particles, 'bra', self.coefficients.conj().T)
             return out
 
     def __str__(self):
@@ -467,19 +536,37 @@ class ManyBodyBasisSpinIsospinState(State):
     def copy(self):
         return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients)
 
+#    def __mul__(self, other):
+#        if isinstance(other, ManyBodyBasisSpinIsospinState):
+#            if self.orientation == 'bra':  # inner product
+#                assert other.orientation == 'ket'
+#                out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
+#            elif self.orientation == 'ket':  # outer product
+#                assert other.orientation == 'bra'
+#                c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
+#                out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
+#                out.matrix = c
+#            return out
+#        else:
+#            raise TypeError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
+
     def __mul__(self, other):
-        if isinstance(other, ManyBodyBasisSpinIsospinState):
-            if self.orientation == 'bra':  # inner product
+        if self.orientation == 'bra':  # inner product
+            if isinstance(other,ManyBodyBasisSpinIsospinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
-            elif self.orientation == 'ket':  # outer product
-                assert other.orientation == 'bra'
-                c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
-                out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
-                out.matrix = c
+            elif isinstance(other,ManyBodyBasisSpinIsospinOperator):
+                out = self.copy()
+                out.coefficients = np.matmul(self.coefficients,other.matrix)
+            else:
+                raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
+            return out 
+        elif self.orientation == 'ket':  # outer product
+            assert other.orientation == 'bra'
+            c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
+            out = ManyBodyBasisSpinIsospsinOperator(self.num_particles)
+            out.matrix = c
             return out
-        else:
-            raise TypeError(f'{self.__class__.__name__} can only multiply another {self.__class__.__name__}')
 
     def __rmul__(self, other):
         if np.isscalar(other):
@@ -489,12 +576,12 @@ class ManyBodyBasisSpinIsospinState(State):
             raise TypeError(f'Not supported: {type(other)} * {self.__class__.__name__}')
         return out
 
-    def transpose(self):
+    def dagger(self):
         if self.orientation == 'bra':
-            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.T)
+            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.conj().T)
             return out
         elif self.orientation == 'ket':
-            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.T)
+            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.conj().T)
             return out
 
     def __str__(self):
@@ -600,6 +687,16 @@ class OneBodyBasisSpinOperator(SpinOperator):
         self.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
         self.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
         return self
+   
+    def zeros(self):
+        out = self.copy()
+        out.matrix = np.zeros_like(out.matrix)
+        return out
+
+    def dagger(self):
+        out = self.copy()
+        out.matrix = self.matrix.conj().T
+        return out
 
 
 class OneBodyBasisSpinIsospinOperator(SpinOperator):
@@ -684,6 +781,16 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
         self.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
         self.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
         return self
+    
+    def zeros(self):
+        out = self.copy()
+        out.matrix = np.zeros_like(out.matrix)
+        return out
+
+    def dagger(self):
+        out = self.copy()
+        out.matrix = self.matrix.conj().T
+        return out
 
 class ManyBodyBasisSpinOperator(SpinOperator):
     def __init__(self, num_particles: int):
@@ -778,6 +885,10 @@ class ManyBodyBasisSpinOperator(SpinOperator):
         out.matrix = np.zeros_like(out.matrix)
         return out
 
+    def dagger(self):
+        out = self.copy()
+        out.matrix = self.matrix.conj().T
+        return out
 
 class ManyBodyBasisSpinIsospinOperator(SpinOperator):
     def __init__(self, num_particles: int):
@@ -863,7 +974,7 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         return b*out
 
     def exchange(self, particle_a: int, particle_b: int):
-        P_1 = ManyBodyBasisSpinOperator(num_particles=self.num_particles)
+        P_1 = ManyBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
         P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
@@ -878,6 +989,11 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
     def zeros(self):
         out = self.copy()
         out.matrix = np.zeros_like(out.matrix)
+        return out
+    
+    def dagger(self):
+        out = self.copy()
+        out.matrix = self.matrix.conj().T
         return out
 
 def random_spin_bra_ket(num_particles):

@@ -1,5 +1,5 @@
-#from quap import *
-from .context import quap
+from quap import *
+#from .context.quap import *
 
 # test basic spin states and operators
 
@@ -13,28 +13,28 @@ def test_states():
     print("|uu> = \n", sp_uu)
     print("|ud> = \n", sp_ud)
     print('INNER PRODUCTS')
-    print("<uu|uu> = \n", sp_uu.transpose() * sp_uu)
-    print("<ud|ud> = \n", sp_ud.transpose() * sp_ud)
-    print("<uu|ud> = \n", sp_uu.transpose() * sp_ud)
+    print("<uu|uu> = \n", sp_uu.dagger() * sp_uu)
+    print("<ud|ud> = \n", sp_ud.dagger() * sp_ud)
+    print("<uu|ud> = \n", sp_uu.dagger() * sp_ud)
     print("|uu> = \n", sp_uu)
     print("|ud> = \n", sp_ud)
     print('OUTER PRODUCTS')
-    print("|uu><uu| = \n", sp_uu * sp_uu.transpose())
-    print("|ud><ud| = \n", sp_ud * sp_ud.transpose())
-    print("|uu><ud| = \n", sp_uu * sp_ud.transpose())
+    print("|uu><uu| = \n", sp_uu * sp_uu.dagger())
+    print("|ud><ud| = \n", sp_ud * sp_ud.dagger())
+    print("|uu><ud| = \n", sp_uu * sp_ud.dagger())
     print('TO MANYBODY')
     sp_uu = sp_uu.to_many_body_state()
     sp_ud = sp_ud.to_many_body_state()
     print("|uu> = \n", sp_uu)
     print("|ud> = \n", sp_ud)
     print('INNER PRODUCTS')
-    print("<uu|uu> = \n", sp_uu.transpose() * sp_uu)
-    print("<ud|ud> = \n", sp_ud.transpose() * sp_ud)
-    print("<uu|ud> = \n", sp_uu.transpose() * sp_ud)
+    print("<uu|uu> = \n", sp_uu.dagger() * sp_uu)
+    print("<ud|ud> = \n", sp_ud.dagger() * sp_ud)
+    print("<uu|ud> = \n", sp_uu.dagger() * sp_ud)
     print('OUTER PRODUCTS')
-    print("|uu><uu| = \n", sp_uu * sp_uu.transpose())
-    print("|ud><ud| = \n", sp_ud * sp_ud.transpose())
-    print("|uu><ud| = \n", sp_uu * sp_ud.transpose())
+    print("|uu><uu| = \n", sp_uu * sp_uu.dagger())
+    print("|ud><ud| = \n", sp_ud * sp_ud.dagger())
+    print("|uu><ud| = \n", sp_uu * sp_ud.dagger())
 
     print('RANDOM TENSOR PRODUCTS')
     coeffs_0 = np.concatenate([spinor2('random', 'ket'), spinor2('random', 'ket')], axis=0)
@@ -44,26 +44,26 @@ def test_states():
     print("|0> = \n", sp_0)
     print("|1> = \n", sp_1)
     print('INNER PRODUCTS')
-    print("<0|0> = \n", sp_0.transpose() * sp_0)
-    print("<1|1> = \n", sp_1.transpose() * sp_1)
-    print("<0|1> = \n", sp_0.transpose() * sp_1)
+    print("<0|0> = \n", sp_0.dagger() * sp_0)
+    print("<1|1> = \n", sp_1.dagger() * sp_1)
+    print("<0|1> = \n", sp_0.dagger() * sp_1)
     print('OUTER PRODUCTS')
-    print("|0><0| = \n", sp_0 * sp_0.transpose())
-    print("|1><1| = \n", sp_1 * sp_1.transpose())
-    print("|0><1| = \n", sp_0 * sp_1.transpose())
+    print("|0><0| = \n", sp_0 * sp_0.dagger())
+    print("|1><1| = \n", sp_1 * sp_1.dagger())
+    print("|0><1| = \n", sp_0 * sp_1.dagger())
     print('TO MANYBODY')
     sp_0 = sp_0.to_many_body_state()
     sp_1 = sp_1.to_many_body_state()
     print("|0> = \n", sp_0)
     print("|1> = \n", sp_1)
     print('INNER PRODUCTS')
-    print("<0|0> = \n", sp_0.transpose() * sp_0)
-    print("<1|1> = \n", sp_1.transpose() * sp_1)
-    print("<0|1> = \n", sp_0.transpose() * sp_1)
+    print("<0|0> = \n", sp_0.dagger() * sp_0)
+    print("<1|1> = \n", sp_1.dagger() * sp_1)
+    print("<0|1> = \n", sp_0.dagger() * sp_1)
     print('OUTER PRODUCTS')
-    print("|0><0| = \n", sp_0 * sp_0.transpose())
-    print("|1><1| = \n", sp_1 * sp_1.transpose())
-    print("|0><1| = \n", sp_0 * sp_1.transpose())
+    print("|0><0| = \n", sp_0 * sp_0.dagger())
+    print("|1><1| = \n", sp_1 * sp_1.dagger())
+    print("|0><1| = \n", sp_0 * sp_1.dagger())
     print('DONE TESTING STATES')
 
 
@@ -145,7 +145,7 @@ def test_operators():
     print("2P(i,j) - 1 \n", rhs)
 
     print('MANY BODY TEST: sigma(i) dot sigma(j) = 2P(i,j) - 1')
-    bra, ket = random_spin_bra_ket(2)
+    #bra, ket = random_spin_bra_ket(2)
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
     sigx01 = ManyBodyBasisSpinOperator(2).sigma(0, 'x').sigma(1, 'x')
@@ -158,7 +158,6 @@ def test_operators():
     print("2P(i,j) - 1 \n", rhs)
 
     print('DONE TESTING OPERATORS')
-
 
 
 def test_propagator_easy():

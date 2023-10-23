@@ -161,8 +161,8 @@ def test_operators():
 
 
 
-def test_propagator_easy():
-    print('TESTING PROPAGATOR (EASY)')
+def test_propagator_x():
+    print('TESTING PROPAGATOR X')
     # bra, ket = random_bra_ket()
     coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
     coeffs_ket = np.concatenate([spinor4('max', 'ket'), spinor4('max', 'ket')], axis=0)
@@ -171,11 +171,29 @@ def test_propagator_easy():
     dt = 0.01
     A = 1.0
     Sx = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'x').sigma(1, 'x')
-    Gx = (-dt * A * Sx).exponentiate()
+    Gx = (-dt/2 * A * Sx).exponentiate()
     print("Gx = \n", Gx)
     print("<s| = \n", bra)
     print("|s> = \n", ket)
     print("<s|Gx|s> = \n", prod([bra, Gx, ket]))
+
+def test_propagator_sigma():
+    print('TESTING PROPAGATOR SIGMA')
+    # bra, ket = random_bra_ket()
+    coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
+    coeffs_ket = np.concatenate([spinor4('max', 'ket'), spinor4('max', 'ket')], axis=0)
+    bra = OneBodyBasisSpinIsospinState(2, 'bra', coeffs_bra).to_many_body_state()
+    ket = OneBodyBasisSpinIsospinState(2, 'ket', coeffs_ket).to_many_body_state()
+    dt = 0.01
+    A = 1.0
+    Sx = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'x').sigma(1, 'x')
+    Sy = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'y').sigma(1, 'y')
+    Sz = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'z').sigma(1, 'z')
+    G = (-dt/2 * A * (Sx + Sy + Sz)).exponentiate()
+    print("G = \n", G)
+    print("<s| = \n", bra)
+    print("|s> = \n", ket)
+    print("<s|G|s> = \n", prod([bra, G, ket]))
 
 # def test_product_states():
 #     import matplotlib.pyplot as plt
@@ -185,11 +203,10 @@ def test_propagator_easy():
 #     plt.plot(domain,y)
 #     plt.show()
 
-
-
 if __name__ == "__main__":
     print('TEST 1 start')
     test_states()
     test_operators()
-    test_propagator_easy()
+    test_propagator_x()
+    test_propagator_sigma()
     print('TEST 1 complete')
