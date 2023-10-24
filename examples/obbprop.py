@@ -1,4 +1,4 @@
-from quap import *
+from quap.main import *
 
 num_particles = 2
 

@@ -8,7 +8,7 @@ version = "0.3"
 authors = [
   { name="Jordan M. R. Fox", email="jordanmrfox@gmail.com" },
 ]
-description = "tools for many-fermion systems"
+description = "Modeling many-fermion systems"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [
