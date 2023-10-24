@@ -1,14 +1,15 @@
-from quap.main import *
+from quap import *
+#from context import quap
 
 num_particles = 2
 
-id = ManyBodySpinOperator(num_particles)
-sigx0 = ManyBodySpinOperator(num_particles).sigma(0, 'x')
-sigy0 = ManyBodySpinOperator(num_particles).sigma(0, 'y')
-sigz0 = ManyBodySpinOperator(num_particles).sigma(0, 'z')
-sigx1 = ManyBodySpinOperator(num_particles).sigma(1, 'x')
-sigy1 = ManyBodySpinOperator(num_particles).sigma(1, 'y')
-sigz1 = ManyBodySpinOperator(num_particles).sigma(1, 'z')
+id = ManyBodyBasisSpinOperator(num_particles)
+sigx0 = ManyBodyBasisSpinOperator(num_particles).sigma(0, 'x')
+sigy0 = ManyBodyBasisSpinOperator(num_particles).sigma(0, 'y')
+sigz0 = ManyBodyBasisSpinOperator(num_particles).sigma(0, 'z')
+sigx1 = ManyBodyBasisSpinOperator(num_particles).sigma(1, 'x')
+sigy1 = ManyBodyBasisSpinOperator(num_particles).sigma(1, 'y')
+sigz1 = ManyBodyBasisSpinOperator(num_particles).sigma(1, 'z')
 # sigx01 = sigx0 * sigx1
 # sigy01 = sigy0 * sigy1
 # sigz01 = sigz0 * sigz1
@@ -17,38 +18,45 @@ sig0vec = [sigx0, sigy0, sigz0]
 sig1vec = [sigx1, sigy1, sigz1]
 
 
-def make_state(s, orientation, quiet=True):
-    """s is a string like uu is up up, ud is up down"""
-    if s == 'uu':
-        p = [1, 0, 0, 0]
-    elif s == 'ud':
-        p = [0, 1, 0, 0]
-    elif s == 'du':
-        p = [0, 0, 1, 0]
-    elif s == 'dd':
-        p = [0, 0, 0, 1]
-    elif s == 'Q':
-        if not quiet: print('The state Q is an equal mixture of uu, ud, du, dd')
-        p = [0.5, 0.5, 0.5, 0.5]
-    elif s == 'R':
-        if not quiet: print('R is an asymmetric mixture. See function definition.')
-        q1 = 0.5
-        q2 = 0.25
-        c1u = np.sqrt(q1)
-        c1d = -np.sqrt(1 - q1)
-        c2u = np.sqrt(q2)
-        c2d = np.sqrt(1 - q2)
-        p = [c1u * c2u, c1u * c2d, c1d * c2u, c1d * c2d]
-    else:
-        raise ValueError(f'Invalid specification: {s}')
+# def make_state(s, orientation, quiet=True):
+#     """s is a string like uu is up up, ud is up down"""
+#     if s == 'uu':
+#         p = [1, 0, 0, 0]
+#     elif s == 'ud':
+#         p = [0, 1, 0, 0]
+#     elif s == 'du':
+#         p = [0, 0, 1, 0]
+#     elif s == 'dd':
+#         p = [0, 0, 0, 1]
+#     elif s == 'Q':
+#         if not quiet: print('The state Q is an equal mixture of uu, ud, du, dd')
+#         p = [0.5, 0.5, 0.5, 0.5]
+#     elif s == 'R':
+#         if not quiet: print('R is an asymmetric mixture. See function definition.')
+#         q1 = 0.5
+#         q2 = 0.25
+#         c1u = np.sqrt(q1)
+#         c1d = -np.sqrt(1 - q1)
+#         c2u = np.sqrt(q2)
+#         c2d = np.sqrt(1 - q2)
+#         p = [c1u * c2u, c1u * c2d, c1d * c2u, c1d * c2d]
+#     else:
+#         raise ValueError(f'Invalid specification: {s}')
+#
+#     p = np.array(p)
+#     if orientation == 'ket':
+#         return ManyBodyBasisSpinState(num_particles=2, orientation=orientation, coefficients=p.reshape((4, 1)))
+#     elif orientation == 'bra':
+#         return ManyBodyBasisSpinState(num_particles=2, orientation=orientation, coefficients=p.reshape((1, 4)))
+#     else:
+#         raise ValueError('Invalid orientation')
 
-    p = np.array(p)
-    if orientation == 'ket':
-        return ManyBodySpinState(num_particles=2, orientation=orientation, coefficients=p.reshape((4, 1)))
-    elif orientation == 'bra':
-        return ManyBodySpinState(num_particles=2, orientation=orientation, coefficients=p.reshape((1, 4)))
-    else:
-        raise ValueError('Invalid orientation')
+def make_test_states():
+    coeffs_bra = np.concatenate([spinor2('max', 'bra'), spinor2('max', 'bra')], axis=1)
+    coeffs_ket = np.concatenate([spinor2('up', 'ket'), spinor2('down', 'ket')], axis=0)
+    bra = OneBodyBasisSpinState(2, 'bra', coeffs_bra).to_many_body_state()
+    ket = OneBodyBasisSpinState(2, 'ket', coeffs_ket).to_many_body_state()
+    return bra, ket
 
 
 def get_Amat(diag=False):
@@ -73,15 +81,13 @@ def test_brackets_1():
     Amat = get_Amat()
     kx = 0.5 * dt * Amat[0, 0]
     # sum brackets
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
-    b1 = np.cosh(kx) * (bra * ket) - np.sinh(kx) * prod([bra, sigx0, sigx1, ket])
+    bra, ket = make_test_states()
+    b1 = np.cosh(kx) * bra * ket - np.sinh(kx) * bra * sigx0 * sigx1 * ket
     print(b1)
 
     # sum wavefunctions
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
-    ket = np.cosh(kx) * ket - np.sinh(kx) * prod([sigx0, sigx1, ket])
+    bra, ket = make_test_states()
+    ket = np.cosh(kx) * ket - np.sinh(kx) * sigx0 * sigx1 * ket
     b2 = bra * ket
     print(b2)
 
@@ -92,16 +98,14 @@ def test_brackets_2():
     Amat = get_Amat()
     K = 0.5 * dt * Amat
 
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
+    bra, ket = make_test_states()
     b1 = (np.cosh(K[0, 0]) * np.cosh(K[1, 1]) * bra * ket
           - np.cosh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigy0, sigy1, ket])
           - np.cosh(K[1, 1]) * np.sinh(K[0, 0]) * prod([bra, sigx0, sigx1, ket])
           + np.sinh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigx0, sigx1, sigy0, sigy1, ket]))
     print(b1)
 
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
+    bra, ket = make_test_states()
     ket = np.cosh(K[0, 0]) * ket - np.sinh(K[0, 0]) * prod([sigx0, sigx1, ket])
     ket = np.cosh(K[1, 1]) * ket - np.sinh(K[1, 1]) * prod([sigy0, sigy1, ket])
     b2 = bra * ket
@@ -109,7 +113,7 @@ def test_brackets_2():
 
 
 def Gpade_sigma(dt, Amat):
-    out = ManyBodySpinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinOperator(num_particles).zeros()
     for a in range(3):
         for b in range(3):
             out += Amat[a, b] * sig0vec[a] * sig1vec[b]
@@ -130,11 +134,10 @@ def gaussian_brackets(n_samples=100, mix=False):
     dt = 0.01
     Amat = get_Amat(diag=False)
 
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
+    bra, ket = make_test_states()
 
     # correct answer via pade
-    b_exact = bra * (Gpade_sigma(dt, Amat) * ket)
+    b_exact = bra * Gpade_sigma(dt, Amat) * ket
 
     # n_samples = 1000
     b_list = []
@@ -182,11 +185,10 @@ def rbm_brackets(n_samples=100, mix=False):
     dt = 0.01
     Amat = get_Amat()
 
-    bra = make_state('uu', 'bra')
-    ket = make_state('R', 'ket')
+    bra, ket = make_test_states()
 
     # correct answer via pade
-    b_exact = bra * (Gpade_sigma(dt, Amat) * ket)
+    b_exact = bra * Gpade_sigma(dt, Amat) * ket
 
     # make population of identical wfns
     # n_samples = 1000
