@@ -4,6 +4,13 @@
 
 __version__ = '0.3'
 
+# paradigms
+# - basis choice such as spin, spin+isospin, one-body, many-body are given their own separate classes
+# for states and operators. You should not be able to multiply a OBB state by a MBB state, etc.
+# - methods generally return a copy of the instance with the specified change. e.g. a normalization
+# might be written psi.normalize(). In this case psi should not be changed, the method returns a copy
+# of psi that is normalized. Proper normalization of psi could be "psi = psi.normalize()"
+
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -203,7 +210,7 @@ class OneBodyBasisSpinState(State):
         return OneBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients - other.coefficients)
 
     def copy(self):
-        return OneBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients)
+        return OneBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients.copy())
 
     def to_list(self):
         if self.orientation == 'ket':
@@ -261,22 +268,40 @@ class OneBodyBasisSpinState(State):
         return ManyBodyBasisSpinState(self.num_particles, self.orientation, sp_mb)
 
     def normalize(self):
+        out = self.copy()
         if self.orientation == 'ket':
             for i in range(self.num_particles):
                 n = np.linalg.norm(self.coefficients[i:i+2, 0])
-                self.coefficients[i:i+2, 0] /= n
+                out.coefficients[i:i+2, 0] /= n
         if self.orientation == 'bra':
             for i in range(self.num_particles):
                 n = np.linalg.norm(self.coefficients[0, i:i + 2])
-                self.coefficients[0, i:i + 2] /= n
+                out.coefficients[0, i:i + 2] /= n
+        return out
 
-    def scalar_mult(self, x, particle_index):
+    def scalar_mult(self, particle_index, b):
         out = self.copy()
         if self.orientation == 'ket':
-            out.coefficients[particle_index * 2:(particle_index+1) * 2, 0] *= x
+            out.coefficients[particle_index * 2:(particle_index+1) * 2, 0] *= b
         elif self.orientation == 'bra':
-            out.coefficients[0, particle_index * 2:(particle_index+1) * 2] *= x
+            out.coefficients[0, particle_index * 2:(particle_index+1) * 2] *= b
         return out
+
+    def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        c = b ** (1 / self.num_particles)
+        out = self.copy()
+        for i in range(self.num_particles):
+            out = out.scalar_mult(i, c)
+        return out
+
+    def __rmul__(self, other):
+        if np.isscalar(other):
+            out = self.copy().spread_scalar_mult(other)
+            return out
+        else:
+            raise ValueError('Problem in rmul')
+
 
 
 class OneBodyBasisSpinIsospinState(State):
@@ -309,7 +334,7 @@ class OneBodyBasisSpinIsospinState(State):
         return OneBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients - other.coefficients)
 
     def copy(self):
-        return OneBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients)
+        return OneBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients.copy())
 
     def to_list(self):
         if self.orientation == 'ket':
@@ -370,22 +395,39 @@ class OneBodyBasisSpinIsospinState(State):
         return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, sp_mb)
 
     def normalize(self):
+        out = self.copy()
         if self.orientation == 'ket':
             for i in range(self.num_particles):
                 n = np.linalg.norm(self.coefficients[i:i + 4, 0])
-                self.coefficients[i:i + 4, 0] /= n
+                out.coefficients[i:i + 4, 0] /= n
         if self.orientation == 'bra':
             for i in range(self.num_particles):
                 n = np.linalg.norm(self.coefficients[0, i:i + 4])
-                self.coefficients[0, i:i + 4] /= n
+                out.coefficients[0, i:i + 4] /= n
+        return out
 
-    def scalar_mult(self, x, particle_index=0):
+    def scalar_mult(self, particle_index, b ):
         out = self.copy()
         if self.orientation == 'ket':
-            out.coefficients[particle_index * 4:(particle_index + 1) * 4, 0] *= x
+            out.coefficients[particle_index * 4:(particle_index + 1) * 4, 0] *= b
         elif self.orientation == 'bra':
-            out.coefficients[0, particle_index * 4:(particle_index + 1) * 4] *= x
+            out.coefficients[0, particle_index * 4:(particle_index + 1) * 4] *= b
         return out
+
+    def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        c = b ** (1 / self.num_particles)
+        out = self.copy()
+        for i in range(self.num_particles):
+            out = out.scalar_mult(i, c)
+        return out
+
+    def __rmul__(self, other):
+        if np.isscalar(other):
+            out = self.copy().spread_scalar_mult(other)
+            return out
+        else:
+            raise ValueError('Problem in rmul')
 
 
 class ManyBodyBasisSpinState(State):
@@ -409,7 +451,7 @@ class ManyBodyBasisSpinState(State):
         return ManyBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients - other.coefficients)
 
     def copy(self):
-        return ManyBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients)
+        return ManyBodyBasisSpinState(self.num_particles, self.orientation, self.coefficients.copy())
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
@@ -451,7 +493,6 @@ class ManyBodyBasisSpinState(State):
         return "\n".join(out)
 
 
-
 class ManyBodyBasisSpinIsospinState(State):
     def __init__(self, num_particles: int, orientation: str, coefficients: np.ndarray):
         super().__init__(num_particles, orientation)
@@ -473,7 +514,7 @@ class ManyBodyBasisSpinIsospinState(State):
         return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients - other.coefficients)
 
     def copy(self):
-        return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients)
+        return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients.copy())
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
@@ -514,6 +555,7 @@ class ManyBodyBasisSpinIsospinState(State):
         out += [str(self.coefficients)]
         return "\n".join(out)
 
+
 class SpinOperator:
     """
     base class for spin operators
@@ -546,7 +588,7 @@ class OneBodyBasisSpinOperator(SpinOperator):
 
     def copy(self):
         out = OneBodyBasisSpinOperator(self.num_particles)
-        out.matrix = self.matrix
+        out.matrix = self.matrix.copy()
         return out
 
     def __mul__(self, other):
@@ -557,7 +599,7 @@ class OneBodyBasisSpinOperator(SpinOperator):
             return out
         elif isinstance(other, OneBodyBasisSpinOperator):
             out = other.copy()
-            out.matrix = np.matmul(self.matrix, other.matrix, dtype=complex)
+            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
         else:
             raise ValueError(f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or a {self.__class__.__name__}')
@@ -573,17 +615,21 @@ class OneBodyBasisSpinOperator(SpinOperator):
         assert matrix.shape == (2,2)
         idx_i = particle_index * 2
         idx_f = (particle_index + 1) * 2
-        self.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(matrix, self.matrix[idx_i:idx_f, idx_i:idx_f], dtype=complex)
+        out = self.copy()
+        out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(matrix, out.matrix[idx_i:idx_f, idx_i:idx_f], dtype=complex)
+        return out
 
     def sigma(self, particle_index, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
 
     def scalar_mult(self, particle_index, b):
         assert np.isscalar(b)
-        self.apply_one_body_operator(particle_index=particle_index, matrix=b * np.identity(2))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=b * np.identity(2))
+        return out
 
     def spread_scalar_mult(self, b):
         assert np.isscalar(b)
@@ -593,17 +639,25 @@ class OneBodyBasisSpinOperator(SpinOperator):
             out = out.scalar_mult(i, c)
         return out
 
+    def __rmul__(self, other):
+        if np.isscalar(other):
+            out = self.copy().spread_scalar_mult(other)
+            return out
+        else:
+            raise ValueError('Problem in rmul')
+
     def exchange(self, particle_a: int, particle_b: int):
+        out = self.copy()
         idx_ai = particle_a * 2
         idx_af = (particle_a + 1) * 2
         idx_bi = particle_b * 2
         idx_bf = (particle_b + 1) * 2
-        temp = self.matrix.copy()
-        self.matrix[idx_ai:idx_af, idx_ai:idx_af] = temp[idx_ai:idx_af, idx_bi:idx_bf]
-        self.matrix[idx_ai:idx_af, idx_bi:idx_bf] = temp[idx_ai:idx_af, idx_ai:idx_af]
-        self.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
-        self.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
-        return self
+        temp = out.matrix.copy()
+        out.matrix[idx_ai:idx_af, idx_ai:idx_af] = temp[idx_ai:idx_af, idx_bi:idx_bf]
+        out.matrix[idx_ai:idx_af, idx_bi:idx_bf] = temp[idx_ai:idx_af, idx_ai:idx_af]
+        out.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
+        out.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
+        return out
 
     def zeros(self):
         out = self.copy()
@@ -637,7 +691,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
 
     def copy(self):
         out = OneBodyBasisSpinIsospinOperator(self.num_particles)
-        out.matrix = self.matrix
+        out.matrix = self.matrix.copy()
         return out
 
     def __mul__(self, other):
@@ -648,7 +702,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
             return out
         elif isinstance(other, OneBodyBasisSpinIsospinOperator):
             out = other.copy()
-            out.matrix = np.matmul(self.matrix, other.matrix, dtype=complex)
+            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
         else:
             raise ValueError(f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
@@ -666,39 +720,59 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
         onebody_matrix = repeated_kronecker_product([isospin_matrix,spin_matrix])
         idx_i = particle_index * 4
         idx_f = (particle_index + 1) * 4
-        self.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(onebody_matrix, self.matrix[idx_i:idx_f, idx_i:idx_f], dtype=complex)
+        out = self.copy()
+        out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(onebody_matrix, out.matrix[idx_i:idx_f, idx_i:idx_f], dtype=complex)
+        return out
 
     def sigma(self, particle_index, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex), spin_matrix=pauli(dimension))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex), spin_matrix=pauli(dimension))
+        return out
 
     def tau(self, particle_index, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),spin_matrix=np.identity(2, dtype=complex))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),spin_matrix=np.identity(2, dtype=complex))
+        return out
 
     def scalar_mult(self, particle_index, b):
         assert np.isscalar(b)
-        self.apply_one_body_operator(particle_index=particle_index, isospin_matrix=b * np.identity(2),spin_matrix=np.identity(2, dtype=complex))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=b * np.identity(2),spin_matrix=np.identity(2, dtype=complex))
+        return out
+
+    def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        c = b ** (1 / self.num_particles)
+        out = self.copy()
+        for i in range(self.num_particles):
+            out = out.scalar_mult(i, c)
+        return out
+
+    def __rmul__(self, other):
+        if np.isscalar(other):
+            out = self.copy().spread_scalar_mult(other)
+            return out
+        else:
+            raise ValueError('Problem in rmul')
 
     def exchange(self, particle_a: int, particle_b: int):
         broken = True
         if broken:
             raise ValueError('Exchange for the spin-isospin basis is not set up!')
         else:
+            out = self.copy()
             idx_ai = particle_a * 4
             idx_af = (particle_a + 1) * 4
             idx_bi = particle_b * 4
             idx_bf = (particle_b + 1) * 4
-            temp = self.matrix.copy()
-            self.matrix[idx_ai:idx_af, idx_ai:idx_af] = temp[idx_ai:idx_af, idx_bi:idx_bf]
-            self.matrix[idx_ai:idx_af, idx_bi:idx_bf] = temp[idx_ai:idx_af, idx_ai:idx_af]
-            self.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
-            self.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
-            return self
-
+            temp = out.matrix.copy()
+            out.matrix[idx_ai:idx_af, idx_ai:idx_af] = temp[idx_ai:idx_af, idx_bi:idx_bf]
+            out.matrix[idx_ai:idx_af, idx_bi:idx_bf] = temp[idx_ai:idx_af, idx_ai:idx_af]
+            out.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
+            out.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
+            return out
 
     def zeros(self):
         out = self.copy()
@@ -709,6 +783,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
         out = self.copy()
         out.matrix = self.matrix.conj().T
         return out
+
 
 class ManyBodyBasisSpinOperator(SpinOperator):
     def __init__(self, num_particles: int):
@@ -730,7 +805,7 @@ class ManyBodyBasisSpinOperator(SpinOperator):
 
     def copy(self):
         out = ManyBodyBasisSpinOperator(self.num_particles)
-        out.matrix = self.matrix
+        out.matrix = self.matrix.copy()
         return out
 
     def __mul__(self, other):
@@ -741,7 +816,7 @@ class ManyBodyBasisSpinOperator(SpinOperator):
             return out
         elif isinstance(other, ManyBodyBasisSpinOperator):
             out = other.copy()
-            out.matrix = np.matmul(self.matrix, other.matrix, dtype=complex)
+            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
         else:
             raise ValueError(f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
@@ -766,12 +841,15 @@ class ManyBodyBasisSpinOperator(SpinOperator):
         obo = [np.identity(2, dtype=complex) for _ in range(self.num_particles)]
         obo[particle_index] = matrix
         obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
+        out = self.copy()
+        out.matrix = np.matmul(obo, out.matrix, dtype=complex)
+        return out
 
     def sigma(self, particle_index: int, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
 
     def scalar_mult(self, particle_index: int, b):
         """
@@ -791,7 +869,8 @@ class ManyBodyBasisSpinOperator(SpinOperator):
         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
         P = (P_x + P_y + P_z + P_1)
-        return 0.5 * P * self
+        out = 0.5 * P * self.copy()
+        return out
 
     def exponentiate(self):
         out = self.copy()
@@ -807,6 +886,7 @@ class ManyBodyBasisSpinOperator(SpinOperator):
         out = self.copy()
         out.matrix = self.matrix.conj().T
         return out
+
 
 class ManyBodyBasisSpinIsospinOperator(SpinOperator):
     def __init__(self, num_particles: int):
@@ -828,7 +908,7 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
 
     def copy(self):
         out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
-        out.matrix = self.matrix
+        out.matrix = self.matrix.copy()
         return out
 
     def __mul__(self, other):
@@ -839,7 +919,7 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
             return out
         elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
             out = other.copy()
-            out.matrix = np.matmul(self.matrix, other.matrix, dtype=complex)
+            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
         else:
             raise ValueError(f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
@@ -859,25 +939,27 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         out += "Re=\n"+re+"\nIm:\n"+im
         return out
 
-
     def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
         assert type(isospin_matrix) == np.ndarray and isospin_matrix.shape == (2,2)
         assert type(spin_matrix) == np.ndarray and spin_matrix.shape == (2, 2)
         obo = [np.identity(4, dtype=complex) for _ in range(self.num_particles)]
         obo[particle_index] = repeated_kronecker_product([isospin_matrix, spin_matrix])
         obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
+        out = self.copy()
+        out.matrix = np.matmul(obo, self.matrix, dtype=complex)
+        return out
 
     def sigma(self, particle_index: int, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex), spin_matrix=pauli(dimension))
-        return self
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex), spin_matrix=pauli(dimension))
+        return out
 
     def tau(self, particle_index: int, dimension):
         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-        self.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension), spin_matrix=np.identity(2, dtype=complex))
-        return self
-
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension), spin_matrix=np.identity(2, dtype=complex))
+        return out
 
     def scalar_mult(self, particle_index: int, b):
         """
@@ -897,7 +979,8 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
         P = (P_x + P_y + P_z + P_1)
-        return 0.5 * P * self
+        out = 0.5 * P * self.copy()
+        return out
 
     def exponentiate(self):
         out = self.copy()
@@ -913,6 +996,7 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         out = self.copy()
         out.matrix = self.matrix.conj().T
         return out
+
 
 def random_spin_bra_ket(num_particles):
     coeffs_ket = np.concatenate(num_particles*[spinor2('random', 'ket')], axis=0)

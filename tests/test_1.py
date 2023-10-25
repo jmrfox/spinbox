@@ -1,5 +1,4 @@
 from quap import *
-#from .context.quap import *
 
 # test spin+isospin states and operators
 
