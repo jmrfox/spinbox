@@ -102,14 +102,22 @@ def Gpade_sigma(dt, Amat):
     out = -0.5 * dt * out
     return out.exponentiate()
 
-
 def Ggauss_1d_sample(dt, A, x, opi, opj):
     k = np.sqrt(-0.5 * dt * A, dtype=complex)
     norm = np.exp(0.5 * dt * A)
-    gi = np.cosh(k * x) * one + np.sinh(k * x) * opi
-    gj = np.cosh(k * x) * one + np.sinh(k * x) * opj
+    # gi = np.cosh(k * x) * one + np.sinh(k * x) * opi
+    # gj = np.cosh(k * x) * one + np.sinh(k * x) * opj
+    gi = one + opi
+    gj = one
     return norm * gi * gj
 
+def test_gaussian_sample():
+    A = get_Amat()[0,0]
+    dt = 0.01
+    bra, ket = make_test_states()
+    x = 1.0
+    out = bra * Ggauss_1d_sample(dt, A, x, sigx0, sigx1) * ket
+    print(f'<Gx> = {out}')
 
 def gaussian_brackets(n_samples=100, mix=False):
     print('HS brackets')
@@ -198,10 +206,13 @@ def rbm_brackets(n_samples=100, mix=False):
     print('error = ', b_exact - b_rbm)
 
 
+
+
 if __name__ == '__main__':
     test_brackets_0()
     # test_brackets_1()
     # test_brackets_2()
+    test_gaussian_sample()
     # n_samples = 1000
     # mix = False
     # gaussian_brackets(n_samples=n_samples, mix=mix)

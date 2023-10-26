@@ -71,10 +71,19 @@ def Gpade_sigma_mb(dt: float, Amat: np.ndarray):
 def Ggauss_1d_sample(dt: float, A: float, x, i: int, j: int, opi: OneBodyBasisSpinOperator, opj: OneBodyBasisSpinOperator):
     k = np.sqrt(-0.5 * dt * A, dtype=complex)
     norm = np.exp(0.5 * dt * A)
-    gi = one.scalar_mult(i, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x))
-    gj = one.scalar_mult(j, np.cosh(k * x)) + opj.scalar_mult(j, np.sinh(k * x))
+    # gi = one.scalar_mult(i, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x))
+    # gj = one.scalar_mult(j, np.cosh(k * x)) + opj.scalar_mult(j, np.sinh(k * x))
+    gi = one + opi
+    gj = one
     return norm * gi * gj
 
+def test_gaussian_sample():
+    A = get_Amat()[0,0]
+    dt = 0.01
+    bra, ket = make_test_states()
+    x = 1.0
+    out = bra * Ggauss_1d_sample(dt, A, x, 0, 1, sigx0, sigx1) * ket
+    print(f'<Gx> = {out}')
 
 def gaussian_brackets(n_samples=100, mix=False):
     print('HS brackets')
@@ -167,8 +176,9 @@ def rbm_brackets(n_samples=100, mix=False):
 
 if __name__ == "__main__":
     print('ONE-BODY BASIS PROPAGATORS')
-    test_brackets_0()
-    gaussian_brackets()
+    # test_brackets_0()
+    test_gaussian_sample()
+    # gaussian_brackets()
     # rbm_brackets()
     print('ONE-BODY BASIS PROPAGATORS DONE')
 
