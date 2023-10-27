@@ -1,5 +1,7 @@
 from quap import *
 
+from tqdm import tqdm
+
 num_particles = 2
 
 one = OneBodyBasisSpinOperator(num_particles)
@@ -71,14 +73,12 @@ def Gpade_sigma_mb(dt: float, Amat: np.ndarray):
 def Ggauss_1d_sample(dt: float, A: float, x, i: int, j: int, opi: OneBodyBasisSpinOperator, opj: OneBodyBasisSpinOperator):
     k = np.sqrt(-0.5 * dt * A, dtype=complex)
     norm = np.exp(0.5 * dt * A)
-    # gi = one.scalar_mult(i, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x))
-    # gj = one.scalar_mult(j, np.cosh(k * x)) + opj.scalar_mult(j, np.sinh(k * x))
-    gi = one + opi
-    gj = one
-    return norm * gi * gj
+    op = OneBodyBasisSpinOperator(2)
+    out = op.copy().scalar_mult(i, np.cosh(k*x)).scalar_mult(j, np.cosh(k*x)) + opi.scalar_mult(i, np.sinh(k*x)) * opj.scalar_mult(j, np.sinh(k*x))
+    return out.spread_scalar_mult(norm)
 
 def test_gaussian_sample():
-    A = get_Amat()[0,0]
+    A = get_Amat()[0, 0]
     dt = 0.01
     bra, ket = make_test_states()
     x = 1.0
@@ -128,13 +128,23 @@ def gaussian_brackets(n_samples=100, mix=False):
     print('error = ', b_exact - b_gauss)
 
 
-def Grbm_1d_sample(dt, A, h, opi, opj):
+def Grbm_1d_sample(dt, A, h, i, j, opi, opj):
     norm = np.exp(-0.5 * dt * np.abs(A)) / 2
     W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(A))))
     arg = W * (2 * h - 1)
-    qi = np.cosh(arg) * one + np.sinh(arg) * opi
-    qj = np.cosh(arg) * one - np.sign(A) * np.sinh(arg) * opj
-    return norm * qi * qj
+    # qi = np.cosh(arg) * one + np.sinh(arg) * opi
+    # qj = np.cosh(arg) * one - np.sign(A) * np.sinh(arg) * opj
+    op = OneBodyBasisSpinOperator(2)
+    out = op.copy().scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(A)*np.sinh(arg))
+    return out.spread_scalar_mult(norm)
+
+def test_rbm_sample():
+    A = get_Amat()[0, 0]
+    dt = 0.01
+    bra, ket = make_test_states()
+    x = 1.0
+    out = bra * Grbm_1d_sample(dt, A, x, 0, 1, sigx0, sigx1) * ket
+    print(f'<Gx> = {out}')
 
 
 def rbm_brackets(n_samples=100, mix=False):
@@ -154,15 +164,15 @@ def rbm_brackets(n_samples=100, mix=False):
     # mix = True
     n = 0
     idx = [0, 1, 2]
-    for i in range(n_samples):
+    for i in tqdm(range(n_samples)):
         ket_p = ket.copy()
         ket_m = ket.copy()
         if mix:
             rng.shuffle(idx)
         for a in idx:
             for b in idx:
-                ket_p = 2 * Grbm_1d_sample(dt, Amat[a, b], h_set[n], sig0vec[a], sig1vec[b]) * ket_p
-                ket_m = 2 * Grbm_1d_sample(dt, Amat[a, b], 1 - h_set[n], sig0vec[a], sig1vec[b]) * ket_m
+                ket_p = 2 * (Grbm_1d_sample(dt, Amat[a, b], h_set[n],0, 1, sig0vec[a], sig1vec[b]) * ket_p)
+                ket_m = 2 * (Grbm_1d_sample(dt, Amat[a, b], 1 - h_set[n], 0, 1 , sig0vec[a], sig1vec[b]) * ket_m)
                 n += 1
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
@@ -177,8 +187,10 @@ def rbm_brackets(n_samples=100, mix=False):
 if __name__ == "__main__":
     print('ONE-BODY BASIS PROPAGATORS')
     # test_brackets_0()
-    test_gaussian_sample()
+    # test_gaussian_sample()
     # gaussian_brackets()
-    # rbm_brackets()
+    # test_rbm_sample()
+    n_samples = 10000
+    rbm_brackets(n_samples=n_samples, mix=True)
     print('ONE-BODY BASIS PROPAGATORS DONE')
 

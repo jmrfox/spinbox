@@ -576,13 +576,13 @@ class OneBodyBasisSpinOperator(SpinOperator):
 
     def __add__(self, other):
         assert isinstance(other, OneBodyBasisSpinOperator)
-        out = OneBodyBasisSpinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
         assert isinstance(other, OneBodyBasisSpinOperator)
-        out = OneBodyBasisSpinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
@@ -639,12 +639,12 @@ class OneBodyBasisSpinOperator(SpinOperator):
             out = out.scalar_mult(i, c)
         return out
 
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy().spread_scalar_mult(other)
-            return out
-        else:
-            raise ValueError('Problem in rmul')
+    # def __rmul__(self, other):
+    #     if np.isscalar(other):
+    #         out = self.copy().spread_scalar_mult(other)
+    #         return out
+    #     else:
+    #         raise ValueError('Problem in rmul')
 
     def exchange(self, particle_a: int, particle_b: int):
         out = self.copy()
@@ -679,13 +679,13 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
 
     def __add__(self, other):
         assert isinstance(other, OneBodyBasisSpinIsospinOperator)
-        out = OneBodyBasisSpinIsospinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
         assert isinstance(other, OneBodyBasisSpinIsospinOperator)
-        out = OneBodyBasisSpinIsospinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
@@ -793,13 +793,13 @@ class ManyBodyBasisSpinOperator(SpinOperator):
 
     def __add__(self, other):
         assert isinstance(other, ManyBodyBasisSpinOperator)
-        out = ManyBodyBasisSpinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
         assert isinstance(other, ManyBodyBasisSpinOperator)
-        out = ManyBodyBasisSpinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
@@ -896,13 +896,13 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
 
     def __add__(self, other):
         assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
-        out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
         assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
-        out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
+        out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 

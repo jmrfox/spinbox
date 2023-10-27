@@ -102,22 +102,37 @@ def Gpade_sigma(dt, Amat):
     out = -0.5 * dt * out
     return out.exponentiate()
 
+
+def Bpade_sigma(bra, ket, dt, Amat):
+    out = 0
+    Kmat = -0.5 * dt * Amat
+    for a in range(3):
+        for b in range(3):
+            out += np.cosh(Kmat[a, b]) * bra * ket + np.sinh(Kmat[a, b]) * bra * sig0vec[a] * sig1vec[b] * ket
+    return out
+
 def Ggauss_1d_sample(dt, A, x, opi, opj):
     k = np.sqrt(-0.5 * dt * A, dtype=complex)
     norm = np.exp(0.5 * dt * A)
-    # gi = np.cosh(k * x) * one + np.sinh(k * x) * opi
-    # gj = np.cosh(k * x) * one + np.sinh(k * x) * opj
-    gi = one + opi
-    gj = one
+    gi = np.cosh(k * x) * one + np.sinh(k * x) * opi
+    gj = np.cosh(k * x) * one + np.sinh(k * x) * opj
     return norm * gi * gj
 
+def Bgauss_1d_sample(bra, ket, dt, A, x, opi, opj):
+    k = np.sqrt(-0.5 * dt * A, dtype=complex)
+    norm = np.exp(0.5 * dt * A)
+    bi = np.cosh(k * x) * bra * ket + np.sinh(k * x) * bra * opi * ket
+    bj = np.cosh(k * x) * bra * ket + np.sinh(k * x) * bra * opj * ket
+    return norm * bi * bj
+
 def test_gaussian_sample():
-    A = get_Amat()[0,0]
+    A = get_Amat()[0, 0]
     dt = 0.01
     bra, ket = make_test_states()
     x = 1.0
     out = bra * Ggauss_1d_sample(dt, A, x, sigx0, sigx1) * ket
     print(f'<Gx> = {out}')
+    # print(f'Bx = {Bgauss_1d_sample(bra, ket, dt, A, x, sigx0, sigx1)}')
 
 def gaussian_brackets(n_samples=100, mix=False):
     print('HS brackets')
@@ -160,6 +175,46 @@ def gaussian_brackets(n_samples=100, mix=False):
     print('gauss = ', b_gauss)
     print('error = ', b_exact - b_gauss)
 
+# def gaussian_brackets(n_samples=100, mix=False):
+#     print('HS brackets')
+#     dt = 0.01
+#     Amat = get_Amat(diag=False)
+#
+#     bra, ket = make_test_states()
+#
+#     # correct answer via pade
+#     b_exact = Bpade_sigma(bra, ket, dt, Amat)
+#
+#     b_list = []
+#     x_set = rng.standard_normal(n_samples * 9)  # different x for each x,y,z
+#     n = 0
+#     for i in range(n_samples):
+#         ket_p = ket.copy()
+#         ket_m = ket.copy()
+#         idx = [0, 1, 2]
+#         if mix:
+#             rng.shuffle(idx)
+#         b_p = 1.0
+#         b_m = 1.0
+#         for a in idx:
+#             for b in idx:
+#                 b_p *= Bgauss_1d_sample(bra, ket_p, dt, Amat[a, b], x_set[n], sig0vec[a], sig1vec[b])
+#                 b_m *= Bgauss_1d_sample(bra, ket_m, dt, Amat[a, b], -x_set[n], sig0vec[a], sig1vec[b])
+#                 n += 1
+#         b_list.append(b_p)
+#         b_list.append(b_m)
+#
+#     # plt.figure(figsize=(5, 3))
+#     # plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+#     # plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+#     # plt.title(f'<G(gauss)>')
+#     # plt.legend()
+#     # plt.show()
+#
+#     b_gauss = np.mean(b_list)
+#     print('exact = ', b_exact)
+#     print('gauss = ', b_gauss)
+#     print('error = ', b_exact - b_gauss)
 
 def Grbm_1d_sample(dt, A, h, opi, opj):
     norm = np.exp(-0.5 * dt * np.abs(A)) / 2
@@ -169,6 +224,12 @@ def Grbm_1d_sample(dt, A, h, opi, opj):
     qj = np.cosh(arg) * one - np.sign(A) * np.sinh(arg) * opj
     return norm * qi * qj
 
+def test_rbm_sample():
+    A = get_Amat()[0, 0]
+    dt = 0.01
+    bra, ket = make_test_states()
+    out = bra * Grbm_1d_sample(dt, A, 0, sigx0, sigx1) * ket + bra * Grbm_1d_sample(dt, A, 1, sigx0, sigx1) * ket
+    print(f'<Gx> = {out}')
 
 def rbm_brackets(n_samples=100, mix=False):
     print('RBM brackets')
@@ -181,10 +242,8 @@ def rbm_brackets(n_samples=100, mix=False):
     b_exact = bra * Gpade_sigma(dt, Amat) * ket
 
     # make population of identical wfns
-    # n_samples = 1000
     b_list = []
     h_set = rng.integers(0, 2, n_samples * 9)
-    # mix = True
     n = 0
     idx = [0, 1, 2]
     for i in range(n_samples):
@@ -206,14 +265,16 @@ def rbm_brackets(n_samples=100, mix=False):
     print('error = ', b_exact - b_rbm)
 
 
-
-
 if __name__ == '__main__':
-    test_brackets_0()
+    # test_brackets_0()
     # test_brackets_1()
     # test_brackets_2()
-    test_gaussian_sample()
-    # n_samples = 1000
-    # mix = False
+
+    n_samples = 1000
+    mix = False
+
+    # test_gaussian_sample()
     # gaussian_brackets(n_samples=n_samples, mix=mix)
-    # rbm_brackets(n_samples=n_samples, mix=mix)
+
+    test_rbm_sample()
+    rbm_brackets(n_samples=n_samples, mix=mix)
