@@ -134,7 +134,7 @@ def test_gaussian_sample():
     print(f'<Gx> = {out}')
     # print(f'Bx = {Bgauss_1d_sample(bra, ket, dt, A, x, sigx0, sigx1)}')
 
-def gaussian_brackets(n_samples=100, mix=False):
+def gaussian_brackets(n_samples=100, mix=False, plot=False):
     print('HS brackets')
     dt = 0.01
     Amat = get_Amat(diag=False)
@@ -149,7 +149,7 @@ def gaussian_brackets(n_samples=100, mix=False):
     x_set = rng.standard_normal(n_samples * 9)  # different x for each x,y,z
     # mix = False
     n = 0
-    for i in range(n_samples):
+    for i in tqdm(range(n_samples)):
         ket_p = ket.copy()
         ket_m = ket.copy()
         idx = [0, 1, 2]
@@ -163,58 +163,19 @@ def gaussian_brackets(n_samples=100, mix=False):
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
-    # plt.figure(figsize=(5, 3))
-    # plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
-    # plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
-    # plt.title(f'<G(gauss)>')
-    # plt.legend()
-    # plt.show()
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(gauss)>')
+        plt.legend()
+        plt.show()
 
     b_gauss = np.mean(b_list)
     print('exact = ', b_exact)
     print('gauss = ', b_gauss)
     print('error = ', b_exact - b_gauss)
 
-# def gaussian_brackets(n_samples=100, mix=False):
-#     print('HS brackets')
-#     dt = 0.01
-#     Amat = get_Amat(diag=False)
-#
-#     bra, ket = make_test_states()
-#
-#     # correct answer via pade
-#     b_exact = Bpade_sigma(bra, ket, dt, Amat)
-#
-#     b_list = []
-#     x_set = rng.standard_normal(n_samples * 9)  # different x for each x,y,z
-#     n = 0
-#     for i in range(n_samples):
-#         ket_p = ket.copy()
-#         ket_m = ket.copy()
-#         idx = [0, 1, 2]
-#         if mix:
-#             rng.shuffle(idx)
-#         b_p = 1.0
-#         b_m = 1.0
-#         for a in idx:
-#             for b in idx:
-#                 b_p *= Bgauss_1d_sample(bra, ket_p, dt, Amat[a, b], x_set[n], sig0vec[a], sig1vec[b])
-#                 b_m *= Bgauss_1d_sample(bra, ket_m, dt, Amat[a, b], -x_set[n], sig0vec[a], sig1vec[b])
-#                 n += 1
-#         b_list.append(b_p)
-#         b_list.append(b_m)
-#
-#     # plt.figure(figsize=(5, 3))
-#     # plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
-#     # plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
-#     # plt.title(f'<G(gauss)>')
-#     # plt.legend()
-#     # plt.show()
-#
-#     b_gauss = np.mean(b_list)
-#     print('exact = ', b_exact)
-#     print('gauss = ', b_gauss)
-#     print('error = ', b_exact - b_gauss)
 
 def Grbm_1d_sample(dt, A, h, opi, opj):
     norm = np.exp(-0.5 * dt * np.abs(A)) / 2
@@ -246,7 +207,7 @@ def rbm_brackets(n_samples=100, mix=False):
     h_set = rng.integers(0, 2, n_samples * 9)
     n = 0
     idx = [0, 1, 2]
-    for i in range(n_samples):
+    for i in tqdm(range(n_samples)):
         ket_p = ket.copy()
         ket_m = ket.copy()
         if mix:
