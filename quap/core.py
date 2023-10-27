@@ -632,6 +632,8 @@ class OneBodyBasisSpinOperator(SpinOperator):
         return out
 
     def spread_scalar_mult(self, b):
+        """scalar multiplication, but 'spread' over all particles
+        e.g. for N-particle system, each spinor multiplied by b^(1/N)"""
         assert np.isscalar(b)
         c = b**(1/self.num_particles)
         out = self.copy()
@@ -639,12 +641,13 @@ class OneBodyBasisSpinOperator(SpinOperator):
             out = out.scalar_mult(i, c)
         return out
 
-    # def __rmul__(self, other):
-    #     if np.isscalar(other):
-    #         out = self.copy().spread_scalar_mult(other)
-    #         return out
-    #     else:
-    #         raise ValueError('Problem in rmul')
+    def __rmul__(self, other):
+        if np.isscalar(other):
+            # out = self.copy().spread_scalar_mult(other)
+            # return out
+            raise ValueError('Cannot multiply this way! Use .scalar_mult() instead!')
+        else:
+            raise ValueError(f'rmul not supported for {other.__class__.__name__} * {self.__class__.__name__}')
 
     def exchange(self, particle_a: int, particle_b: int):
         out = self.copy()
@@ -752,10 +755,11 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
 
     def __rmul__(self, other):
         if np.isscalar(other):
-            out = self.copy().spread_scalar_mult(other)
-            return out
+            # out = self.copy().spread_scalar_mult(other)
+            # return out
+            raise ValueError('Cannot multiply this way! Use .scalar_mult() instead!')
         else:
-            raise ValueError('Problem in rmul')
+            raise ValueError(f'rmul not supported for {other.__class__.__name__} * {self.__class__.__name__}')
 
     def exchange(self, particle_a: int, particle_b: int):
         broken = True
