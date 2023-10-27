@@ -1,5 +1,5 @@
 from quap import *
-#from context import quap
+from tqdm import tqdm
 
 num_particles = 2
 
@@ -144,10 +144,8 @@ def gaussian_brackets(n_samples=100, mix=False, plot=False):
     # correct answer via pade
     b_exact = bra * Gpade_sigma(dt, Amat) * ket
 
-    # n_samples = 1000
     b_list = []
     x_set = rng.standard_normal(n_samples * 9)  # different x for each x,y,z
-    # mix = False
     n = 0
     for i in tqdm(range(n_samples)):
         ket_p = ket.copy()
@@ -219,6 +217,14 @@ def rbm_brackets(n_samples=100, mix=False):
                 n += 1
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
+
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(rbm)>')
+        plt.legend()
+        plt.show()
 
     b_rbm = np.mean(b_list)
     print('exact = ', b_exact)

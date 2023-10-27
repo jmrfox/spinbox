@@ -1,5 +1,4 @@
 from quap import *
-
 from tqdm import tqdm
 
 num_particles = 2
@@ -85,7 +84,7 @@ def test_gaussian_sample():
     out = bra * Ggauss_1d_sample(dt, A, x, 0, 1, sigx0, sigx1) * ket
     print(f'<Gx> = {out}')
 
-def gaussian_brackets(n_samples=100, mix=False):
+def gaussian_brackets(n_samples=100, mix=False, plot=False):
     print('HS brackets')
     dt = 0.01
     Amat = get_Amat(diag=False)
@@ -115,12 +114,13 @@ def gaussian_brackets(n_samples=100, mix=False):
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
-    # plt.figure(figsize=(5, 3))
-    # plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
-    # plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
-    # plt.title(f'<G(gauss)>')
-    # plt.legend()
-    # plt.show()
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(gauss)>')
+        plt.legend()
+        plt.show()
 
     b_gauss = np.mean(b_list)
     print('exact = ', b_exact)
@@ -147,7 +147,7 @@ def test_rbm_sample():
     print(f'<Gx> = {out}')
 
 
-def rbm_brackets(n_samples=100, mix=False):
+def rbm_brackets(n_samples=100, mix=False, plot=False):
     print('RBM brackets')
     dt = 0.01
     Amat = get_Amat()
@@ -176,6 +176,14 @@ def rbm_brackets(n_samples=100, mix=False):
                 n += 1
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
+
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(rbm)>')
+        plt.legend()
+        plt.show()
 
     b_rbm = np.mean(b_list)
     print('exact = ', b_exact)
