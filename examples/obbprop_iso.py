@@ -1,6 +1,9 @@
 from quap import *
 from tqdm import tqdm
 
+# do some tests for 2 particles in the spin-isospin one-body basis
+# still only testing spin operators, no taus
+
 num_particles = 2
 
 one = OneBodyBasisSpinIsospinOperator(num_particles)

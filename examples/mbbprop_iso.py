@@ -1,6 +1,9 @@
 from quap import *
 from tqdm import tqdm
 
+# do some tests for 2 particles in the spin-isospin many-body basis
+# still only testing spin operators, no taus
+
 num_particles = 2
 
 one = ManyBodyBasisSpinIsospinOperator(num_particles)
@@ -81,10 +84,15 @@ def test_brackets_2():
     K = 0.5 * dt * Amat
 
     bra, ket = make_test_states()
+    # b1 = (np.cosh(K[0, 0]) * np.cosh(K[1, 1]) * bra * ket
+    #       - np.cosh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigy0, sigy1, ket])
+    #       - np.cosh(K[1, 1]) * np.sinh(K[0, 0]) * prod([bra, sigx0, sigx1, ket])
+    #       + np.sinh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigx0, sigx1, sigy0, sigy1, ket]))
     b1 = (np.cosh(K[0, 0]) * np.cosh(K[1, 1]) * bra * ket
-          - np.cosh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigy0, sigy1, ket])
-          - np.cosh(K[1, 1]) * np.sinh(K[0, 0]) * prod([bra, sigx0, sigx1, ket])
-          + np.sinh(K[0, 0]) * np.sinh(K[1, 1]) * prod([bra, sigx0, sigx1, sigy0, sigy1, ket]))
+          - np.cosh(K[0, 0]) * np.sinh(K[1, 1]) * bra * sigy0 * sigy1 * ket
+          - np.cosh(K[1, 1]) * np.sinh(K[0, 0]) * bra * sigx0 * sigx1 * ket
+          + np.sinh(K[0, 0]) * np.sinh(K[1, 1]) * bra * sigx0 * sigx1 * sigy0 * sigy1 * ket)
+
     print(b1)
 
     bra, ket = make_test_states()
@@ -190,7 +198,7 @@ def test_rbm_sample():
     out = bra * Grbm_1d_sample(dt, A, 0, sigx0, sigx1) * ket + bra * Grbm_1d_sample(dt, A, 1, sigx0, sigx1) * ket
     print(f'<Gx> = {out}')
 
-def rbm_brackets(n_samples=100, mix=False):
+def rbm_brackets(n_samples=100, mix=False, plot=False):
     print('RBM brackets')
     dt = 0.01
     Amat = get_Amat()

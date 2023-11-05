@@ -455,12 +455,12 @@ class ManyBodyBasisSpinState(State):
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
-            if isinstance(other,ManyBodyBasisSpinState):
+            if isinstance(other, ManyBodyBasisSpinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
-            elif isinstance(other,ManyBodyBasisSpinOperator):
+            elif isinstance(other, ManyBodyBasisSpinOperator):
                 out = self.copy()
-                out.coefficients = np.matmul(self.coefficients,other.matrix)
+                out.coefficients = np.matmul(self.coefficients, other.matrix)
             else:
                 raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out 
