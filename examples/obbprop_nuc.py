@@ -1,5 +1,8 @@
 import nuctest as nt
 from quap import *
+from tqdm import tqdm
+from cProfile import Profile
+from pstats import SortKey, Stats
 
 one = OneBodyBasisSpinIsospinOperator(2)
 sigx0 = OneBodyBasisSpinIsospinOperator(2).sigma(0, 'x')
@@ -20,27 +23,63 @@ tau0vec = [taux0, tauy0, tauz0]
 tau1vec = [taux1, tauy1, tauz1]
 
 
-def Ggauss_1d_sample(dt: float, A: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
+def Ggauss_sample(dt: float, A: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
     k = np.sqrt(-0.5 * dt * A, dtype=complex)
     norm = np.exp(0.5 * dt * A)
     op = OneBodyBasisSpinIsospinOperator(2)
     out = op.copy().scalar_mult(i, np.cosh(k * x)).scalar_mult(j, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x)) * opj.scalar_mult(j, np.sinh(k * x))
     return out.spread_scalar_mult(norm)
 
-
-def gaussian_test():
-    coeffs = read_sp('../data/h2_sp.dat').reshape(8, 1)
-    print(coeffs)
-    sp_i = OneBodyBasisSpinIsospinState(2, 'ket', coeffs)
-    print(f"initial = {sp_i}")
+def test_gaussian_sample():
     Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    bra, ket = nt.make_test_states()
     x = 1.0
-    sp_f = sp_i.copy()
-    idx = [0, 1, 2]
-    for a in idx:
-        for b in idx:
-            sp_f = Ggauss_1d_sample(nt.dt, Asig[a, b], x, 0, 1, sig0vec[a], sig1vec[b]) * sp_f
-    print(f"final = {sp_f}")
+    out = bra * Ggauss_sample(nt.dt, Asig[0, 0], x, 0, 1, sigx0, sigx1) * ket
+    print(f'gaussian test = {out}')
+
+def gaussian_brackets(n_samples=100, mix=False, plot=False):
+    print('HS brackets')
+    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    bra, ket = nt.make_test_states()
+
+    b_list = []
+    x_set = rng.standard_normal(n_samples * 40)  # different x for each x,y,z
+    n = 0
+    for i in tqdm(range(n_samples)):
+        ket_p = ket.copy()
+        ket_m = ket.copy()
+        idx = [0, 1, 2]
+        if mix:
+            rng.shuffle(idx)
+        for a in idx:
+            for b in idx:
+                ket_p = Ggauss_sample(nt.dt, Asig[a, b], x_set[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
+                ket_m = Ggauss_sample(nt.dt, Asig[a, b], -x_set[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
+                n += 1
+        for a in idx:
+            for b in idx:
+                for c in idx:
+                    ket_p = Ggauss_sample(nt.dt, Asigtau[a, b, c], x_set[n], 0, 1, sig0vec[a]*tau0vec[c], sig1vec[b]*tau1vec[c]) * ket_p
+                    ket_m = Ggauss_sample(nt.dt, Asigtau[a, b, c], -x_set[n], 0, 1, sig0vec[a]*tau0vec[c], sig1vec[b]*tau1vec[c]) * ket_m
+                    n += 1
+        for c in idx:
+            ket_p = Ggauss_sample(nt.dt, Atau[c], x_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
+            ket_m = Ggauss_sample(nt.dt, Atau[c], -x_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
+            n += 1
+
+        b_list.append(bra * ket_p)
+        b_list.append(bra * ket_m)
+
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(gauss)>')
+        plt.legend()
+        plt.show()
+
+    b_gauss = np.mean(b_list)
+    print('HS < Gsig Gsigtau Gtau > = ', b_gauss)
 
 
 def Grbm_sample(dt, A, h, i, j, opi, opj):
@@ -49,21 +88,72 @@ def Grbm_sample(dt, A, h, i, j, opi, opj):
     arg = W * (2 * h - 1)
     op = OneBodyBasisSpinIsospinOperator(2)
     out = op.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(A) * np.sinh(arg))
-    return out.spread_scalar_mult(norm)
+    return out.spread_scalar_mult(2*norm)
+    # return out.scalar_mult(0, 2*norm)
 
 
-def rbm_test():
+def test_rbm_sample():
     bra, ket = nt.make_test_states()
     Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
-    h = 1.0
+    out = 0.5 * (bra * Grbm_sample(nt.dt, Asig[0, 0], 0, 0, 1, sigx0, sigx1) * ket + bra * Grbm_sample(nt.dt, Asig[0, 0], 1, 0, 1, sigx0, sigx1) * ket)
+    print(f"rbm test = {out}")
+
+
+def rbm_brackets(n_samples=100, mix=False):
+    print('RBM brackets')
+    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    bra, ket = nt.make_test_states()
+
+    # make population of identical wfns
+    b_list = []
+    h_set = rng.integers(0, 2, n_samples * 40)
+    n = 0
     idx = [0, 1, 2]
-    for a in idx:
-        for b in idx:
-            ket = Grbm_sample(nt.dt, Asig[a, b], h, 0, 1, sig0vec[a], sig1vec[b]) * ket
-    b = bra * ket
-    print(f"final = {b}")
+    for _ in tqdm(range(n_samples)):
+        ket_p = ket.copy()
+        ket_m = ket.copy()
+        if mix:
+            rng.shuffle(idx)
+        for a in idx:
+            for b in idx:
+                ket_p = Grbm_sample(nt.dt, Asig[a, b], h_set[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
+                ket_m = Grbm_sample(nt.dt, Asig[a, b], 1-h_set[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
+                n += 1
+        for a in idx:
+            for b in idx:
+                for c in idx:
+                    ket_p = Grbm_sample(nt.dt, Asigtau[a, b, c], h_set[n], 0, 1, sig0vec[a]*tau0vec[c], sig1vec[b]*tau1vec[c]) * ket_p
+                    ket_m = Grbm_sample(nt.dt, Asigtau[a, b, c], 1-h_set[n], 0, 1, sig0vec[a]*tau0vec[c], sig1vec[b]*tau1vec[c]) * ket_m
+                    n += 1
+        for c in idx:
+            ket_p = Grbm_sample(nt.dt, Atau[c], h_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
+            ket_m = Grbm_sample(nt.dt, Atau[c], 1-h_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
+            n += 1
+        b_list.append(bra * ket_p)
+        b_list.append(bra * ket_m)
+
+    plot = False
+    if plot:
+        plt.figure(figsize=(5, 3))
+        plt.hist(np.real(b_list), label='Re', alpha=0.6, bins=20)
+        plt.hist(np.imag(b_list), label='Im', alpha=0.6, bins=20)
+        plt.title(f'<G(rbm)>')
+        plt.legend()
+        plt.show()
+
+    b_rbm = np.mean(b_list)
+    print('rbm = ', b_rbm)
+
 
 
 if __name__ == "__main__":
-    rbm_test()
+    # test_gaussian_sample()
+    # test_rbm_sample()
+
+    n_samples = 1000
+    with Profile() as profile:
+        gaussian_brackets(n_samples=n_samples)
+        rbm_brackets(n_samples=n_samples)
+        Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
+
     print('DONE')

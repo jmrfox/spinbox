@@ -518,10 +518,10 @@ class ManyBodyBasisSpinIsospinState(State):
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
-            if isinstance(other,ManyBodyBasisSpinIsospinState):
+            if isinstance(other, ManyBodyBasisSpinIsospinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
-            elif isinstance(other,ManyBodyBasisSpinIsospinOperator):
+            elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients,other.matrix)
             else:
@@ -677,7 +677,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
     def __init__(self, num_particles: int):
         super().__init__(num_particles)
         self.dim = num_particles * 4
-        self.matrix = np.identity(self.dim,dtype=complex)
+        self.matrix = np.identity(self.dim, dtype=complex)
         self.friendly_state = OneBodyBasisSpinIsospinState
 
     def __add__(self, other):
@@ -718,8 +718,8 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
         return out
 
     def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
-        assert isospin_matrix.shape == (2,2)
-        assert spin_matrix.shape == (2,2)
+        assert isospin_matrix.shape == (2, 2)
+        assert spin_matrix.shape == (2, 2)
         onebody_matrix = repeated_kronecker_product([isospin_matrix,spin_matrix])
         idx_i = particle_index * 4
         idx_f = (particle_index + 1) * 4

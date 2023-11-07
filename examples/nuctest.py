@@ -1,6 +1,6 @@
 from quap import *
 
-dt = 0.01
+dt = 0.001
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
