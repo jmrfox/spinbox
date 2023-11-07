@@ -18,7 +18,7 @@ def make_A_matrices(random=False):
             for 2-particle systems, we only need the i=1, j=2 slice of the matrices
             so, Asig[a,b] , Asigtau[a,b,c] , Atau[c] for a,b,c = 1,2,3
             """
-            rng = np.random.default_rng(1312)
+            rng = np.random.default_rng(2023)
             spread = 10
             Asig = spread * rng.standard_normal(size=(3, 3))
             Asigtau = spread * rng.standard_normal(size=(3, 3, 3))
@@ -31,3 +31,8 @@ def make_A_matrices(random=False):
         Asigtau = a * np.ones((3, 3, 3))
         Atau = a * np.ones(3)
         return Asig, Asigtau, Atau
+
+def make_potentials(random=False):
+    Asig, Asigtau, Atau = make_A_matrices(random=random)
+    Vcoul = 1.0
+    return Asig, Asigtau, Atau, Vcoul

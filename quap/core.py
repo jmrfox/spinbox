@@ -739,10 +739,17 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
         out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),spin_matrix=np.identity(2, dtype=complex))
         return out
 
+    # def scalar_mult(self, particle_index, b):
+    #     assert np.isscalar(b)
+    #     out = self.copy()
+    #     out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=b * np.identity(2),spin_matrix=np.identity(2, dtype=complex))
+    #     return out
     def scalar_mult(self, particle_index, b):
         assert np.isscalar(b)
         out = self.copy()
-        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=b * np.identity(2),spin_matrix=np.identity(2, dtype=complex))
+        idx_i = particle_index * 4
+        idx_f = (particle_index + 1) * 4
+        out.matrix[idx_i:idx_f, idx_i:idx_f] = b * out.matrix[idx_i:idx_f, idx_i:idx_f]
         return out
 
     def spread_scalar_mult(self, b):
