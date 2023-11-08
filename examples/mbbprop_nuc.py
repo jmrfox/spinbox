@@ -57,10 +57,8 @@ def Gpade_tau(dt, Amat):
     out = -0.5 * dt * out
     return out.exponentiate()
 
-def Gpade_coul(dt, Amat):
-    out = ManyBodyBasisSpinIsospinOperator(2).zeros()
-    for c in range(3):
-        out += Amat[c] * tau0vec[c] * tau1vec[c]
+def Gpade_coul(dt, v):
+    out = 0.25 * v * tauz0 * tauz1
     out = -0.5 * dt * out
     return out.exponentiate()
 
@@ -114,64 +112,17 @@ def test_gaussian_sample():
 
 
 def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
-    print('HS brackets with sig, sigtau, tau')
-    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
-    bra, ket = nt.make_test_states()
-    bra = bra.to_many_body_state()
-    ket = ket.to_many_body_state()
-
-    # correct answer via pade
-    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * ket
-
-    b_list = []
-    x_set = rng.standard_normal(n_samples * 40)  # different x for each x,y,z
-    n = 0
-    for i in tqdm(range(n_samples)):
-        ket_p = ket.copy()
-        ket_m = ket.copy()
-        idx = [0, 1, 2]
-        if mix:
-            rng.shuffle(idx)
-        for a in idx:
-            for b in idx:
-                ket_p = Ggauss_sample(nt.dt, Asig[a, b], x_set[n], sig0vec[a], sig1vec[b]) * ket_p
-                ket_m = Ggauss_sample(nt.dt, Asig[a, b], -x_set[n], sig0vec[a], sig1vec[b]) * ket_m
-                n += 1
-        for a in idx:
-            for b in idx:
-                for c in idx:
-                    ket_p = Ggauss_sample(nt.dt, Asigtau[a, b, c], x_set[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
-                    ket_m = Ggauss_sample(nt.dt, Asigtau[a, b, c], -x_set[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
-                    n += 1
-        for c in idx:
-            ket_p = Ggauss_sample(nt.dt, Atau[c], x_set[n], tau0vec[c], tau1vec[c]) * ket_p
-            ket_m = Ggauss_sample(nt.dt, Atau[c], -x_set[n], tau0vec[c], tau1vec[c]) * ket_m
-            n += 1
-
-        b_list.append(bra * ket_p)
-        b_list.append(bra * ket_m)
-
-    if plot:
-        plot_samples(b_list, range=(-5, 8), filename='gaussian_brackets_mb_1.pdf', title=f'<G(gauss)>')
-
-    b_gauss = np.mean(b_list)
-    print('exact = ', b_exact)
-    print('gauss = ', b_gauss)
-    print('error = ', b_exact - b_gauss)
-
-
-def gaussian_brackets_2(n_samples=100, mix=False, plot=False):
-    print('HS brackets with sig, sigtau, tau, coulomb')
+    print('HS brackets')
     Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
     # correct answer via pade
-    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * ket
+    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * Gpade_coul(nt.dt, Vcoul)  * ket
 
     b_list = []
-    x_set = rng.standard_normal(n_samples * 40)  # different x for each x,y,z
+    x_set = rng.standard_normal(n_samples * (9 + 28 + 3 + 1))  # different x for each x,y,z
     n = 0
     for i in tqdm(range(n_samples)):
         ket_p = ket.copy()
@@ -195,6 +146,10 @@ def gaussian_brackets_2(n_samples=100, mix=False, plot=False):
             ket_m = Ggauss_sample(nt.dt, Atau[c], -x_set[n], tau0vec[c], tau1vec[c]) * ket_m
             n += 1
 
+        ket_p = Ggauss_sample(nt.dt, 0.25*Vcoul, x_set[n], tauz0, tauz1) * ket_p
+        ket_m = Ggauss_sample(nt.dt, 0.25*Vcoul, -x_set[n], tauz0, tauz1) * ket_m
+        n += 1
+
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
@@ -205,6 +160,7 @@ def gaussian_brackets_2(n_samples=100, mix=False, plot=False):
     print('exact = ', b_exact)
     print('gauss = ', b_gauss)
     print('error = ', b_exact - b_gauss)
+
 
 
 def Grbm_sample(dt, A, h, opi, opj):
@@ -227,13 +183,13 @@ def test_rbm_sample():
 
 def rbm_brackets_1(n_samples=100, mix=False, plot=False):
     print('RBM brackets')
-    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
     # correct answer via pade
-    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * ket
+    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * Gpade_coul(nt.dt, Vcoul) * ket
 
     # make population of identical wfns
     b_list = []
@@ -260,6 +216,11 @@ def rbm_brackets_1(n_samples=100, mix=False, plot=False):
             ket_p = Grbm_sample(nt.dt, Atau[c], h_set[n], tau0vec[c], tau1vec[c]) * ket_p
             ket_m = Grbm_sample(nt.dt, Atau[c], 1 - h_set[n], tau0vec[c], tau1vec[c]) * ket_m
             n += 1
+
+        ket_p = Grbm_sample(nt.dt, 0.25*Vcoul, h_set[n], tauz0, tauz1) * ket_p
+        ket_m = Grbm_sample(nt.dt, 0.25*Vcoul, 1-h_set[n], tauz0, tauz1) * ket_m
+        n += 1
+
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
@@ -278,7 +239,7 @@ if __name__ == "__main__":
     # test_gaussian_sample()
     # test_rbm_sample()
 
-    n_samples = 5000
+    n_samples = 1000
     with Profile() as profile:
         gaussian_brackets_1(n_samples=n_samples, plot=True)
         rbm_brackets_1(n_samples=n_samples, plot=True)

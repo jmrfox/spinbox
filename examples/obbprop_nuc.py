@@ -48,7 +48,7 @@ def test_gaussian_sample():
 
 def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
     print('HS brackets')
-    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
 
     b_list = []
@@ -76,14 +76,19 @@ def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
             ket_m = Ggauss_sample(nt.dt, Atau[c], -x_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
             n += 1
 
+        ket_p = Ggauss_sample(nt.dt, 0.25*Vcoul, x_set[n], 0, 1, tauz0, tauz1) * ket_p
+        ket_m = Ggauss_sample(nt.dt, 0.25*Vcoul, -x_set[n], 0, 1, tauz0, tauz1) * ket_m
+        n += 1
+
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
     if plot:
         plot_samples(b_list, range=(-5, 8), filename='gaussian_brackets_ob_1.pdf', title=f'<G(gauss)>')
 
-    b_gauss = np.mean(b_list)
-    print('HS < Gsig Gsigtau Gtau > = ', b_gauss)
+    b = np.mean(b_list)
+    s = np.std(b_list)
+    print(f'HS < G > =  {b}  +/- {s}')
 
 
 def Grbm_sample(dt, A, h, i, j, opi, opj):
@@ -106,7 +111,7 @@ def test_rbm_sample():
 
 def rbm_brackets_1(n_samples=100, mix=False, plot=False):
     print('RBM brackets')
-    Asig, Asigtau, Atau = nt.make_A_matrices(random=True)
+    Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
 
     # make population of identical wfns
@@ -134,22 +139,27 @@ def rbm_brackets_1(n_samples=100, mix=False, plot=False):
             ket_p = Grbm_sample(nt.dt, Atau[c], h_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
             ket_m = Grbm_sample(nt.dt, Atau[c], 1-h_set[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
             n += 1
+
+        ket_p = Grbm_sample(nt.dt, 0.25*Vcoul, h_set[n], 0, 1, tauz0, tauz1) * ket_p
+        ket_m = Grbm_sample(nt.dt, 0.25*Vcoul, 1 - h_set[n], 0, 1, tauz0, tauz1) * ket_m
+        n += 1
+
         b_list.append(bra * ket_p)
         b_list.append(bra * ket_m)
 
     if plot:
         plot_samples(b_list, range=(-5,8), filename='rbm_brackets_ob_1.pdf', title=f'<G(rbm)>')
 
-    b_rbm = np.mean(b_list)
-    print('HS < Gsig Gsigtau Gtau > = ', b_rbm)
-
+    b = np.mean(b_list)
+    s = np.std(b_list)
+    print(f'RBM < G > =  {b}  +/- {s}')
 
 
 if __name__ == "__main__":
     # test_gaussian_sample()
     # test_rbm_sample()
 
-    n_samples = 5000
+    n_samples = 1000
     with Profile() as profile:
         gaussian_brackets_1(n_samples=n_samples, plot=True)
         rbm_brackets_1(n_samples=n_samples, plot=True)

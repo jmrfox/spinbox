@@ -71,6 +71,7 @@ def spinor2(state, orientation):
     elif state == 'down':
         sp = np.array([0, 1], dtype=complex)
     elif state == 'random':
+        rng = np.random.default_rng(2023)
         sp = rng.uniform(-1, 1, 2) + 1j * rng.uniform(-1, 1, 2)
         sp = sp / np.linalg.norm(sp)
     elif state == 'max':
@@ -90,6 +91,7 @@ def spinor4(state, orientation):
     elif state == 'down':
         sp = np.array([0, 1, 0, 1], dtype=complex)
     elif state == 'random':
+        rng = np.random.default_rng(2023)
         sp = rng.uniform(-1, 1, 4) + 1j * rng.uniform(-1, 1, 4)
         sp = sp / np.linalg.norm(sp)
     elif state == 'max':

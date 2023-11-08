@@ -1,11 +1,13 @@
 from quap import *
 
-dt = 0.001
+dt = 0.01
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
-    coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
-    coeffs_ket = np.concatenate([spinor4('up', 'ket'), spinor4('down', 'ket')], axis=0)
+    # coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
+    # coeffs_ket = np.concatenate([spinor4('up', 'ket'), spinor4('down', 'ket')], axis=0)
+    coeffs_bra = np.concatenate([spinor4('random', 'bra'), spinor4('random', 'bra')], axis=1)
+    coeffs_ket = np.concatenate([spinor4('random', 'ket'), spinor4('random', 'ket')], axis=0)
     bra = OneBodyBasisSpinIsospinState(2, 'bra', coeffs_bra)
     ket = OneBodyBasisSpinIsospinState(2, 'ket', coeffs_ket)
     return bra, ket
@@ -26,13 +28,13 @@ def make_A_matrices(random=False):
             return Asig, Asigtau, Atau
         return random_A_matrices()
     else:
-        a = 3.14
+        a = 0.0
         Asig = a * np.ones((3,3))
         Asigtau = a * np.ones((3, 3, 3))
         Atau = a * np.ones(3)
         return Asig, Asigtau, Atau
 
 def make_potentials(random=False):
-    Asig, Asigtau, Atau = make_A_matrices(random=random)
-    Vcoul = 1.0
+    Asig, Asigtau, Atau = make_A_matrices(random=True)
+    Vcoul = 0.0
     return Asig, Asigtau, Atau, Vcoul
