@@ -119,7 +119,7 @@ def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
     ket = ket.to_many_body_state()
 
     # correct answer via pade
-    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * Gpade_coul(nt.dt, Vcoul)  * ket
+    b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * Gpade_coul(nt.dt, Vcoul) * ket
 
     b_list = []
     x_set = rng.standard_normal(n_samples * (9 + 28 + 3 + 1))  # different x for each x,y,z
@@ -157,8 +157,9 @@ def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
         plot_samples(b_list, range=(-5, 8), filename='gaussian_brackets_mb_1.pdf', title=f'<G(gauss)>')
 
     b_gauss = np.mean(b_list)
+    s_gauss = np.std(b_list)/np.sqrt(n_samples)
     print('exact = ', b_exact)
-    print('gauss = ', b_gauss)
+    print(f'gauss = {b_gauss}  +/-  {s_gauss}')
     print('error = ', b_exact - b_gauss)
 
 
@@ -228,8 +229,9 @@ def rbm_brackets_1(n_samples=100, mix=False, plot=False):
         plot_samples(b_list, range=(-5, 8), filename='rbm_brackets_mb_1.pdf', title=f'<G(rbm)>')
 
     b_rbm = np.mean(b_list)
+    s_rbm = np.std(b_list)/np.sqrt(n_samples)
     print('exact = ', b_exact)
-    print('rbm = ', b_rbm)
+    print(f'rbm = {b_rbm}  +/-  {s_rbm}')
     print('error = ', b_exact - b_rbm)
 
 
@@ -239,7 +241,7 @@ if __name__ == "__main__":
     # test_gaussian_sample()
     # test_rbm_sample()
 
-    n_samples = 1000
+    n_samples = nt.n_samples
     with Profile() as profile:
         gaussian_brackets_1(n_samples=n_samples, plot=True)
         rbm_brackets_1(n_samples=n_samples, plot=True)

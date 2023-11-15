@@ -87,7 +87,7 @@ def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
         plot_samples(b_list, range=(-5, 8), filename='gaussian_brackets_ob_1.pdf', title=f'<G(gauss)>')
 
     b = np.mean(b_list)
-    s = np.std(b_list)
+    s = np.std(b_list)/np.sqrt(n_samples)
     print(f'HS < G > =  {b}  +/- {s}')
 
 
@@ -151,7 +151,7 @@ def rbm_brackets_1(n_samples=100, mix=False, plot=False):
         plot_samples(b_list, range=(-5,8), filename='rbm_brackets_ob_1.pdf', title=f'<G(rbm)>')
 
     b = np.mean(b_list)
-    s = np.std(b_list)
+    s = np.std(b_list) / np.sqrt(n_samples)
     print(f'RBM < G > =  {b}  +/- {s}')
 
 
@@ -159,7 +159,7 @@ if __name__ == "__main__":
     # test_gaussian_sample()
     # test_rbm_sample()
 
-    n_samples = 1000
+    n_samples = nt.n_samples
     with Profile() as profile:
         gaussian_brackets_1(n_samples=n_samples, plot=True)
         rbm_brackets_1(n_samples=n_samples, plot=True)
