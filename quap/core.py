@@ -2,14 +2,7 @@
 # a quantum mechanics playground
 # jordan fox 2023
 
-__version__ = '0.3'
-
-# paradigms
-# - basis choice such as spin, spin+isospin, one-body, many-body are given their own separate classes
-# for states and operators. You should not be able to multiply a OBB state by a MBB state, etc.
-# - methods generally return a copy of the instance with the specified change. e.g. a normalization
-# might be written psi.normalize(). In this case psi should not be changed, the method returns a copy
-# of psi that is normalized. Proper normalization of psi could be "psi = psi.normalize()"
+__version__ = '0.4'
 
 # imports
 import numpy as np
@@ -20,9 +13,7 @@ from numpy.random import default_rng
 rng = default_rng()
 
 from scipy.linalg import expm
-from numpy.linalg import matrix_power
 from scipy.special import spherical_jn, sph_harm
-
 from functools import reduce
 
 # functions
@@ -152,37 +143,6 @@ class State:
         assert orientation in ['bra', 'ket']
         self.orientation = orientation
 
-
-class CoordinateState(State):
-    """
-    base class for states with spatial coordinates
-    requirements:
-      1) integer number of particles, A
-     2) has an ``orientation'' -> bra or ket
-     3) choice of coordinate space: 1Dradial, etc
-
-     options:
-     1Dradial : n
-     3Dspherical: n,l,m
-    """
-    def __init__(self, num_particles: int, orientation: str, coordinates: str, options: dict):
-        super().__init__(num_particles, orientation)
-        if coordinates == '1Dradial':
-            self.n = options['n']
-            self.psi = lambda r: spherical_jn(self.n, r)
-        elif coordinates == '3Dspherical':
-            self.n = options['n']
-            self.l = options['l']
-            self.m = options['m']
-            self.psi = lambda r, theta, phi: spherical_jn(self.n, r) * sph_harm(self.m, self.l, theta, phi)
-        else:
-            raise ValueError(f'Option not supported: {coordinates}')
-
-# class ProductState(State):
-#     """Product of coordinate state and spin state"""
-#     def __init__(self, coordinate_state, spin_state):
-#         self.psi_coord = coordinate_state
-#         self.psi_spin = spin_state
 
 class OneBodyBasisSpinState(State):
     """

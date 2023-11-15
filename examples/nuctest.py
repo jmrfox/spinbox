@@ -28,7 +28,7 @@ def make_A_matrices(random=False):
             return Asig, Asigtau, Atau
         return random_A_matrices()
     else:
-        a = 0.0
+        a = 1.0
         Asig = a * np.ones((3,3))
         Asigtau = a * np.ones((3, 3, 3))
         Atau = a * np.ones(3)
