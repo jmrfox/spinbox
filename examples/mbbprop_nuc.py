@@ -154,7 +154,7 @@ def gaussian_brackets_1(n_samples=100, mix=False, plot=False):
         b_list.append(bra * ket_m)
 
     if plot:
-        plot_samples(b_list, range=(-5, 8), filename='gaussian_brackets_mb_1.pdf', title=f'<G(gauss)>')
+        plot_samples(b_list, range=(-5, 5), filename='gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
 
     b_gauss = np.mean(b_list)
     s_gauss = np.std(b_list)/np.sqrt(n_samples)
@@ -226,7 +226,7 @@ def rbm_brackets_1(n_samples=100, mix=False, plot=False):
         b_list.append(bra * ket_m)
 
     if plot:
-        plot_samples(b_list, range=(-5, 8), filename='rbm_brackets_mb_1.pdf', title=f'<G(rbm)>')
+        plot_samples(b_list, range=(-5, 5), filename='rbm_brackets_mb.pdf', title=f'<G(rbm)>')
 
     b_rbm = np.mean(b_list)
     s_rbm = np.std(b_list)/np.sqrt(n_samples)
