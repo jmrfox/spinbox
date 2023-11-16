@@ -1,16 +1,17 @@
 from quap import *
+from icecream import ic
+# import matplotlib
+# matplotlib.use('Agg', force=True)
+import os
 
 dt = 0.001
-n_samples = 20000
+n_samples = 10000
+n_procs = os.cpu_count() - 2
+
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
-    # coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
-    # coeffs_ket = np.concatenate([spinor4('up', 'ket'), spinor4('down', 'ket')], axis=0)
-    coeffs_bra = np.concatenate([spinor4('random', 'bra'), spinor4('random', 'bra')], axis=1)
-    coeffs_ket = np.concatenate([spinor4('random', 'ket'), spinor4('random', 'ket')], axis=0)
-    bra = OneBodyBasisSpinIsospinState(2, 'bra', coeffs_bra)
-    ket = OneBodyBasisSpinIsospinState(2, 'ket', coeffs_ket)
+    bra, ket = random_spinisospin_bra_ket(2)
     return bra, ket
 
 
@@ -27,16 +28,26 @@ def make_A_matrices(random=False):
             Asigtau = spread * rng.standard_normal(size=(3, 3, 3))
             Atau = spread * rng.standard_normal(size=3)
             return Asig, Asigtau, Atau
+
         return random_A_matrices()
     else:
         a = 1.0
-        Asig = a * np.ones((3,3))
+        Asig = a * np.ones((3, 3))
         Asigtau = a * np.ones((3, 3, 3))
         Atau = a * np.ones(3)
         return Asig, Asigtau, Atau
 
+
 def make_potentials(random=False):
     Asig, Asigtau, Atau = make_A_matrices(random=True)
-    Vcoul = 0.0
+    Vcoul = 1000.0
     return Asig, Asigtau, Atau, Vcoul
 
+
+def plot_samples(X, range, filename, title):
+    plt.figure(figsize=(5, 3))
+    plt.hist(np.real(X), label='Re', alpha=0.5, bins=30, range=range, color='red')
+    plt.hist(np.imag(X), label='Im', alpha=0.5, bins=30, range=range, color='blue')
+    plt.title(title)
+    plt.legend()
+    plt.savefig(filename)
