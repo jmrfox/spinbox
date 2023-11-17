@@ -4,7 +4,6 @@ from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
-import os
 
 one = ManyBodyBasisSpinIsospinOperator(2)
 sigx0 = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'x')
@@ -106,7 +105,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
         b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, Asig, Asigtau, Atau, Vcoul) for x in x_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
+        nt.plot_samples(b_list, range=(-2, 2), filename=f'hsprop_mb{nt.run_tag}.pdf', title='HS (MBB)')
 
     b_gauss = np.mean(b_list)
     s_gauss = np.std(b_list) / np.sqrt(n_samples)
@@ -157,6 +156,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
+
     # correct answer via pade
     b_exact = bra * Gpade_sigma(nt.dt, Asig) * Gpade_sigmatau(nt.dt, Asigtau) * Gpade_tau(nt.dt, Atau) * Gpade_coul(nt.dt, Vcoul) * ket
 
@@ -169,7 +169,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
         b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, Asig, Asigtau, Atau, Vcoul) for h in h_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='rbm_brackets_mb.pdf', title=f'<G(rbm)>')
+        nt.plot_samples(b_list, range=(-2, 2), filename=f'rbmprop_mb{nt.run_tag}.pdf', title='RBM (MBB)')
 
     b_rbm = np.mean(b_list)
     s_rbm = np.std(b_list) / np.sqrt(n_samples)
@@ -181,7 +181,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 if __name__ == "__main__":
     n_samples = nt.n_samples
     plot = True
-    disable_tqdm = True
+    disable_tqdm = False
     with Profile() as profile:
         nt.ic(nt.make_potentials(random=True))
         gaussian_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)

@@ -149,7 +149,7 @@ def gaussian_brackets_serial(n_samples=100, mix=False, plot=False):
         b_list.append(bra * ket_m)
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='../examples/gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
+        nt.plot_samples(b_list, range=(-5, 5), filename='../trash/gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
 
     b_gauss = np.mean(b_list)
     s_gauss = np.std(b_list) / np.sqrt(n_samples)
@@ -198,7 +198,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
         b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, Asig, Asigtau, Atau, Vcoul) for x in x_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='../examples/gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
+        nt.plot_samples(b_list, range=(-5, 5), filename='../trash/gaussian_brackets_mb.pdf', title=f'<G(gauss)>')
 
     b_gauss = np.mean(b_list)
     s_gauss = np.std(b_list) / np.sqrt(n_samples)
@@ -269,7 +269,7 @@ def rbm_brackets_serial(n_samples=100, mix=False, plot=False):
         b_list.append(bra * ket_m)
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='../examples/rbm_brackets_mb.pdf', title=f'<G(rbm)>')
+        nt.plot_samples(b_list, range=(-5, 5), filename='../trash/rbm_brackets_mb.pdf', title=f'<G(rbm)>')
 
     b_rbm = np.mean(b_list)
     s_rbm = np.std(b_list) / np.sqrt(n_samples)
@@ -323,7 +323,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
         b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, Asig, Asigtau, Atau, Vcoul) for h in h_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-5, 5), filename='../examples/rbm_brackets_mb.pdf', title=f'<G(rbm)>')
+        nt.plot_samples(b_list, range=(-5, 5), filename='../trash/rbm_brackets_mb.pdf', title=f'<G(rbm)>')
 
     b_rbm = np.mean(b_list)
     s_rbm = np.std(b_list) / np.sqrt(n_samples)
