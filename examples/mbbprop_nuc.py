@@ -105,7 +105,8 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
         b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, Asig, Asigtau, Atau, Vcoul) for x in x_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-2, 2), filename=f'hsprop_mb{nt.run_tag}.pdf', title='HS (MBB)')
+        range = None
+        nt.plot_samples(b_list, range=range, filename=f'hsprop_mb{nt.run_tag}.pdf', title='HS (MBB)')
 
     b_gauss = np.mean(b_list)
     s_gauss = np.std(b_list) / np.sqrt(n_samples)
@@ -169,7 +170,8 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
         b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, Asig, Asigtau, Atau, Vcoul) for h in h_set], disable=disable_tqdm, leave=True)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-2, 2), filename=f'rbmprop_mb{nt.run_tag}.pdf', title='RBM (MBB)')
+        range = None
+        nt.plot_samples(b_list, range=range, filename=f'rbmprop_mb{nt.run_tag}.pdf', title='RBM (MBB)')
 
     b_rbm = np.mean(b_list)
     s_rbm = np.std(b_list) / np.sqrt(n_samples)

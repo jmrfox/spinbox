@@ -6,10 +6,10 @@ from quap import *
 # matplotlib.use('Agg', force=True)
 import os
 
-dt = 0.0001
-n_samples = 1_000_000
-n_procs = os.cpu_count() - 1
-run_tag = ''
+dt = 0.0002
+n_samples = 500_000
+n_procs = os.cpu_count() - 2 
+run_tag = '_vc1'  #start with a _
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
