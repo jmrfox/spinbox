@@ -9,7 +9,7 @@ import os
 dt = 0.0002
 n_samples = 400_000
 n_procs = os.cpu_count() - 2
-run_tag = '_vc0'
+run_tag = '_vc1000'
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
@@ -42,7 +42,7 @@ def make_A_matrices(random=False):
 
 def make_potentials(random=False):
     Asig, Asigtau, Atau = make_A_matrices(random=True)
-    Vcoul = 0.0
+    Vcoul = 1000.0
     return Asig, Asigtau, Atau, Vcoul
 
 
