@@ -183,7 +183,7 @@ if __name__ == "__main__":
     plot = True
     disable_tqdm = False
     with Profile() as profile:
-        nt.ic(nt.make_potentials(random=True))
+        #nt.ic(nt.make_potentials(random=True))
         gaussian_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
         rbm_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()

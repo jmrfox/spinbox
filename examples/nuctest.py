@@ -1,15 +1,15 @@
 import matplotlib.pyplot as plt
 
 from quap import *
-from icecream import ic
+#from icecream import ic
 # import matplotlib
 # matplotlib.use('Agg', force=True)
 import os
 
-dt = 0.0002
-n_samples = 400_000
-n_procs = os.cpu_count() - 2
-run_tag = '_vc1000'
+dt = 0.0001
+n_samples = 1_000_000
+n_procs = os.cpu_count() - 1
+run_tag = ''
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""
@@ -42,7 +42,7 @@ def make_A_matrices(random=False):
 
 def make_potentials(random=False):
     Asig, Asigtau, Atau = make_A_matrices(random=True)
-    Vcoul = 1000.0
+    Vcoul = 1.0
     return Asig, Asigtau, Atau, Vcoul
 
 
