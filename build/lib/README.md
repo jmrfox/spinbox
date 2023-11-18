@@ -1,2 +1,0 @@
-# quap
- quantum playground
