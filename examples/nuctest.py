@@ -7,9 +7,9 @@ from quap import *
 import os
 
 dt = 0.0002
-n_samples = 500_000
+n_samples = 100
 n_procs = os.cpu_count() - 2 
-run_tag = '_vc1'  #start with a _
+run_tag = '_test'  #start with a _
 
 def make_test_states():
     """returns one body basis spin-isospin states for testing"""

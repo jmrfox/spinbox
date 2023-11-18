@@ -1,14 +1,14 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "quap"
-version = "0.3"
+version = "0.4"
 authors = [
   { name="Jordan M. R. Fox", email="jordanmrfox@gmail.com" },
 ]
-description = "Modeling many-fermion systems"
+description = "Tools for testing nuclear auxiliary field diffusion Monte Carlo"
 readme = "README.md"
 requires-python = ">=3.7"
 classifiers = [

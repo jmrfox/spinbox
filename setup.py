@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='quap',
-    version='0.3',
+    version='0.4',
     packages=[''],
     url='https://github.com/jmrfox/quap',
     license='MIT',
