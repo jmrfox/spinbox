@@ -1,21 +1,30 @@
 [build-system]
-requires = ["setuptools>=61"]
-build-backend = "setuptools.build_meta"
+requires = ["pdm-backend"]
+build-backend = "pdm.backend"
 
 [project]
 name = "quap"
-version = "0.4"
+version = "0.1.0"
 authors = [
-  { name="Jordan M. R. Fox", email="jordanmrfox@gmail.com" },
+    { name="Jordan M. R. Fox", email="jordanmrfox@gmail.com" }
 ]
-description = "Tools for testing nuclear auxiliary field diffusion Monte Carlo"
+description = "quantum playground"
 readme = "README.md"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 classifiers = [
     "Programming Language :: Python :: 3",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+    "numpy~=1.24.3",
+    "matplotlib~=3.7.2",
+    "scipy~=1.10.0",
+    "tqdm~=4.66.1",
+    "setuptools~=68.0.0",
+    "icecream~=2.1.3",
+]
+license = {text = "MIT"}
 
 [project.urls]
 "Homepage" = "https://github.com/jmrfox/quap"
