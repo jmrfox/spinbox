@@ -1,0 +1,16 @@
+Index: quap.py
+===================================================================
+diff --git a/quap.py b/quap/main.py
+rename from quap.py
+rename to quap/main.py
+--- a/quap.py	
++++ b/quap/main.py	
+@@ -863,7 +863,7 @@
+         return b*out
+ 
+     def exchange(self, particle_a: int, particle_b: int):
+-        P_1 = ManyBodyBasisSpinOperator(num_particles=self.num_particles)
++        P_1 = ManyBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
+         P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
+         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
+         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')

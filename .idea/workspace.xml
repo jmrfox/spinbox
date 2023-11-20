@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="7ce0bb15-a0d3-4fda-990b-f1326b3df926" name="Changes" comment="coulomb results added">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/LICENSE" beforeDir="false" afterPath="$PROJECT_DIR$/LICENSE" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/LICENSE" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/README.md" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/pyproject.toml" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/quap.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/quap.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/quap.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/quap.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/tests/test_0.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/build/lib/tests/test_1.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/pyproject.toml" beforeDir="false" afterPath="$PROJECT_DIR$/pyproject.toml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/quap.egg-info/PKG-INFO" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/quap.egg-info/SOURCES.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/quap.egg-info/dependency_links.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/quap.egg-info/top_level.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/setup.py" beforeDir="false" afterPath="$PROJECT_DIR$/setup.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Setup Script" />
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="MarkdownSettingsMigration">
+    <option name="stateVersion" value="1" />
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2X2iQRZRV9YQzdGu8Pxszp2rzi0" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+    <option name="sortKey" value="BY_TIME_DESCENDING" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "C:/Users/MainUser/Documents/GitHub/quap/storage",
+    "settings.editor.selected.configurable": "configurable.group.project"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\storage" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\examples" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\examples" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\outputs" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\tests" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\trash" />
+      <recent name="C:\Users\MainUser\Documents\GitHub\quap\storage" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.obbprop_nuc">
+    <configuration name="mbbprop_nuc" type="PythonConfigurationType" factoryName="Python" singleton="false" temporary="true" nameIsGenerated="true">
+      <output_file path="C:\Users\MainUser\Documents\GitHub\quap\outputs\mbbprop_nuc.out" />
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/mbbprop_nuc.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="obbprop_nuc" type="PythonConfigurationType" factoryName="Python" singleton="false" temporary="true" nameIsGenerated="true">
+      <output_file path="C:\Users\MainUser\Documents\GitHub\quap\examples\obbprop_nuc.out" />
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/examples/obbprop_nuc.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="test_0" type="PythonConfigurationType" factoryName="Python">
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="SDK_NAME" value="Python 3.8" />
+      <option name="WORKING_DIRECTORY" value="" />
+      <option name="IS_MODULE_SDK" value="false" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/tests/test_0.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for mbbprop_nuc.test_bracket_1" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;mbbprop_nuc.test_bracket_1&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests for tests.mbbprop_iso.test_brackets_2" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;tests.mbbprop_iso.test_brackets_2&quot;" />
+      <option name="_new_targetType" value="&quot;PYTHON&quot;" />
+      <method v="2" />
+    </configuration>
+    <configuration name="Python tests in mbbprop_nuc.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
+      <module name="quap" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/examples" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="_new_additionalArguments" value="&quot;&quot;" />
+      <option name="_new_target" value="&quot;$PROJECT_DIR$/examples/mbbprop_nuc.py&quot;" />
+      <option name="_new_targetType" value="&quot;PATH&quot;" />
+      <method v="2" />
+    </configuration>
+    <list>
+      <item itemvalue="Python.test_0" />
+      <item itemvalue="Python.obbprop_nuc" />
+      <item itemvalue="Python.mbbprop_nuc" />
+      <item itemvalue="Python tests.Python tests for tests.mbbprop_iso.test_brackets_2" />
+      <item itemvalue="Python tests.Python tests for mbbprop_nuc.test_bracket_1" />
+      <item itemvalue="Python tests.Python tests in mbbprop_nuc.py" />
+    </list>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.obbprop_nuc" />
+        <item itemvalue="Python.mbbprop_nuc" />
+        <item itemvalue="Python tests.Python tests in mbbprop_nuc.py" />
+        <item itemvalue="Python tests.Python tests for mbbprop_nuc.test_bracket_1" />
+        <item itemvalue="Python tests.Python tests for tests.mbbprop_iso.test_brackets_2" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="7ce0bb15-a0d3-4fda-990b-f1326b3df926" name="Changes" comment="" />
+      <created>1697833558303</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1697833558303</updated>
+    </task>
+    <task id="LOCAL-00001" summary="innocuous change">
+      <option name="closed" value="true" />
+      <created>1697834214353</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1697834214353</updated>
+    </task>
+    <task id="LOCAL-00002" summary="added requirements">
+      <option name="closed" value="true" />
+      <created>1697834904986</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1697834904986</updated>
+    </task>
+    <task id="LOCAL-00003" summary="test for isospin">
+      <option name="closed" value="true" />
+      <created>1697943019002</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1697943019002</updated>
+    </task>
+    <task id="LOCAL-00004" summary="removed one body dot product">
+      <option name="closed" value="true" />
+      <created>1698174063069</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1698174063069</updated>
+    </task>
+    <task id="LOCAL-00005" summary="fixed a bunch of stuff, copy. next fix OB prop">
+      <option name="closed" value="true" />
+      <created>1698196560267</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1698196560267</updated>
+    </task>
+    <task id="LOCAL-00006" summary="fixed obbprop. next do isospin">
+      <option name="closed" value="true" />
+      <created>1698366874450</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1698366874450</updated>
+    </task>
+    <task id="LOCAL-00007" summary="isospin examples working!">
+      <option name="closed" value="true" />
+      <created>1698367715168</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1698367715168</updated>
+    </task>
+    <task id="LOCAL-00008" summary="MB nuclear example working">
+      <option name="closed" value="true" />
+      <created>1699226030731</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1699226030731</updated>
+    </task>
+    <task id="LOCAL-00009" summary="latest">
+      <option name="closed" value="true" />
+      <created>1699368956431</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1699368956431</updated>
+    </task>
+    <task id="LOCAL-00010" summary="updated nuc tests, testing coulomb effects">
+      <option name="closed" value="true" />
+      <created>1700164583203</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1700164583203</updated>
+    </task>
+    <task id="LOCAL-00011" summary="coulomb test">
+      <option name="closed" value="true" />
+      <created>1700190857240</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1700190857240</updated>
+    </task>
+    <task id="LOCAL-00012" summary="coulomb test">
+      <option name="closed" value="true" />
+      <created>1700245820114</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1700245820114</updated>
+    </task>
+    <task id="LOCAL-00013" summary="coulomb results added">
+      <option name="closed" value="true" />
+      <created>1700253321239</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1700253321239</updated>
+    </task>
+    <option name="localTasksCounter" value="14" />
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="innocuous change" />
+    <MESSAGE value="added requirements" />
+    <MESSAGE value="test for isospin" />
+    <MESSAGE value="removed one body dot product" />
+    <MESSAGE value="fixed a bunch of stuff, copy. next fix OB prop" />
+    <MESSAGE value="fixed obbprop. next do isospin" />
+    <MESSAGE value="isospin examples working!" />
+    <MESSAGE value="MB nuclear example working" />
+    <MESSAGE value="latest" />
+    <MESSAGE value="updated nuc tests, testing coulomb effects" />
+    <MESSAGE value="coulomb test" />
+    <MESSAGE value="coulomb results added" />
+    <option name="LAST_COMMIT_MESSAGE" value="coulomb results added" />
+  </component>
+</project>
