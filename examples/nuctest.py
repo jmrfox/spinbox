@@ -9,7 +9,7 @@ from quap import *
 # matplotlib.use('Agg', force=True)
 
 dt = 0.001
-n_samples = 50000
+n_samples = 10000
 n_procs = os.cpu_count() - 2 
 run_tag = '_CoulOnly'  #start with a _
 

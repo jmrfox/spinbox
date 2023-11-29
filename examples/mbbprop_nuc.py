@@ -57,6 +57,8 @@ def g_pade_coul(dt, v):
     return out.exponentiate()
 
 def g_coul_onebody(dt,v):
+    """just the one-body part of the expanded coulomb propagator
+    for use along with auxiliary field propagators"""
     out = ManyBodyBasisSpinIsospinOperator(2)
     out += tauz0 + tauz1
     out = - 0.125 * v * dt * out

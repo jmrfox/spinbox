@@ -605,7 +605,7 @@ class OneBodyBasisSpinOperator(SpinOperator):
         """scalar multiplication, but 'spread' over all particles
         e.g. for N-particle system, each spinor multiplied by b^(1/N)"""
         assert np.isscalar(b)
-        c = b ** (1 / self.num_particles)
+        c = np.array(b, dtype=complex) ** (1 / self.num_particles)
         out = self.copy()
         for i in range(self.num_particles):
             out = out.scalar_mult(i, c)
@@ -728,7 +728,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
 
     def spread_scalar_mult(self, b):
         assert np.isscalar(b)
-        c = b ** (1 / self.num_particles)
+        c = np.array(b, dtype=complex) ** (1 / self.num_particles)
         out = self.copy()
         for i in range(self.num_particles):
             out = out.scalar_mult(i, c)
