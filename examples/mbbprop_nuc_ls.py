@@ -56,11 +56,12 @@ def g_pade_coul(dt, v):
     out = -0.125 * v * dt * out
     return out.exponentiate()
 
-def g_coul_onebody(dt,v):
+def g_linear_ls(bls):
     out = ManyBodyBasisSpinIsospinOperator(2)
-    out += tauz0 + tauz1
-    out = - 0.125 * v * dt * out
+    for c in range(3):
+        out += 0.j5 * bls[c] * (sig0vec[c] + sig1vec[c])
     return out.exponentiate()
+
 
 def g_gauss_sample(dt, a, x, opi, opj):
     k = np.sqrt(-0.5 * dt * a, dtype=complex)
@@ -96,9 +97,8 @@ def gauss_task(x, bra, ket, pot_dict):
         ket_p = g_gauss_sample(nt.dt, atau[c], x[n], tau0vec[c], tau1vec[c]) * ket_p
         ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
-
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
+    ket_p = g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
+    ket_m = g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -116,7 +116,13 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     bls = pot_dict['bls']
 
     # correct answer via pade
-    b_exact = bra * g_pade_sig(nt.dt, asig) * g_pade_sigtau(nt.dt, asigtau) * g_pade_tau(nt.dt, atau) * g_pade_coul(nt.dt, vcoul) * ket
+    b_exact = bra * 
+        g_pade_sig(nt.dt, asig) *
+        g_pade_sigtau(nt.dt, asigtau) * 
+        g_pade_tau(nt.dt, atau) * 
+        g_pade_coul(nt.dt, vcoul) * 
+        g_linear_ls(bls) * 
+        ket
 
     n_aux = 9 + 27 + 3 + 1
     x_set = rng.standard_normal((n_samples, n_aux))  # different x for each x,y,z
@@ -170,8 +176,8 @@ def rbm_task(h, bra, ket, pot_dict):
         ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
+    ket_p = g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
+    ket_m = g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
     n += 1
     return 0.5 * (bra * ket_p + bra * ket_m)
 

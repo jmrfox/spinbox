@@ -23,46 +23,54 @@ tauz1 = OneBodyBasisSpinIsospinOperator(2).tau(1, 'z')
 tau0vec = [taux0, tauy0, tauz0]
 tau1vec = [taux1, tauy1, tauz1]
 
-def Ggauss_sample(dt: float, A: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
-    k = np.sqrt(-0.5 * dt * A, dtype=complex)
-    norm = np.exp(0.5 * dt * A)
+def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
+    k = np.sqrt(-0.5 * dt * a, dtype=complex)
+    norm = np.exp(0.5 * dt * a)
     op = OneBodyBasisSpinIsospinOperator(2)
     out = op.copy().scalar_mult(i, np.cosh(k * x)).scalar_mult(j, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x)) * opj.scalar_mult(j, np.sinh(k * x))
     return out.spread_scalar_mult(norm)
 
-def gauss_task(x, bra, ket, Asig, Asigtau, Atau, Vcoul):
+def gauss_task(x, bra, ket, pot_dict):
     ket_p = ket.copy()
     ket_m = ket.copy()
+    
+    asig = pot_dict['asig']
+    asigtau = pot_dict['asigtau']
+    atau = pot_dict['atau']
+    vcoul = pot_dict['vcoul']
+    bls = pot_dict['bls']
+    
     n = 0
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
-            ket_p = Ggauss_sample(nt.dt, Asig[a, b], x[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
-            ket_m = Ggauss_sample(nt.dt, Asig[a, b], -x[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
+            ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
+            ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
             n += 1
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = Ggauss_sample(nt.dt, Asigtau[a, b, c], x[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
-                ket_m = Ggauss_sample(nt.dt, Asigtau[a, b, c], -x[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = Ggauss_sample(nt.dt, Atau[c], x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
-        ket_m = Ggauss_sample(nt.dt, Atau[c], -x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
+        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
         n += 1
-    ket_p = Ggauss_sample(nt.dt, 0.25 * Vcoul, x[n], 0, 1, tauz0, tauz1) * ket_p
-    ket_m = Ggauss_sample(nt.dt, 0.25 * Vcoul, -x[n], 0, 1, tauz0, tauz1) * ket_m
+    ket_p = g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tauz0, tauz1) * ket_p
+    ket_m = g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tauz0, tauz1) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
 def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=False):
     print('HS brackets')
-    Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
 
-    n_aux = 9 + 28 + 3 + 1
+    pot_dict = nt.make_potentials()
+    
+    n_aux = 9 + 27 + 3 + 1
     x_set = rng.standard_normal((n_samples, n_aux))  # different x for each x,y,z
     with Pool(processes=nt.n_procs) as pool:
-        b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, Asig, Asigtau, Atau, Vcoul) for x in x_set], disable=disable_tqdm)).get()
+        b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm)).get()
 
     if plot:
         nt.plot_samples(b_list, range=(-2, 2), filename=f'hsprop_ob{nt.run_tag}.pdf', title='HS (OBB)')
@@ -72,53 +80,59 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     print(f'gauss =  {b}  +/- {s}')
 
 
-def Grbm_sample(dt, A, h, i, j, opi, opj):
-    norm = np.exp(-0.5 * dt * np.abs(A)) / 2
-    W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(A))))
+def g_rbm_sample(dt, a, h, i, j, opi, opj):
+    norm = np.exp(-0.5 * dt * np.abs(a)) / 2
+    W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
-    out = one.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(A) * np.sinh(arg))
+    out = one.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(a) * np.sinh(arg))
     return out.spread_scalar_mult(2 * norm)
     # return out.scalar_mult(0, 2*norm)
 
 
-def rbm_task(h, bra, ket, Asig, Asigtau, Atau, Vcoul):
+def rbm_task(h, bra, ket, pot_dict):
     ket_p = ket.copy()
     ket_m = ket.copy()
+
+    asig = pot_dict['asig']
+    asigtau = pot_dict['asigtau']
+    atau = pot_dict['atau']
+    vcoul = pot_dict['vcoul']
+    bls = pot_dict['bls']
+
     n = 0
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
-            ket_p = Grbm_sample(nt.dt, Asig[a, b], h[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
-            ket_m = Grbm_sample(nt.dt, Asig[a, b], 1 - h[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
+            ket_p = g_rbm_sample(nt.dt, asig[a, b], h[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_p
+            ket_m = g_rbm_sample(nt.dt, asig[a, b], 1 - h[n], 0, 1, sig0vec[a], sig1vec[b]) * ket_m
             n += 1
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = Grbm_sample(nt.dt, Asigtau[a, b, c], h[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
-                ket_m = Grbm_sample(nt.dt, Asigtau[a, b, c], 1 - h[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
+                ket_p = g_rbm_sample(nt.dt, asigtau[a, b, c], h[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
+                ket_m = g_rbm_sample(nt.dt, asigtau[a, b, c], 1 - h[n], 0, 1, sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = Grbm_sample(nt.dt, Atau[c], h[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
-        ket_m = Grbm_sample(nt.dt, Atau[c], 1 - h[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
+        ket_p = g_rbm_sample(nt.dt, atau[c], h[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
+        ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    ket_p = Grbm_sample(nt.dt, 0.25 * Vcoul, h[n], 0, 1, tauz0, tauz1) * ket_p
-    ket_m = Grbm_sample(nt.dt, 0.25 * Vcoul, 1 - h[n], 0, 1, tauz0, tauz1) * ket_m
+    ket_p = g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], 0, 1, tauz0, tauz1) * ket_p
+    ket_m = g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], 0, 1, tauz0, tauz1) * ket_m
     n += 1
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
 def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=False):
     print('RBM brackets')
-    Asig, Asigtau, Atau, Vcoul = nt.make_potentials(random=True)
     bra, ket = nt.make_test_states()
 
-    # make population of identical wfns
-
-    n_aux = 9 + 28 + 3 + 1
+    pot_dict = nt.make_potentials()
+    
+    n_aux = 9 + 27 + 3 + 1
     h_set = rng.integers(0, 2, size=(n_samples, n_aux))
 
     with Pool(processes=nt.n_procs) as pool:
-        b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, Asig, Asigtau, Atau, Vcoul) for h in h_set], disable=disable_tqdm)).get()
+        b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm)).get()
 
     if plot:
         nt.plot_samples(b_list, range=(-2, 2), filename=f'rbmprop_ob{nt.run_tag}.pdf', title='RBM (OBB)')
@@ -129,9 +143,6 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 
 
 if __name__ == "__main__":
-    # test_gaussian_sample()
-    # test_rbm_sample()
-
     n_samples = nt.n_samples
     plot = True
     disable_tqdm = False
