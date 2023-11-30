@@ -26,10 +26,13 @@ tau1vec = [taux1, tauy1, tauz1]
 def g_coul_onebody(dt,v):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
-    const = - 0.125 * v * dt
-    out = one.spread_scalar_mult(np.exp(const))
-    out = one.spread_scalar_mult(np.cosh(const)) + tauz0.spread_scalar_mult(np.sinh(const)) * out
-    out = one.spread_scalar_mult(np.cosh(const)) + tauz1.spread_scalar_mult(np.sinh(const)) * out
+    k = - 0.125 * v * dt
+    # out = one.spread_scalar_mult(np.exp(const))
+    # out = one.spread_scalar_mult(np.cosh(const)) + tauz0.spread_scalar_mult(np.sinh(const)) * out
+    # out = one.spread_scalar_mult(np.cosh(const)) + tauz1.spread_scalar_mult(np.sinh(const)) * out
+    out = one.scalar_mult(0, k)
+    out = one.scalar_mult(0, np.cosh(k)) * out + tauz0.scalar_mult(0, np.sinh(k)) * out
+    out = one.scalar_mult(1, np.cosh(k)) * out + tauz1.scalar_mult(1, np.sinh(k)) * out 
     return out
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
@@ -65,8 +68,10 @@ def gauss_task(x, bra, ket, pot_dict):
         ket_p = g_gauss_sample(nt.dt, atau[c], x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_p
         ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
         n += 1
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tauz0, tauz1) * ket_m
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tauz0, tauz1) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -125,9 +130,10 @@ def rbm_task(h, bra, ket, pot_dict):
         ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], 0, 1, tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], 0, 1, tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], 0, 1, tauz0, tauz1) * ket_m
-    n += 1
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], 0, 1, tauz0, tauz1) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], 0, 1, tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 

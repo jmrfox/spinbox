@@ -50,11 +50,18 @@ def g_pade_tau(dt, atau):
     return out.exponentiate()
 
 
+# def g_pade_coul(dt, v):
+#     out = ManyBodyBasisSpinIsospinOperator(2)
+#     out += tauz0 + tauz1 + tauz0 * tauz1
+#     out = -0.125 * v * dt * out
+#     return out.exponentiate()
+
 def g_pade_coul(dt, v):
-    out = ManyBodyBasisSpinIsospinOperator(2)
-    out += tauz0 + tauz1 + tauz0 * tauz1
-    out = -0.125 * v * dt * out
+    out = 0.5*(one + tauz0) 
+    out = 0.5*(one + tauz1) * out
+    out = -0.5 * v * dt * out
     return out.exponentiate()
+
 
 def g_coul_onebody(dt,v):
     """just the one-body part of the expanded coulomb propagator
@@ -99,8 +106,10 @@ def gauss_task(x, bra, ket, pot_dict):
         ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -172,9 +181,10 @@ def rbm_task(h, bra, ket, pot_dict):
         ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
-    n += 1
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 

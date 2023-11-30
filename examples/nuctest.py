@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import sys, os
 
-sys.path.append('/home/anl.gov/jfox/Projects/quap/src/')
+sys.path.append('src/')
 from quap import *
 
 #from icecream import ic
