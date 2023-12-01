@@ -17,6 +17,15 @@ sigz1 = OneBodyBasisSpinIsospinOperator(num_particles).sigma(1, 'z')
 sig0vec = [sigx0, sigy0, sigz0]
 sig1vec = [sigx1, sigy1, sigz1]
 
+global_seed = 17
+rng = default_rng(seed=global_seed)
+
+def make_test_states(rng=None):
+    """returns one body basis spin-isospin states for testing"""
+    bra, ket = random_spinisospin_bra_ket(2, bra_seed=global_seed, ket_seed=global_seed+1)
+    bra = bra.to_many_body_state()
+    ket = ket.to_many_body_state()
+    return bra, ket
 
 def make_test_states():
     coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
@@ -199,7 +208,7 @@ if __name__ == "__main__":
     print('ONE-BODY BASIS PROPAGATORS')
     test_brackets_0()
 
-    n_samples = 1000
+    n_samples = 10000
     mix = False
     test_gaussian_sample()
     gaussian_brackets(n_samples=n_samples, mix=mix)

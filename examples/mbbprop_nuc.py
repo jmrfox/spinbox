@@ -23,6 +23,15 @@ tauz1 = ManyBodyBasisSpinIsospinOperator(2).tau(1, 'z')
 tau0vec = [taux0, tauy0, tauz0]
 tau1vec = [taux1, tauy1, tauz1]
 
+# num_particles = 2
+# sig = np.full(shape=(num_particles,3), fill_value=None)
+# tau = np.full(shape=(num_particles,3), fill_value=None)
+# for i in range(num_particles):
+#     for a in [0,1,2]:
+#         sig[i,a] = ManyBodyBasisSpinIsospinOperator(num_particles).sigma(i,a)
+#         tau[i,a] = ManyBodyBasisSpinIsospinOperator(num_particles).tau(i,a)
+
+
 def g_pade_sig(dt, asig):
     out = ManyBodyBasisSpinIsospinOperator(2).zeros()
     for a in range(3):
@@ -50,25 +59,17 @@ def g_pade_tau(dt, atau):
     return out.exponentiate()
 
 
-# def g_pade_coul(dt, v):
-#     out = ManyBodyBasisSpinIsospinOperator(2)
-#     out += tauz0 + tauz1 + tauz0 * tauz1
-#     out = -0.125 * v * dt * out
-#     return out.exponentiate()
-
 def g_pade_coul(dt, v):
-    out = 0.5*(one + tauz0) 
-    out = 0.5*(one + tauz1) * out
-    out = -0.5 * v * dt * out
+    out = one + tauz0 + tauz1 + tauz0 * tauz1
+    # out = one + tauz0 + tauz1
+    out = -0.125 * v * dt * out
     return out.exponentiate()
 
 
 def g_coul_onebody(dt,v):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
-    out = ManyBodyBasisSpinIsospinOperator(2)
-    out += tauz0 + tauz1
-    out = - 0.125 * v * dt * out
+    out = - 0.125 * v * dt * (one + tauz0 + tauz1)
     return out.exponentiate()
 
 def g_gauss_sample(dt, a, x, opi, opj):
@@ -106,10 +107,10 @@ def gauss_task(x, bra, ket, pot_dict):
         ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
-    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -119,7 +120,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
-    pot_dict = nt.make_potentials()
+    pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
     asig = pot_dict['asig']
     asigtau = pot_dict['asigtau']
     atau = pot_dict['atau']
@@ -130,6 +131,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     b_exact = bra * g_pade_sig(nt.dt, asig) * g_pade_sigtau(nt.dt, asigtau) * g_pade_tau(nt.dt, atau) * g_pade_coul(nt.dt, vcoul) * ket
 
     n_aux = 9 + 27 + 3 + 1
+    rng = default_rng(seed=nt.global_seed)
     x_set = rng.standard_normal((n_samples, n_aux))  # different x for each x,y,z
     with Pool(processes=nt.n_procs) as pool:
         b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
@@ -181,10 +183,10 @@ def rbm_task(h, bra, ket, pot_dict):
         ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau0vec[c], tau1vec[c]) * ket_m
         n += 1
 
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
-    ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
+    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
+    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -194,7 +196,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
-    pot_dict = nt.make_potentials()
+    pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
     asig = pot_dict['asig']
     asigtau = pot_dict['asigtau']
     atau = pot_dict['atau']
@@ -207,6 +209,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
     # make population of identical wfns
 
     n_aux = 9 + 27 + 3 + 1
+    rng = default_rng(seed=nt.global_seed)
     h_set = rng.integers(0, 2, size=(n_samples, n_aux))
 
     with Pool(processes=nt.n_procs) as pool:
@@ -230,5 +233,8 @@ if __name__ == "__main__":
     with Profile() as profile:
         gaussian_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
         rbm_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
+        bra, ket = nt.make_test_states()
+        instant_bracket = bra * ket
+        print(f'<G(t=0)> = {instant_bracket}')
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
     print('DONE')

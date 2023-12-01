@@ -21,11 +21,14 @@ sig0vec = [sigx0, sigy0, sigz0]
 sig1vec = [sigx1, sigy1, sigz1]
 
 
-def make_test_states():
-    coeffs_bra = np.concatenate([spinor4('max', 'bra'), spinor4('max', 'bra')], axis=1)
-    coeffs_ket = np.concatenate([spinor4('up', 'ket'), spinor4('down', 'ket')], axis=0)
-    bra = OneBodyBasisSpinIsospinState(2, 'bra', coeffs_bra).to_many_body_state()
-    ket = OneBodyBasisSpinIsospinState(2, 'ket', coeffs_ket).to_many_body_state()
+global_seed = 17
+rng = default_rng(seed=global_seed)
+
+def make_test_states(rng=None):
+    """returns one body basis spin-isospin states for testing"""
+    bra, ket = random_spinisospin_bra_ket(2, bra_seed=global_seed, ket_seed=global_seed+1)
+    bra = bra.to_many_body_state()
+    ket = ket.to_many_body_state()
     return bra, ket
 
 
@@ -51,7 +54,7 @@ def test_brackets_0():
     k = 0.5 * dt * Amat[0, 0]
     # sum brackets
     bra, ket = make_test_states()
-    b1 = np.cosh(k) * bra * ket - np.sinh(k) * bra * sigx0 * ket
+    b1 = np.cosh(k) * (bra * ket) - np.sinh(k) * (bra * sigx0 * ket)
     print(f'summing brackets : {b1}')
 
     # sum wavefunctions

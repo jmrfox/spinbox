@@ -10,8 +10,6 @@ import matplotlib.pyplot as plt
 
 from numpy.random import default_rng
 
-rng = default_rng()
-
 from scipy.linalg import expm
 from functools import reduce
 
@@ -57,7 +55,7 @@ def pauli(arg):
     return out
 
 
-def spinor2(state, orientation):
+def spinor2(state, orientation, seed=None):
     assert state in ['up', 'down', 'random', 'max']
     assert orientation in ['bra', 'ket']
     if state == 'up':
@@ -65,7 +63,7 @@ def spinor2(state, orientation):
     elif state == 'down':
         sp = np.array([0, 1], dtype=complex)
     elif state == 'random':
-        rng = np.random.default_rng(2023)
+        rng = default_rng(seed=seed)
         sp = rng.uniform(-1, 1, 2) + 1j * rng.uniform(-1, 1, 2)
         sp = sp / np.linalg.norm(sp)
     elif state == 'max':
@@ -76,7 +74,7 @@ def spinor2(state, orientation):
         return sp.reshape((1, 2))
 
 
-def spinor4(state, orientation):
+def spinor4(state, orientation, seed=None):
     assert state in ['up', 'down', 'random', 'max']
     assert orientation in ['bra', 'ket']
     if state == 'up':
@@ -84,7 +82,7 @@ def spinor4(state, orientation):
     elif state == 'down':
         sp = np.array([0, 1, 0, 1], dtype=complex)
     elif state == 'random':
-        rng = np.random.default_rng(2023)
+        rng = default_rng(seed=seed)
         sp = rng.uniform(-1, 1, 4) + 1j * rng.uniform(-1, 1, 4)
         sp = sp / np.linalg.norm(sp)
     elif state == 'max':
@@ -254,7 +252,7 @@ class OneBodyBasisSpinState(State):
 
     def spread_scalar_mult(self, b):
         assert np.isscalar(b)
-        c = b ** (1 / self.num_particles)
+        c = np.array(b, dtype=complex) ** (1 / self.num_particles)
         out = self.copy()
         for i in range(self.num_particles):
             out = out.scalar_mult(i, c)
@@ -394,7 +392,7 @@ class OneBodyBasisSpinIsospinState(State):
             out = self.copy().spread_scalar_mult(other)
             return out
         else:
-            raise ValueError('Problem in rmul')
+            raise ValueError(f'Problem in rmul: got a {type(other)}')
 
 
 class ManyBodyBasisSpinState(State):
@@ -987,17 +985,17 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         return out
 
 
-def random_spin_bra_ket(num_particles):
-    coeffs_ket = np.concatenate(num_particles * [spinor2('random', 'ket')], axis=0)
-    coeffs_bra = np.concatenate(num_particles * [spinor2('random', 'bra')], axis=1)
-    ket = OneBodyBasisSpinState(num_particles, 'ket', coeffs_ket)
+def random_spin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
+    coeffs_bra = np.concatenate(num_particles * [spinor2('random', 'bra', seed=bra_seed)], axis=1)
+    coeffs_ket = np.concatenate(num_particles * [spinor2('random', 'ket', seed=ket_seed)], axis=0)
     bra = OneBodyBasisSpinState(num_particles, 'bra', coeffs_bra)
+    ket = OneBodyBasisSpinState(num_particles, 'ket', coeffs_ket)
     return bra, ket
 
 
-def random_spinisospin_bra_ket(num_particles):
-    coeffs_ket = np.concatenate(num_particles * [spinor4('random', 'ket')], axis=0)
-    coeffs_bra = np.concatenate(num_particles * [spinor4('random', 'bra')], axis=1)
-    ket = OneBodyBasisSpinIsospinState(num_particles, 'ket', coeffs_ket)
+def random_spinisospin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
+    coeffs_bra = np.concatenate(num_particles * [spinor4('random', 'bra', seed=bra_seed)], axis=1)
+    coeffs_ket = np.concatenate(num_particles * [spinor4('random', 'ket', seed=ket_seed)], axis=0)
     bra = OneBodyBasisSpinIsospinState(num_particles, 'bra', coeffs_bra)
+    ket = OneBodyBasisSpinIsospinState(num_particles, 'ket', coeffs_ket)
     return bra, ket
