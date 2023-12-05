@@ -5,38 +5,18 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
-one = ManyBodyBasisSpinIsospinOperator(2)
-sigx0 = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'x')
-sigy0 = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'y')
-sigz0 = ManyBodyBasisSpinIsospinOperator(2).sigma(0, 'z')
-sigx1 = ManyBodyBasisSpinIsospinOperator(2).sigma(1, 'x')
-sigy1 = ManyBodyBasisSpinIsospinOperator(2).sigma(1, 'y')
-sigz1 = ManyBodyBasisSpinIsospinOperator(2).sigma(1, 'z')
-sig0vec = [sigx0, sigy0, sigz0]
-sig1vec = [sigx1, sigy1, sigz1]
-taux0 = ManyBodyBasisSpinIsospinOperator(2).tau(0, 'x')
-tauy0 = ManyBodyBasisSpinIsospinOperator(2).tau(0, 'y')
-tauz0 = ManyBodyBasisSpinIsospinOperator(2).tau(0, 'z')
-taux1 = ManyBodyBasisSpinIsospinOperator(2).tau(1, 'x')
-tauy1 = ManyBodyBasisSpinIsospinOperator(2).tau(1, 'y')
-tauz1 = ManyBodyBasisSpinIsospinOperator(2).tau(1, 'z')
-tau0vec = [taux0, tauy0, tauz0]
-tau1vec = [taux1, tauy1, tauz1]
-
-# num_particles = 2
-# sig = np.full(shape=(num_particles,3), fill_value=None)
-# tau = np.full(shape=(num_particles,3), fill_value=None)
-# for i in range(num_particles):
-#     for a in [0,1,2]:
-#         sig[i,a] = ManyBodyBasisSpinIsospinOperator(num_particles).sigma(i,a)
-#         tau[i,a] = ManyBodyBasisSpinIsospinOperator(num_particles).tau(i,a)
-
+num_particles = 2
+one = ManyBodyBasisSpinIsospinOperator(num_particles)
+# list constructors make generating operators more streamlined
+sig = [[ManyBodyBasisSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
+tau = [[ManyBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
+# access like sig[particle][xyz]
 
 def g_pade_sig(dt, asig):
     out = ManyBodyBasisSpinIsospinOperator(2).zeros()
     for a in range(3):
         for b in range(3):
-            out += asig[a, b] * sig0vec[a] * sig1vec[b]
+            out += asig[a, b] * sig[0][a] * sig[1][b]
     out = -0.5 * dt * out
     return out.exponentiate()
 
@@ -46,7 +26,7 @@ def g_pade_sigtau(dt, asigtau):
     for a in range(3):
         for b in range(3):
             for c in range(3):
-                out += asigtau[a, b, c] * sig0vec[a] * sig1vec[b] * tau0vec[c] * tau1vec[c]
+                out += asigtau[a, b, c] * sig[0][a] * sig[1][b] * tau[0][c] * tau[1][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
@@ -54,14 +34,14 @@ def g_pade_sigtau(dt, asigtau):
 def g_pade_tau(dt, atau):
     out = ManyBodyBasisSpinIsospinOperator(2).zeros()
     for c in range(3):
-        out += atau[c] * tau0vec[c] * tau1vec[c]
+        out += atau[c] * tau[0][c] * tau[1][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
 
 def g_pade_coul(dt, v):
-    out = one + tauz0 + tauz1 + tauz0 * tauz1
-    # out = one + tauz0 + tauz1
+    out = one + tau[0][2] + tau[1][2] + tau[0][2] * tau[1][2]
+    # out = one + tau[0][2] + tau[1][2]
     out = -0.125 * v * dt * out
     return out.exponentiate()
 
@@ -69,7 +49,7 @@ def g_pade_coul(dt, v):
 def g_coul_onebody(dt,v):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
-    out = - 0.125 * v * dt * (one + tauz0 + tauz1)
+    out = - 0.125 * v * dt * (one + tau[0][2] + tau[1][2])
     return out.exponentiate()
 
 def g_gauss_sample(dt, a, x, opi, opj):
@@ -80,7 +60,7 @@ def g_gauss_sample(dt, a, x, opi, opj):
     return norm * gi * gj
 
 
-def gauss_task(x, bra, ket, pot_dict):
+def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
     ket_p = ket.copy()
     ket_m = ket.copy()
 
@@ -91,24 +71,27 @@ def gauss_task(x, bra, ket, pot_dict):
     bls = pot_dict['bls']
 
     n = 0
-    for a in [0, 1, 2]:
-        for b in [0, 1, 2]:
-            ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], sig0vec[a], sig1vec[b]) * ket_p
-            ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], sig0vec[a], sig1vec[b]) * ket_m
+    idx = [[0, 1, 2] for _ in range(6)]
+    if rng_mix is not None: # no evidence that mixing helps.
+        idx = rng_mix.choice(2,size=(6,3))
+    for a in idx[0]:
+        for b in idx[1]:
+            ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], sig[0][a], sig[1][b]) * ket_p
+            ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], sig[0][a], sig[1][b]) * ket_m
             n += 1
-    for a in [0, 1, 2]:
-        for b in [0, 1, 2]:
-            for c in [0, 1, 2]:
-                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
-                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
+    for a in idx[2]:
+        for b in idx[3]:
+            for c in idx[4]:
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
-    for c in [0, 1, 2]:
-        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], tau0vec[c], tau1vec[c]) * ket_p
-        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau0vec[c], tau1vec[c]) * ket_m
+    for c in idx[5]:
+        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau[0][c], tau[1][c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tau[0][2], tau[1][2]) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tau[0][2], tau[1][2]) * ket_m
     # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
     # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
@@ -169,22 +152,22 @@ def rbm_task(h, bra, ket, pot_dict):
     n = 0
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
-            ket_p = g_rbm_sample(nt.dt, asig[a, b], h[n], sig0vec[a], sig1vec[b]) * ket_p
-            ket_m = g_rbm_sample(nt.dt, asig[a, b], 1 - h[n], sig0vec[a], sig1vec[b]) * ket_m
+            ket_p = g_rbm_sample(nt.dt, asig[a, b], h[n], sig[0][a], sig[1][b]) * ket_p
+            ket_m = g_rbm_sample(nt.dt, asig[a, b], 1 - h[n], sig[0][a], sig[1][b]) * ket_m
             n += 1
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = g_rbm_sample(nt.dt, asigtau[a, b, c], h[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_p
-                ket_m = g_rbm_sample(nt.dt, asigtau[a, b, c], 1 - h[n], sig0vec[a] * tau0vec[c], sig1vec[b] * tau1vec[c]) * ket_m
+                ket_p = g_rbm_sample(nt.dt, asigtau[a, b, c], h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_rbm_sample(nt.dt, asigtau[a, b, c], 1 - h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = g_rbm_sample(nt.dt, atau[c], h[n], tau0vec[c], tau1vec[c]) * ket_p
-        ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau0vec[c], tau1vec[c]) * ket_m
+        ket_p = g_rbm_sample(nt.dt, atau[c], h[n], tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau[0][c], tau[1][c]) * ket_m
         n += 1
 
-    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tauz0, tauz1) * ket_p
-    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tauz0, tauz1) * ket_m
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tau[0][2], tau[1][2]) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tau[0][2], tau[1][2]) * ket_m
     # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
     # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
@@ -234,7 +217,7 @@ if __name__ == "__main__":
         gaussian_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
         rbm_brackets_parallel(n_samples=n_samples, plot=plot, disable_tqdm=disable_tqdm)
         bra, ket = nt.make_test_states()
-        instant_bracket = bra * ket
-        print(f'<G(t=0)> = {instant_bracket}')
+        bracket_t0 = bra * ket
+        print(f'<G(t=0)> = {bracket_t0}')
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
     print('DONE')

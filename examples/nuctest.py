@@ -7,9 +7,9 @@ from quap import *
 # matplotlib.use('Agg', force=True)
 
 dt = 0.001
-n_samples = 20_000
+n_samples = 100_000
 n_procs = os.cpu_count() - 2 
-run_tag = '_test'  #start with a _
+run_tag = '_coul'  #start with a _
 global_seed = 17
 
 def make_test_states(rng=None):
@@ -41,7 +41,7 @@ def make_bls(scale=10.0, rng=None):
 
 def make_all_potentials(scale=10.0, rng=None):
     out = {}
-    option = 'coul'
+    option = 'all'
 
     if option=='all':
         out['asig'] = make_asig(scale=scale, rng=rng)
@@ -57,8 +57,8 @@ def make_all_potentials(scale=10.0, rng=None):
         out['bls'] = make_bls(scale=0., rng=rng)
     elif option=='test':
         out['asig'] = make_asig(scale=scale, rng=rng)
-        out['asigtau'] = make_asigtau(scale=scale, rng=rng)
-        out['atau'] = make_atau(scale=scale, rng=rng)
+        out['asigtau'] = make_asigtau(scale=0., rng=rng)
+        out['atau'] = make_atau(scale=0., rng=rng)
         out['vcoul'] = make_vcoul(scale=0., rng=rng)
         out['bls'] = make_bls(scale=0., rng=rng)
     return out
