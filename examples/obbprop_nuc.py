@@ -6,7 +6,7 @@ from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
 num_particles = 2
-one = OneBodyBasisSpinIsospinOperator(num_particles)
+ident = OneBodyBasisSpinIsospinOperator(num_particles)
 # list constructors make generating operators more streamlined
 sig = [[OneBodyBasisSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
 tau = [[OneBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
@@ -19,13 +19,13 @@ def g_coul_onebody(dt, v):
     k = - 0.125 * v * dt
     norm = np.exp(k)
     ck, sk = np.cosh(k), np.sinh(k)
-    out = one.scalar_mult(0, ck).scalar_mult(1, ck) + tau[0][2].scalar_mult(0, sk) * tau[1][2].scalar_mult(1, sk)
+    out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + tau[0][2].scalar_mult(0, sk) * tau[1][2].scalar_mult(1, sk)
     return out.spread_scalar_mult(norm)
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
     k = np.sqrt(-0.5 * dt * a, dtype=complex)
     norm = np.exp(0.5 * dt * a)
-    out = one.scalar_mult(i, np.cosh(k * x)).scalar_mult(j, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x)) * opj.scalar_mult(j, np.sinh(k * x))
+    out = ident.scalar_mult(i, np.cosh(k * x)).scalar_mult(j, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x)) * opj.scalar_mult(j, np.sinh(k * x))
     return out.spread_scalar_mult(norm)
 
 
@@ -107,7 +107,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
         b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-2, 2), filename=f'hsprop_ob{nt.run_tag}.pdf', title='HS (OBB)')
+        nt.plot_samples(b_list, filename=f'hsprop_ob{nt.run_tag}.pdf', title='HS (OBB)')
 
     b = np.mean(b_list)
     s = np.std(b_list) / np.sqrt(n_samples)
@@ -118,7 +118,7 @@ def g_rbm_sample(dt, a, h, i, j, opi, opj):
     norm = np.exp(-0.5 * dt * np.abs(a)) / 2
     W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
-    out = one.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(a) * np.sinh(arg))
+    out = ident.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(a) * np.sinh(arg))
     return out.spread_scalar_mult(2 * norm)
     # return out.scalar_mult(0, 2*norm)
 
@@ -171,7 +171,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
         b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm)).get()
 
     if plot:
-        nt.plot_samples(b_list, range=(-2, 2), filename=f'rbmprop_ob{nt.run_tag}.pdf', title='RBM (OBB)')
+        nt.plot_samples(b_list, filename=f'rbmprop_ob{nt.run_tag}.pdf', title='RBM (OBB)')
 
     b = np.mean(b_list)
     s = np.std(b_list) / np.sqrt(n_samples)

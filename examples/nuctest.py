@@ -7,7 +7,7 @@ from quap import *
 # matplotlib.use('Agg', force=True)
 
 dt = 0.001
-n_samples = 100_000
+n_samples = 200_000
 n_procs = os.cpu_count() - 2 
 run_tag = '_coul'  #start with a _
 global_seed = 17
@@ -64,11 +64,18 @@ def make_all_potentials(scale=10.0, rng=None):
     return out
 
 
-def plot_samples(X, range, filename, title):
-    plt.figure(figsize=(5, 3))
-    plt.hist(np.real(X), label='Re', alpha=0.5, bins=30, range=range, color='red')
-    plt.hist(np.imag(X), label='Im', alpha=0.5, bins=30, range=range, color='blue')
-    plt.title(title + f"\n<G> = {np.mean(X):.6f}  +/-  {np.std(X)/np.sqrt(len(X)):.6f}")
+def plot_samples(X, filename, title, bins='auto', range=None):
+    plt.figure(figsize=(7, 5))
+    n = len(X)
+    Xre = np.real(X)
+    Xim = np.imag(X)
+    mre, sre = np.mean(Xre), np.std(Xre)
+    mim, sim = np.mean(Xim), np.std(Xim)
+    plt.hist(Xre, label='Re', alpha=0.5, bins=bins, range=range, color='red')
+    plt.hist(Xim, label='Im', alpha=0.5, bins=bins, range=range, color='blue')
+    title += "\n" + rf"Re : $\mu$ = {mre:.6f}, $\sigma$ = {sre:.6f}, $\epsilon$ = {sre/np.sqrt(n):.6f}"
+    title += "\n" + rf"Im : $\mu$ = {mim:.6f}, $\sigma$ = {sim:.6f}, $\epsilon$ = {sim/np.sqrt(n):.6f}"
+    plt.title(title)
     plt.legend()
     plt.tight_layout()
     plt.savefig(filename)

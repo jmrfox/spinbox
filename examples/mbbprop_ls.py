@@ -52,6 +52,20 @@ def g_coul_onebody(dt,v):
     out = - 0.125 * v * dt * (ident + tau[0][2] + tau[1][2])
     return out.exponentiate()
 
+
+def g_linear_ls(dt, bls):
+    # linear approx to LS
+    out = ident
+    for a in range(3):
+         out += 0.5j * bls[a] * ( sig[0][a] + sig[1][a] ) 
+    return out
+
+def g_ls_onebody(dt, bls):
+    # one-body part of the LS propagator factorization
+    out = ident
+    return out
+
+
 def g_gauss_sample(dt, a, x, opi, opj):
     k = np.sqrt(-0.5 * dt * a, dtype=complex)
     norm = np.exp(0.5 * dt * a)
@@ -92,8 +106,10 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
 
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tau[0][2], tau[1][2]) * ket_m
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
+
+    ket_p = g_ls_onebody(nt.dt, bls) * ket_p
+    ket_m = g_ls_onebody(nt.dt, bls) * ket_m
+
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -111,7 +127,7 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     bls = pot_dict['bls']
 
     # correct answer via pade
-    b_exact = bra * g_pade_sig(nt.dt, asig) * g_pade_sigtau(nt.dt, asigtau) * g_pade_tau(nt.dt, atau) * g_pade_coul(nt.dt, vcoul) * ket
+    b_exact = bra * g_pade_sig(nt.dt, asig) * g_pade_sigtau(nt.dt, asigtau) * g_pade_tau(nt.dt, atau) * g_pade_coul(nt.dt, vcoul) * g_linear_ls(nt.dt, bls) * ket
 
     n_aux = 9 + 27 + 3 + 1
     rng = default_rng(seed=nt.global_seed)
