@@ -62,7 +62,11 @@ def g_linear_ls(dt, bls):
 
 def g_ls_onebody(dt, bls):
     # one-body part of the LS propagator factorization
-    out = ident
+    out = ident.copy()
+    for i in range(num_particles):
+        for a in range(3):
+            k = bls[a]   # for 2 particles, B_ija = g_ia
+            out = (np.cos(k) * ident + 1.0j * np.sin(k) * sig[i][a]) * out
     return out
 
 
