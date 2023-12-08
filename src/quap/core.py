@@ -16,17 +16,13 @@ from functools import reduce
 
 # functions
 
-def read_sp(filename):
+def read_coeffs(filename):
     def r2c(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
 
-    l = []
-    with open(filename, 'r') as f:
-        for line in f:
-            l.append(line.strip("()\n").split(','))
-    array = np.array(l)
-    sp = np.array([r2c(x) for x in array])
+    c = np.loadtxt(filename)
+    sp = np.array([r2c(x) for x in c])
     return sp
 
 
