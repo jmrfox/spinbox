@@ -566,7 +566,7 @@ class OneBodyBasisSpinOperator(SpinOperator):
             return out
         else:
             raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or a {self.__class__.__name__}')
+                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or a {self.__class__.__name__}')
 
     def __str__(self):
         out = f"{self.__class__.__name__}\n"
@@ -673,7 +673,7 @@ class OneBodyBasisSpinIsospinOperator(SpinOperator):
             return out
         else:
             raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
+                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
 
     def __str__(self):
         out = f"{self.__class__.__name__}\n"
@@ -799,7 +799,7 @@ class ManyBodyBasisSpinOperator(SpinOperator):
             return out
         else:
             raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
+                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
 
     def __rmul__(self, other):
         if np.isscalar(other):
@@ -903,7 +903,7 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
             return out
         else:
             raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__class__.__name__}, or {self.__class__.__name__}')
+                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
 
     def __rmul__(self, other):
         if np.isscalar(other):
