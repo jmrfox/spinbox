@@ -14,8 +14,8 @@ tau = [[OneBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 
 
 
 def load_ket(filename):
-    c = read_sp(filename)
-    sp = OneBodyBasisSpinIsospinState(num_particles, 'ket', c)
+    c = read_coeffs(filename)
+    sp = OneBodyBasisSpinIsospinState(num_particles, 'ket', c.reshape(-1, 1))
     return sp
 
 def g_coul_onebody(dt, v):
@@ -186,8 +186,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 if __name__ == "__main__":
     n_samples = nt.n_samples
     fn_in = 'examples/fort.770'
-    # sp = load_ket(fn_in)
-    sp = read_sp(fn_in)
-    print(sp)
+    ket = load_ket(fn_in)
+    print(ket)
 
     print('DONE')
