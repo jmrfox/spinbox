@@ -26,7 +26,7 @@ def g_pade_sigtau(dt, asigtau):
     for a in range(3):
         for b in range(3):
             for c in range(3):
-                out += asigtau[a, b, c] * sig[0][a] * sig[1][b] * tau[0][c] * tau[1][c]
+                out += asigtau[a, b] * sig[0][a] * sig[1][b] * tau[0][c] * tau[1][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
@@ -34,14 +34,13 @@ def g_pade_sigtau(dt, asigtau):
 def g_pade_tau(dt, atau):
     out = ManyBodyBasisSpinIsospinOperator(2).zeros()
     for c in range(3):
-        out += atau[c] * tau[0][c] * tau[1][c]
+        out += atau * tau[0][c] * tau[1][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
 
 def g_pade_coul(dt, v):
     out = ident + tau[0][2] + tau[1][2] + tau[0][2] * tau[1][2]
-    # out = one + tau[0][2] + tau[1][2]
     out = -0.125 * v * dt * out
     return out.exponentiate()
 
@@ -100,12 +99,12 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
     for a in idx[2]:
         for b in idx[3]:
             for c in idx[4]:
-                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
-                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in idx[5]:
-        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], tau[0][c], tau[1][c]) * ket_p
-        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], tau[0][c], tau[1][c]) * ket_m
+        ket_p = g_gauss_sample(nt.dt, atau, x[n], tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau, -x[n], tau[0][c], tau[1][c]) * ket_m
         n += 1
 
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tau[0][2], tau[1][2]) * ket_p
@@ -177,18 +176,16 @@ def rbm_task(h, bra, ket, pot_dict):
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = g_rbm_sample(nt.dt, asigtau[a, b, c], h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
-                ket_m = g_rbm_sample(nt.dt, asigtau[a, b, c], 1 - h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                ket_p = g_rbm_sample(nt.dt, asigtau[a, b], h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_rbm_sample(nt.dt, asigtau[a, b], 1 - h[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = g_rbm_sample(nt.dt, atau[c], h[n], tau[0][c], tau[1][c]) * ket_p
-        ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], tau[0][c], tau[1][c]) * ket_m
+        ket_p = g_rbm_sample(nt.dt, atau, h[n], tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_rbm_sample(nt.dt, atau, 1 - h[n], tau[0][c], tau[1][c]) * ket_m
         n += 1
 
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tau[0][2], tau[1][2]) * ket_m
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 

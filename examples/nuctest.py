@@ -7,9 +7,9 @@ from quap import *
 # matplotlib.use('Agg', force=True)
 
 dt = 0.001
-n_samples = 200_000
+n_samples = 10_000
 n_procs = os.cpu_count() - 2 
-run_tag = '_coul'  #start with a _
+run_tag = '_test'  #start with a _
 global_seed = 17
 
 def make_test_states(rng=None):
@@ -28,10 +28,10 @@ def make_asig(scale=10.0, rng=None):
     return make_potential((3, 3), scale=scale, rng=rng)
 
 def make_asigtau(scale=10.0, rng=None):
-    return make_potential((3, 3, 3), scale=scale, rng=rng)
+    return make_potential((3, 3), scale=scale, rng=rng)
 
 def make_atau(scale=10.0, rng=None):
-    return make_potential((3), scale=scale, rng=rng)
+    return make_potential((), scale=scale, rng=rng)
 
 def make_vcoul(scale=10.0, rng=None):
     return make_potential((), scale=scale, rng=rng)

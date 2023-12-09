@@ -48,17 +48,15 @@ def gauss_task(x, bra, ket, pot_dict):
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
-                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
-        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
+        ket_p = g_gauss_sample(nt.dt, atau, x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau, -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
         n += 1
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tau[0][2], tau[1][2]) * ket_m
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 def gauss_task(x, bra, ket, pot_dict):
@@ -80,17 +78,15 @@ def gauss_task(x, bra, ket, pot_dict):
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = g_gauss_sample(nt.dt, asigtau[a, b, c], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
-                ket_m = g_gauss_sample(nt.dt, asigtau[a, b, c], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = g_gauss_sample(nt.dt, atau[c], x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
-        ket_m = g_gauss_sample(nt.dt, atau[c], -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
+        ket_p = g_gauss_sample(nt.dt, atau, x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau, -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
         n += 1
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tau[0][2], tau[1][2]) * ket_m
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
@@ -115,12 +111,11 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
 
 
 def g_rbm_sample(dt, a, h, i, j, opi, opj):
-    norm = np.exp(-0.5 * dt * np.abs(a)) / 2
+    norm = np.exp(-0.5 * dt * np.abs(a))
     W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
     out = ident.scalar_mult(i, np.cosh(arg)).scalar_mult(j, np.cosh(arg)) + opi.scalar_mult(i, np.sinh(arg)) * opj.scalar_mult(j, -np.sign(a) * np.sinh(arg))
-    return out.spread_scalar_mult(2 * norm)
-    # return out.scalar_mult(0, 2*norm)
+    return out.spread_scalar_mult(norm)
 
 
 def rbm_task(h, bra, ket, pot_dict):
@@ -142,18 +137,16 @@ def rbm_task(h, bra, ket, pot_dict):
     for a in [0, 1, 2]:
         for b in [0, 1, 2]:
             for c in [0, 1, 2]:
-                ket_p = g_rbm_sample(nt.dt, asigtau[a, b, c], h[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
-                ket_m = g_rbm_sample(nt.dt, asigtau[a, b, c], 1 - h[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                ket_p = g_rbm_sample(nt.dt, asigtau[a, b], h[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_rbm_sample(nt.dt, asigtau[a, b], 1 - h[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
     for c in [0, 1, 2]:
-        ket_p = g_rbm_sample(nt.dt, atau[c], h[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
-        ket_m = g_rbm_sample(nt.dt, atau[c], 1 - h[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
+        ket_p = g_rbm_sample(nt.dt, atau, h[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_rbm_sample(nt.dt, atau, 1 - h[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
         n += 1
 
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], 0, 1, tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], 0, 1, tau[0][2], tau[1][2]) * ket_m
-    # ket_p = g_coul_onebody(nt.dt, vcoul) * ket_p
-    # ket_m = g_coul_onebody(nt.dt, vcoul) * ket_m
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
