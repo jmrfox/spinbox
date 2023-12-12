@@ -183,15 +183,24 @@ if __name__ == "__main__":
     print("INITIAL KET\n", ket)
     asig = np.loadtxt('examples/fort.7701').reshape((3,2,3,2), order='F')
     asigtau = np.loadtxt('examples/fort.7702').reshape((3,2,3,2), order='F')
+    atau = np.loadtxt('examples/fort.7703').reshape((2,2), order='F')
+    vcoul = np.loadtxt('examples/fort.7704').reshape((2,2), order='F')
     for a in range(3):
         for b in range(3):
-            norm = np.exp(-nt.dt * 0.5 * asig[a, 0, b, 1])
+            norm = np.exp(-nt.dt * 0.5 * np.abs(asig[a, 0, b, 1]))
             ket = (g_rbm_sample(nt.dt, asig[a, 0, b, 1], 1.0, 0, 1, sig[0][a], sig[1][b]) * ket).spread_scalar_mult(1/norm)
     for a in range(3):
         for b in range(3):
             for c in range(3):
-                norm = np.exp(-nt.dt * 0.5 * asigtau[a, 0, b, 1])
+                norm = np.exp(-nt.dt * 0.5 * np.abs(asigtau[a, 0, b, 1]))
                 ket = (g_rbm_sample(nt.dt, asigtau[a, 0, b, 1], 1.0, 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket).spread_scalar_mult(1/norm)
+    for c in range(3):
+        norm = np.exp(-nt.dt * 0.5 * np.abs(atau[0, 1]))
+        ket = (g_rbm_sample(nt.dt, atau[0, 1], 1.0, 0, 1, tau[0][c], tau[1][c]) * ket).spread_scalar_mult(1/norm)
+    # norm = np.exp(-nt.dt * 0.5 * (vcoul[0, 1] + np.abs(vcoul[0, 1])))
+    # ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * g_rbm_sample(nt.dt, 0.25 * vcoul[0, 1], 1.0, 0, 1, tau[0][2], tau[1][2]) * ket).spread_scalar_mult(1/norm)
+    norm = np.exp(-nt.dt * 0.5 * vcoul[0, 1])
+    ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * ket).spread_scalar_mult(1/norm)
     print("FINAL KET\n", ket)
 
     print('DONE')
