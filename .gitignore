@@ -4,3 +4,5 @@ __pycache__/
 examples/__pycache__/
 quap/__pycache__/
 src/quap/__pycache__/
+.idea/
+.vscode/
