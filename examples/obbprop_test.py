@@ -5,6 +5,11 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
+# import os
+# import sys
+# sys.path.append(os.path.dirname(os.path.realpath(__file__)))
+# print(sys.path)
+
 num_particles = 2
 ident = OneBodyBasisSpinIsospinOperator(num_particles)
 # list constructors make generating operators more streamlined
@@ -178,13 +183,15 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 
 if __name__ == "__main__":
     n_samples = nt.n_samples
-    fn_in = 'examples/fort.770'
+    fn_in = 'fort.770'
+    fn_truth = 'fort.775'
     ket = load_ket(fn_in)
+    truth = load_ket(fn_truth)
     print("INITIAL KET\n", ket)
-    asig = np.loadtxt('examples/fort.7701').reshape((3,2,3,2), order='F')
-    asigtau = np.loadtxt('examples/fort.7702').reshape((3,2,3,2), order='F')
-    atau = np.loadtxt('examples/fort.7703').reshape((2,2), order='F')
-    vcoul = np.loadtxt('examples/fort.7704').reshape((2,2), order='F')
+    asig = np.loadtxt('fort.7701').reshape((3,2,3,2), order='F')
+    asigtau = np.loadtxt('fort.7702').reshape((3,2,3,2), order='F')
+    atau = np.loadtxt('fort.7703').reshape((2,2), order='F')
+    vcoul = np.loadtxt('fort.7704').reshape((2,2), order='F')
     for a in range(3):
         for b in range(3):
             norm = np.exp(-nt.dt * 0.5 * np.abs(asig[a, 0, b, 1]))
@@ -197,10 +204,9 @@ if __name__ == "__main__":
     for c in range(3):
         norm = np.exp(-nt.dt * 0.5 * np.abs(atau[0, 1]))
         ket = (g_rbm_sample(nt.dt, atau[0, 1], 1.0, 0, 1, tau[0][c], tau[1][c]) * ket).spread_scalar_mult(1/norm)
-    # norm = np.exp(-nt.dt * 0.5 * (vcoul[0, 1] + np.abs(vcoul[0, 1])))
-    # ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * g_rbm_sample(nt.dt, 0.25 * vcoul[0, 1], 1.0, 0, 1, tau[0][2], tau[1][2]) * ket).spread_scalar_mult(1/norm)
-    norm = np.exp(-nt.dt * 0.5 * vcoul[0, 1])
-    ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * ket).spread_scalar_mult(1/norm)
+    norm = np.exp(-nt.dt * 0.125 * (vcoul[0, 1] + np.abs(vcoul[0, 1])))
+    ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * g_rbm_sample(nt.dt, 0.25 * vcoul[0, 1], 1.0, 0, 1, tau[0][2], tau[1][2]) * ket).spread_scalar_mult(1/norm)
     print("FINAL KET\n", ket)
-
+    # print(ket.coefficients / truth.coefficients)
+    print(ket.coefficients)
     print('DONE')
