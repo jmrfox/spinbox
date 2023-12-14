@@ -182,31 +182,29 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 
 
 if __name__ == "__main__":
-    n_samples = nt.n_samples
-    fn_in = 'fort.770'
-    fn_truth = 'fort.775'
-    ket = load_ket(fn_in)
-    truth = load_ket(fn_truth)
-    print("INITIAL KET\n", ket)
-    asig = np.loadtxt('fort.7701').reshape((3,2,3,2), order='F')
-    asigtau = np.loadtxt('fort.7702').reshape((3,2,3,2), order='F')
-    atau = np.loadtxt('fort.7703').reshape((2,2), order='F')
-    vcoul = np.loadtxt('fort.7704').reshape((2,2), order='F')
-    for a in range(3):
-        for b in range(3):
-            norm = np.exp(-nt.dt * 0.5 * np.abs(asig[a, 0, b, 1]))
-            ket = (g_rbm_sample(nt.dt, asig[a, 0, b, 1], 1.0, 0, 1, sig[0][a], sig[1][b]) * ket).spread_scalar_mult(1/norm)
-    for a in range(3):
-        for b in range(3):
-            for c in range(3):
-                norm = np.exp(-nt.dt * 0.5 * np.abs(asigtau[a, 0, b, 1]))
-                ket = (g_rbm_sample(nt.dt, asigtau[a, 0, b, 1], 1.0, 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket).spread_scalar_mult(1/norm)
-    for c in range(3):
-        norm = np.exp(-nt.dt * 0.5 * np.abs(atau[0, 1]))
-        ket = (g_rbm_sample(nt.dt, atau[0, 1], 1.0, 0, 1, tau[0][c], tau[1][c]) * ket).spread_scalar_mult(1/norm)
-    norm = np.exp(-nt.dt * 0.125 * (vcoul[0, 1] + np.abs(vcoul[0, 1])))
-    ket = (g_coul_onebody(nt.dt, vcoul[0, 1]) * g_rbm_sample(nt.dt, 0.25 * vcoul[0, 1], 1.0, 0, 1, tau[0][2], tau[1][2]) * ket).spread_scalar_mult(1/norm)
-    print("FINAL KET\n", ket)
-    # print(ket.coefficients / truth.coefficients)
-    print(ket.coefficients)
+    data_dir = './data/h2/'
+    ket = load_ket(data_dir+'fort.770')
+    print("INITIAL KET\n", ket.coefficients)
+    asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
+    asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
+    atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
+    vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
+    pairs_ij = [[0,1]]
+    h = 1.0
+    for i,j in pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                norm = np.exp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
+                ket = (g_rbm_sample(nt.dt, asig[a, i, b, j], h, i, j, sig[i][a], sig[j][b]) * ket).spread_scalar_mult(1/norm)
+        for a in range(3):
+            for b in range(3):
+                for c in range(3):
+                    norm = np.exp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
+                    ket = (g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, i, j, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket).spread_scalar_mult(1/norm)
+        for c in range(3):
+            norm = np.exp(-nt.dt * 0.5 * np.abs(atau[i, j]))
+            ket = (g_rbm_sample(nt.dt, atau[i, j], h, i, j, tau[i][c], tau[j][c]) * ket).spread_scalar_mult(1/norm)
+        norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
+        ket = (g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[i][2], tau[j][2]) * ket).spread_scalar_mult(1/norm)
+    print("FINAL KET\n", ket.coefficients)
     print('DONE')
