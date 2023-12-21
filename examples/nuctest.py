@@ -41,7 +41,7 @@ def make_bls(scale=10.0, rng=None):
 
 def make_all_potentials(scale=10.0, rng=None):
     out = {}
-    option = 'all'
+    option = 'test'
 
     if option=='all':
         out['asig'] = make_asig(scale=scale, rng=rng)
@@ -57,9 +57,9 @@ def make_all_potentials(scale=10.0, rng=None):
         out['bls'] = make_bls(scale=0., rng=rng)
     elif option=='test':
         out['asig'] = make_asig(scale=scale, rng=rng)
-        out['asigtau'] = make_asigtau(scale=0., rng=rng)
-        out['atau'] = make_atau(scale=0., rng=rng)
-        out['vcoul'] = make_vcoul(scale=0., rng=rng)
+        out['asigtau'] = make_asigtau(scale=scale, rng=rng)
+        out['atau'] = make_atau(scale=scale, rng=rng)
+        out['vcoul'] = make_vcoul(scale=scale, rng=rng)
         out['bls'] = make_bls(scale=0., rng=rng)
     return out
 
