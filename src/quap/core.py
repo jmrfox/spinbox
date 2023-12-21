@@ -17,6 +17,10 @@ from functools import reduce
 # functions
 
 def read_coeffs(filename):
+    """reads in complex spin coefficients from a text file
+    returns a numpy array
+    file contents are expected to be in a column form with real and imaginary coefficients in each row
+    """
     def r2c(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
@@ -36,6 +40,7 @@ def prod(l: list):
 
 
 def pauli(arg):
+    """returns pauli matrix numpy array"""
     if arg in [0, 'x']:
         out = np.array([[0, 1], [1, 0]], dtype=complex)
     elif arg in [1, 'y']:
@@ -52,6 +57,7 @@ def pauli(arg):
 
 
 def spinor2(state, orientation, seed=None):
+    """returns spin coefficients, numpy array"""
     assert state in ['up', 'down', 'random', 'max']
     assert orientation in ['bra', 'ket']
     if state == 'up':
@@ -71,6 +77,7 @@ def spinor2(state, orientation, seed=None):
 
 
 def spinor4(state, orientation, seed=None):
+    """returns spin-isospin coefficients, numpy array"""
     assert state in ['up', 'down', 'random', 'max']
     assert orientation in ['bra', 'ket']
     if state == 'up':
@@ -101,7 +108,7 @@ def repeated_kronecker_product(matrices: list):
 def pmat(x, heatmap=False, lims=None, print_zeros=False):
     """print and/or plot a complex matrix
     heatmat: plot a heatmap
-    lims: if plotting, limits on colormap
+    lims: if plotting, limits on colorbar
     print_zeros: whether to print Re/Im parts if all zero"""
     n, m = x.shape
     re = np.real(x)
