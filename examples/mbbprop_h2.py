@@ -54,7 +54,7 @@ def g_coul_onebody(dt,v):
     return out.exponentiate()
 
 
-def g_linear_ls(dt, bls):
+def g_linear_ls(bls):
     # linear approx to LS
     out = ident
     for a in range(3):
@@ -123,7 +123,7 @@ if __name__ == "__main__":
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
         ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
-        ket = g_linear_ls(nt.dt, bls) * ket
+        ket = g_linear_ls(bls) * ket
         
 
     print("FINAL KET\n", ket.coefficients)
