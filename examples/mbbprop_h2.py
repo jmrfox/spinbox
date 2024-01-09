@@ -58,17 +58,17 @@ def g_linear_ls(bls):
     # linear approx to LS
     out = ident
     for a in range(3):
-         out += 0.5j * bls[a] * ( sig[0][a] + sig[1][a] ) 
+         out += - 0.5j * bls[a] * ( sig[0][a] + sig[1][a] ) 
     return out
 
 
-def g_ls_onebody(dt, bls):
+def g_ls_onebody(bls):
     # one-body part of the LS propagator factorization
     out = ident.copy()
     for i in range(num_particles):
         for a in range(3):
             k = bls[a]   # for 2 particles, B_ija = g_ia
-            out = (np.cos(k) * ident + 1.0j * np.sin(k) * sig[i][a]) * out
+            out = (np.cos(k) * ident - 1.0j * np.sin(k) * sig[i][a]) * out
     return out
 
 
@@ -104,6 +104,7 @@ if __name__ == "__main__":
     atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
     vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
     bls = nt.make_bls()
+
     pairs_ij = [[0,1]]
     h = 1.0
     for i,j in pairs_ij:
@@ -123,8 +124,21 @@ if __name__ == "__main__":
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
         ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
-        ket = g_linear_ls(bls) * ket
-        
+        ls_type = 'linear'
+        # ls_type = 'full'
+        if ls_type is None:
+            pass
+        elif ls_type == 'linear':
+            ket = g_linear_ls(bls) * ket
+        elif ls_type == 'full':
+            for a in range(3):
+                ket = np.exp(- 0.5 * bls[a]**2) * g_ls_onebody(bls) * ket
+            for a in range(3):
+                for b in range(3):
+                    asigls = - bls[a]* bls[b]
+                    # norm = np.exp(- 0.5 * (np.abs(asigls) + bls[a]**2))
+                    # ket = (1/norm) * g_rbm_sample(1, asigls, h, sig[i][a], sig[j][b]) * ket
+                    ket = g_rbm_sample(1, asigls, h, sig[i][a], sig[j][b]) * ket
 
     print("FINAL KET\n", ket.coefficients)
     print('DONE')

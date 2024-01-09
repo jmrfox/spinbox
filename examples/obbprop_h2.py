@@ -32,14 +32,14 @@ def g_coul_onebody(dt, v):
     out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + tau[0][2].scalar_mult(0, sk) * tau[1][2].scalar_mult(1, sk)
     return out.spread_scalar_mult(norm)
 
-def g_ls_onebody(dt, bls, alpha):
+def g_ls_onebody(bls, alpha):
     """just the one-body part of the factored LS propagator
     for use along with auxiliary field propagator for 2 body part
     alpha is the dimension, xyz = 012"""
-    k = - 0.5 * bls * dt
-    ck, sk = np.cos(k), np.sin(k)
+    k = - 1.j * bls
+    ck, sk = np.cosh(k), np.sinh(k)
     out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + sig[0][alpha].scalar_mult(0, sk) * sig[1][alpha].scalar_mult(1, sk)
-    return out.spread_scalar_mult(norm)
+    return out
 
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
@@ -61,11 +61,13 @@ if __name__ == "__main__":
     data_dir = './data/h2/'
     ket = load_ket(data_dir+'fort.770')
     print("INITIAL KET\n", ket.coefficients)
+    print("INITIAL KET in many-body basis\n", ket.to_many_body_state().coefficients)
     asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
     asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
     atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
     vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
     bls = nt.make_bls()
+            
     pairs_ij = [[0,1]]
     h = 1.0
     for i,j in pairs_ij:
@@ -86,12 +88,14 @@ if __name__ == "__main__":
         ket = (g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[i][2], tau[j][2]) * ket).spread_scalar_mult(1/norm)
         # LS
         for a in range(3):
-            ket = g_ls_onebody(nt.dt, bls[a], a) * ket
+            ket = g_ls_onebody(bls[a], a) * ket
+            ket = ket.spread_scalar_mult(np.exp( - 0.5 * bls[a]**2))
         for a in range(3):
             for b in range(3):
-                asigls = -bls[a]* bls[b]
-                norm = np.exp(-nt.dt * 0.5 * (np.abs(asigls) + bls[a]**2))
-                ket = (g_rbm_sample(nt.dt, asigls, h, i, j, sig[i][a], sig[j][b]) * ket).spread_scalar_mult(1/norm)
+                asigls = - bls[a]* bls[b]
+                # norm = np.exp(- 0.5 * (np.abs(asigls) + bls[a]**2))
+                # ket = (g_rbm_sample(1, asigls, h, i, j, sig[i][a], sig[j][b]) * ket).spread_scalar_mult(1/norm)
+                ket = g_rbm_sample(1, asigls, h, i, j, sig[i][a], sig[j][b]) * ket
     print("FINAL KET\n", ket.coefficients)
     print("FINAL KET in many-body basis\n", ket.to_many_body_state().coefficients)
     print('DONE')

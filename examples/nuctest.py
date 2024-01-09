@@ -36,7 +36,7 @@ def make_atau(scale=10.0, rng=None):
 def make_vcoul(scale=10.0, rng=None):
     return make_potential((), scale=scale, rng=rng)
 
-def make_bls(scale=10.0, rng=None):
+def make_bls(scale=0.1, rng=None):
     return make_potential((3), scale=scale, rng=rng)
 
 def make_all_potentials(scale=10.0, rng=None):
