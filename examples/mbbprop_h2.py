@@ -58,7 +58,7 @@ def g_linear_ls(bls, i, j):
     # linear approx to LS
     out = ident
     for a in range(3):
-         out += - 0.5.j * bls[a] * ( sig[i][a] + sig[j][a] ) 
+         out += - 0.5j * bls[a] * ( sig[i][a] + sig[j][a] ) 
     return out
 
 
@@ -123,8 +123,8 @@ if __name__ == "__main__":
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
         ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
-        ls_type = 'linear'
-        # ls_type = 'full'
+        # ls_type = 'linear'
+        ls_type = 'full'
         if ls_type is None:
             pass
         elif ls_type == 'linear':
