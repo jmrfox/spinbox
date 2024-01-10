@@ -23,23 +23,35 @@ def load_ket(filename):
     sp = OneBodyBasisSpinIsospinState(num_particles, 'ket', c.reshape(-1, 1))
     return sp
 
-def g_coul_onebody(dt, v):
+def g_coul_onebody(dt, v, i, j):
     """just the one-body part of the factored coulomb propagator
-    for use along with auxiliary field propagator for 2 body part"""
+    for use along with auxiliary field propagator for 2 body part
+    although I call this one-body factor, it in fact acts on both particles, just individually"""
     k = - 0.125 * v * dt
     norm = np.exp(k)
     ck, sk = np.cosh(k), np.sinh(k)
-    out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + tau[0][2].scalar_mult(0, sk) * tau[1][2].scalar_mult(1, sk)
+    out = ident.scalar_mult(i, ck).scalar_mult(j, ck) + tau[i][2].scalar_mult(i, sk) * tau[j][2].scalar_mult(j, sk)
+    # out = ident.copy()
+    # out = (ident.scalar_mult(i, ck) + tau[i][2].scalar_mult(i, sk) ) * out
+    # out = (ident.scalar_mult(j, ck) + tau[j][2].scalar_mult(j, sk) ) * out
     return out.spread_scalar_mult(norm)
 
-def g_ls_onebody(bls, alpha):
+# def g_ls_onebody(bls, i, alpha):
+#     """just the one-body part of the factored LS propagator
+#     this is actually a 1-body operator. i is the particle index"""
+#     k = - 1.j * bls[alpha]
+#     ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
+#     out = ident.scalar_mult(i, ck) + sig[i][alpha].scalar_mult(i, sk)
+#     return out
+
+def g_ls_onebody(bls, i, j, alpha):
     """just the one-body part of the factored LS propagator
-    for use along with auxiliary field propagator for 2 body part
-    alpha is the dimension, xyz = 012"""
-    k = - 1.j * bls
-    ck, sk = np.cosh(k), np.sinh(k)
-    out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + sig[0][alpha].scalar_mult(0, sk) * sig[1][alpha].scalar_mult(1, sk)
-    return out
+    this is actually a 1-body operator. i is the particle index"""
+    k = - 1.j * bls[alpha]
+    norm = np.exp( - 0.5 * bls[alpha]**2)
+    ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
+    out = ident.scalar_mult(i, ck).scalar_mult(j, ck) + sig[i][a].scalar_mult(i, sk) * sig[j][a].scalar_mult(j, sk)
+    return out.spread_scalar_mult(norm)
 
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
@@ -85,11 +97,10 @@ if __name__ == "__main__":
             ket = (g_rbm_sample(nt.dt, atau[i, j], h, i, j, tau[i][c], tau[j][c]) * ket).spread_scalar_mult(1/norm)
         # coulomb
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
-        ket = (g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[i][2], tau[j][2]) * ket).spread_scalar_mult(1/norm)
+        ket = (g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[i][2], tau[j][2]) * ket).spread_scalar_mult(1/norm)
         # LS
         for a in range(3):
-            ket = g_ls_onebody(bls[a], a) * ket
-            ket = ket.spread_scalar_mult(np.exp( - 0.5 * bls[a]**2))
+            ket = g_ls_onebody(bls, i, j, a) * ket
         for a in range(3):
             for b in range(3):
                 asigls = - bls[a]* bls[b]

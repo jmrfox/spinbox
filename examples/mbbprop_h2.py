@@ -14,61 +14,60 @@ tau = [[ManyBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1,
 # access like sig[particle][xyz]
 
 
-def g_pade_sig(dt, asig):
-    out = ManyBodyBasisSpinIsospinOperator(2).zeros()
+def g_pade_sig(dt, asig, i, j):
+    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
     for a in range(3):
         for b in range(3):
-            out += asig[a, b] * sig[0][a] * sig[1][b]
+            out += asig[a, b] * sig[i][a] * sig[j][b]
     out = -0.5 * dt * out
     return out.exponentiate()
 
 
-def g_pade_sigtau(dt, asigtau):
-    out = ManyBodyBasisSpinIsospinOperator(2).zeros()
+def g_pade_sigtau(dt, asigtau, i, j):
+    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
     for a in range(3):
         for b in range(3):
             for c in range(3):
-                out += asigtau[a, b] * sig[0][a] * sig[1][b] * tau[0][c] * tau[1][c]
+                out += asigtau[a, b] * sig[i][a] * sig[j][b] * tau[i][c] * tau[j][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
 
-def g_pade_tau(dt, atau):
-    out = ManyBodyBasisSpinIsospinOperator(2).zeros()
+def g_pade_tau(dt, atau, i, j):
+    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
     for c in range(3):
-        out += atau * tau[0][c] * tau[1][c]
+        out += atau * tau[i][c] * tau[j][c]
     out = -0.5 * dt * out
     return out.exponentiate()
 
 
-def g_pade_coul(dt, v):
-    out = ident + tau[0][2] + tau[1][2] + tau[0][2] * tau[1][2]
+def g_pade_coul(dt, v, i, j):
+    out = ident + tau[i][2] + tau[j][2] + tau[i][2] * tau[j][2]
     out = -0.125 * v * dt * out
     return out.exponentiate()
 
 
-def g_coul_onebody(dt,v):
+def g_coul_onebody(dt, v, i, j):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
-    out = - 0.125 * v * dt * (ident + tau[0][2] + tau[1][2])
+    out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2])
     return out.exponentiate()
 
 
-def g_linear_ls(bls):
+def g_linear_ls(bls, i, j):
     # linear approx to LS
     out = ident
     for a in range(3):
-         out += - 0.5j * bls[a] * ( sig[0][a] + sig[1][a] ) 
+         out += - 0.5.j * bls[a] * ( sig[i][a] + sig[j][a] ) 
     return out
 
 
-def g_ls_onebody(bls):
+def g_ls_onebody(bls, i, j):
     # one-body part of the LS propagator factorization
     out = ident.copy()
-    for i in range(num_particles):
-        for a in range(3):
-            k = bls[a]   # for 2 particles, B_ija = g_ia
-            out = (np.cos(k) * ident - 1.0j * np.sin(k) * sig[i][a]) * out
+    for a in range(3):
+        norm = np.exp(- 0.5 * bls[a]**2)
+        out = norm * (- 1.j * bls[a] * (sig[i][a] + sig[j][a])).exponentiate() * out
     return out
 
 
@@ -122,17 +121,16 @@ if __name__ == "__main__":
             ket = (1/norm) * g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
         # coulomb
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
-        ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j]) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
+        ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
         ls_type = 'linear'
         # ls_type = 'full'
         if ls_type is None:
             pass
         elif ls_type == 'linear':
-            ket = g_linear_ls(bls) * ket
+            ket = g_linear_ls(bls, i, j) * ket
         elif ls_type == 'full':
-            for a in range(3):
-                ket = np.exp(- 0.5 * bls[a]**2) * g_ls_onebody(bls) * ket
+            ket = g_ls_onebody(bls, i, j) * ket
             for a in range(3):
                 for b in range(3):
                     asigls = - bls[a]* bls[b]
