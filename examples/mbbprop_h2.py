@@ -58,17 +58,24 @@ def g_linear_ls(bls, i, j):
     # linear approx to LS
     out = ident
     for a in range(3):
-         out += - 0.5j * bls[a] * ( sig[i][a] + sig[j][a] ) 
+        out += - 0.5j * bls[a] * ( sig[i][a] + sig[j][a] ) 
     return out
 
 
 def g_ls_onebody(bls, i, j):
     # one-body part of the LS propagator factorization
-    out = ident.copy()
+    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
     for a in range(3):
-        norm = np.exp(- 0.5 * bls[a]**2)
-        out = norm * (- 1.j * bls[a] * (sig[i][a] + sig[j][a])).exponentiate() * out
-    return out
+        out = - 0.5j * bls[a] * (sig[i][a] + sig[j][a])
+    return out.exponentiate()
+
+def g_ls_twobody(bls, i, j):
+    # one-body part of the LS propagator factorization
+    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    for a in range(3):
+        for b in range(3):
+            out += 0.125 * bls[a] * bls[b] * sig[i][a] * sig[j][b]
+    return out.exponentiate()
 
 
 def g_gauss_sample(dt, a, x, opi, opj):
@@ -94,7 +101,32 @@ def load_ket(filename):
     return sp
 
 
-if __name__ == "__main__":
+
+ls_test = True
+if __name__ == "__main__" and ls_test:
+    data_dir = './data/h2/'
+    # ket = load_ket(data_dir+'fort.770').to_many_body_state()
+    # print("INITIAL KET\n", ket.coefficients)
+    bls = nt.make_bls()
+
+    # pairs_ij = [[0,1]]
+    # ls_type = 'linear'
+    # ls_type = 'full'
+
+    ket = load_ket(data_dir+'fort.770').to_many_body_state()
+    ket = g_linear_ls(bls, 0, 1) * ket
+    print("ket 1\n", ket.coefficients)
+    
+    ket = load_ket(data_dir+'fort.770').to_many_body_state()
+    ket = g_ls_onebody(bls, 0, 1) * ket
+    trace_factor = np.exp( + 0.125 * np.sum(bls**2))
+    ket = trace_factor * g_ls_twobody(bls, 0, 1) * ket                   
+    print("ket 2\n", ket.coefficients)
+    
+    # print("FINAL KET\n", ket.coefficients)
+    print('DONE')
+
+if __name__ == "__main__" and not ls_test:
     data_dir = './data/h2/'
     ket = load_ket(data_dir+'fort.770').to_many_body_state()
     print("INITIAL KET\n", ket.coefficients)
@@ -123,20 +155,16 @@ if __name__ == "__main__":
         norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
         ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
-        # ls_type = 'linear'
-        ls_type = 'full'
+        ls_type = 'linear'
+        # ls_type = 'full'
         if ls_type is None:
             pass
         elif ls_type == 'linear':
             ket = g_linear_ls(bls, i, j) * ket
         elif ls_type == 'full':
             ket = g_ls_onebody(bls, i, j) * ket
-            for a in range(3):
-                for b in range(3):
-                    asigls = - bls[a]* bls[b]
-                    # norm = np.exp(- 0.5 * (np.abs(asigls) + bls[a]**2))
-                    # ket = (1/norm) * g_rbm_sample(1, asigls, h, sig[i][a], sig[j][b]) * ket
-                    ket = g_rbm_sample(1, asigls, h, sig[i][a], sig[j][b]) * ket
+            trace_factor = np.exp( 0.5 * np.sum(bls**2))
+            ket = trace_factor * g_ls_twobody(bls, i, j) * ket                   
 
     print("FINAL KET\n", ket.coefficients)
     print('DONE')
