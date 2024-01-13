@@ -5,22 +5,17 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
-# import os
-# import sys
-# sys.path.append(os.path.dirname(os.path.realpath(__file__)))
-# print(sys.path)
 
-num_particles = 2
-ident = OneBodyBasisSpinIsospinOperator(num_particles)
+ident = OneBodyBasisSpinIsospinOperator(nt.num_particles)
 # list constructors make generating operators more streamlined
-sig = [[OneBodyBasisSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
-tau = [[OneBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
+sig = [[OneBodyBasisSpinIsospinOperator(nt.num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.num_particles)]
+tau = [[OneBodyBasisSpinIsospinOperator(nt.num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.num_particles)]
 # access like sig[particle][xyz]
 
 
 def load_ket(filename):
     c = read_coeffs(filename)
-    sp = OneBodyBasisSpinIsospinState(num_particles, 'ket', c.reshape(-1, 1))
+    sp = OneBodyBasisSpinIsospinState(nt.num_particles, 'ket', c.reshape(-1, 1))
     return sp
 
 def g_coul_onebody(dt, v, i, j):
@@ -31,28 +26,28 @@ def g_coul_onebody(dt, v, i, j):
     norm = np.exp(k)
     ck, sk = np.cosh(k), np.sinh(k)
     out = ident.scalar_mult(i, ck).scalar_mult(j, ck) + tau[i][2].scalar_mult(i, sk) * tau[j][2].scalar_mult(j, sk)
-    # out = ident.copy()
-    # out = (ident.scalar_mult(i, ck) + tau[i][2].scalar_mult(i, sk) ) * out
-    # out = (ident.scalar_mult(j, ck) + tau[j][2].scalar_mult(j, sk) ) * out
     return out.spread_scalar_mult(norm)
 
-# def g_ls_onebody(bls, i, alpha):
-#     """just the one-body part of the factored LS propagator
-#     this is actually a 1-body operator. i is the particle index"""
-#     k = - 1.j * bls[alpha]
-#     ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
-#     out = ident.scalar_mult(i, ck) + sig[i][alpha].scalar_mult(i, sk)
-#     return out
-
-def g_ls_onebody(bls, i, j, alpha):
+def g_ls_linear(gls, i, a):
     """just the one-body part of the factored LS propagator
     this is actually a 1-body operator. i is the particle index"""
-    k = - 1.j * bls[alpha]
-    norm = np.exp( - 0.5 * bls[alpha]**2)
-    ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
-    out = ident.scalar_mult(i, ck).scalar_mult(j, ck) + sig[i][a].scalar_mult(i, sk) * sig[j][a].scalar_mult(j, sk)
-    return out.spread_scalar_mult(norm)
+    k = - 1.j * gls[a, i]
+    out = ident + sig[i][a].scalar_mult(i, k)
+    return out
 
+def g_ls_onebody(gls, i, a):
+    """just the one-body part of the factored LS propagator
+    this is actually a 1-body operator. i is the particle index"""
+    k = - 1.j * gls[a, i]
+    ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
+    out = ident.scalar_mult(i, ck) + sig[i][a].scalar_mult(i, sk)
+    return out
+
+def g_ls_twobody(gls, i, j, a, b):
+    k = 0.5 * gls[a, i] * gls[b, j]
+    ck, sk = np.cosh(k, dtype=complex), np.sinh(k, dtype=complex)
+    out = ident.scalar_mult(i, ck).scalar_mult(j, ck) + sig[i][a].scalar_mult(i, sk) * sig[j][b].scalar_mult(j, sk)
+    return out
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
     k = np.sqrt(-0.5 * dt * a, dtype=complex)
@@ -69,16 +64,51 @@ def g_rbm_sample(dt, a, h, i, j, opi, opj):
     return out.spread_scalar_mult(norm)
 
 
-if __name__ == "__main__":
+def load_h2():
     data_dir = './data/h2/'
-    ket = load_ket(data_dir+'fort.770')
-    print("INITIAL KET\n", ket.coefficients)
-    print("INITIAL KET in many-body basis\n", ket.to_many_body_state().coefficients)
+    c = read_coeffs(data_dir+'fort.770')
+    ket = OneBodyBasisSpinIsospinState(nt.num_particles, 'ket', c.reshape(-1, 1)).to_many_body_state()    
     asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
     asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
     atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
     vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
     bls = nt.make_bls()
+    return ket, asig, asigtau, atau, vcoul, bls
+
+
+ls_test = True
+if __name__ == "__main__" and ls_test:
+    bra, ket = nt.make_test_states()
+    pots = nt.make_all_potentials(scale = 0.1)
+    gls = np.sum(pots['bls'], axis = 2)
+
+    ket_0 = ket.copy()
+    for i in range(nt.num_particles):
+        for a in range(3):
+            ket_0 = g_ls_linear(gls, i, a) * ket_0
+
+    ket_1 = ket.copy()
+    trace_factor = np.exp( - 0.5 * np.sum(gls**2))
+    ket_1 = trace_factor * ket_1
+    for i in range(nt.num_particles):
+        for a in range(3):
+            ket_1 = g_ls_onebody(gls, i, a) * ket_1
+        for j in range(i):
+            for b in range(3):
+                ket_1 = g_ls_twobody(gls, i, j, a, b) * ket_1   
+    
+    # print("linear ket: \n", ket_0)
+    # print("full ket: \n", ket_1)
+    print("linear bracket: \n", bra * ket_0)
+    print("full bracket: \n", bra * ket_1)
+    
+    
+    print('DONE')
+
+
+elif __name__ == "__main__" and not ls_test:
+    ket, asig, asigtau, atau, vcoul, bls = load_h2()
+    print("INITIAL KET\n", ket.coefficients)
             
     pairs_ij = [[0,1]]
     h = 1.0

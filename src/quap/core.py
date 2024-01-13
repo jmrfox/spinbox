@@ -16,6 +16,9 @@ from functools import reduce
 
 # functions
 
+def csqrt(x):
+    return np.sqrt(x, dtype=complex)
+
 def read_coeffs(filename):
     """reads in complex spin coefficients from a text file
     returns a numpy array
@@ -94,6 +97,30 @@ def spinor4(state, orientation, seed=None):
         return sp.reshape((4, 1)) / np.linalg.norm(sp)
     elif orientation == 'bra':
         return sp.reshape((1, 4)) / np.linalg.norm(sp)
+
+
+def random_spin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
+    sp_bra, sp_ket = [], []
+    for i in range(num_particles):
+        sp_bra.append(spinor2('random', 'bra', seed=bra_seed + i))
+        sp_ket.append(spinor2('random', 'ket', seed=ket_seed + i))
+    coeffs_bra = np.concatenate(sp_bra, axis=1)
+    coeffs_ket = np.concatenate(sp_ket, axis=0)
+    bra = OneBodyBasisSpinState(num_particles, 'bra', coeffs_bra)
+    ket = OneBodyBasisSpinState(num_particles, 'ket', coeffs_ket)
+    return bra, ket
+
+
+def random_spinisospin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
+    sp_bra, sp_ket = [], []
+    for i in range(num_particles):
+        sp_bra.append(spinor4('random', 'bra', seed=bra_seed + i))
+        sp_ket.append(spinor4('random', 'ket', seed=ket_seed + i))
+    coeffs_bra = np.concatenate(sp_bra, axis=1)
+    coeffs_ket = np.concatenate(sp_ket, axis=0)
+    bra = OneBodyBasisSpinIsospinState(num_particles, 'bra', coeffs_bra)
+    ket = OneBodyBasisSpinIsospinState(num_particles, 'ket', coeffs_ket)
+    return bra, ket
 
 
 def repeated_kronecker_product(matrices: list):
@@ -988,17 +1015,6 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         return out
 
 
-def random_spin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
-    coeffs_bra = np.concatenate(num_particles * [spinor2('random', 'bra', seed=bra_seed)], axis=1)
-    coeffs_ket = np.concatenate(num_particles * [spinor2('random', 'ket', seed=ket_seed)], axis=0)
-    bra = OneBodyBasisSpinState(num_particles, 'bra', coeffs_bra)
-    ket = OneBodyBasisSpinState(num_particles, 'ket', coeffs_ket)
-    return bra, ket
 
+# class Optimizer():
 
-def random_spinisospin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
-    coeffs_bra = np.concatenate(num_particles * [spinor4('random', 'bra', seed=bra_seed)], axis=1)
-    coeffs_ket = np.concatenate(num_particles * [spinor4('random', 'ket', seed=ket_seed)], axis=0)
-    bra = OneBodyBasisSpinIsospinState(num_particles, 'bra', coeffs_bra)
-    ket = OneBodyBasisSpinIsospinState(num_particles, 'ket', coeffs_ket)
-    return bra, ket

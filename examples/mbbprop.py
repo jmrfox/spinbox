@@ -6,16 +6,15 @@ from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
 
-num_particles = 2
-ident = ManyBodyBasisSpinIsospinOperator(num_particles)
+ident = ManyBodyBasisSpinIsospinOperator(nt.num_particles)
 # list constructors make generating operators more streamlined
-sig = [[ManyBodyBasisSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
-tau = [[ManyBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
-# access like sig[particle][xyz]
+sig = [[ManyBodyBasisSpinIsospinOperator(nt.num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.num_particles)]
+tau = [[ManyBodyBasisSpinIsospinOperator(nt.num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.num_particles)]
+# sig[particle][xyz]
 
 
 def g_pade_sig(dt, asig, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
     for a in range(3):
         for b in range(3):
             out += asig[a, b] * sig[i][a] * sig[j][b]
@@ -24,7 +23,7 @@ def g_pade_sig(dt, asig, i, j):
 
 
 def g_pade_sigtau(dt, asigtau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
     for a in range(3):
         for b in range(3):
             for c in range(3):
@@ -34,7 +33,7 @@ def g_pade_sigtau(dt, asigtau, i, j):
 
 
 def g_pade_tau(dt, atau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
     for c in range(3):
         out += atau * tau[i][c] * tau[j][c]
     out = -0.5 * dt * out
@@ -54,32 +53,31 @@ def g_coul_onebody(dt, v, i, j):
     return out.exponentiate()
 
 
-def g_linear_ls(bls, i, j):
+def g_ls_linear(gls, i):
     # linear approx to LS
     out = ident
     for a in range(3):
-        out += - 0.5j * bls[a] * ( sig[i][a] + sig[j][a] ) 
+        out += - 1.j * gls[a, i] * sig[i][a] 
     return out
 
-
-def g_ls_onebody(bls, i, j):
+def g_ls_onebody(gls, i):
     # one-body part of the LS propagator factorization
-    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
     for a in range(3):
-        out = - 0.5j * bls[a] * (sig[i][a] + sig[j][a])
+        out += - 1.j * gls[a, i] * sig[i][a]
     return out.exponentiate()
 
-def g_ls_twobody(bls, i, j):
+def g_ls_twobody(gls, i, j):
     # one-body part of the LS propagator factorization
-    out = ManyBodyBasisSpinIsospinOperator(num_particles).zeros()
+    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
     for a in range(3):
         for b in range(3):
-            out += 0.125 * bls[a] * bls[b] * sig[i][a] * sig[j][b]
+            out += 0.5 * gls[a, i] * gls[b, j] * sig[i][a] * sig[j][b]
     return out.exponentiate()
 
 
 def g_gauss_sample(dt, a, x, opi, opj):
-    k = np.sqrt(-0.5 * dt * a, dtype=complex)
+    k = csqrt(-0.5 * dt * a)
     norm = np.exp(0.5 * dt * a)
     gi = np.cosh(k * x) * ident + np.sinh(k * x) * opi
     gj = np.cosh(k * x) * ident + np.sinh(k * x) * opj
@@ -88,53 +86,54 @@ def g_gauss_sample(dt, a, x, opi, opj):
 
 def g_rbm_sample(dt, a, h, opi, opj):
     norm = np.exp(-0.5 * dt * np.abs(a)) / 2
-    W = np.arctanh(np.sqrt(np.tanh(0.5 * dt * np.abs(a))))
+    W = np.arctanh(csqrt(np.tanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
     qi = np.cosh(arg) * ident + np.sinh(arg) * opi
     qj = np.cosh(arg) * ident - np.sign(a) * np.sinh(arg) * opj
     return 2 * norm * qi * qj
 
 
-def load_ket(filename):
-    c = read_coeffs(filename)
-    sp = OneBodyBasisSpinIsospinState(num_particles, 'ket', c.reshape(-1, 1))
-    return sp
-
-
-
-ls_test = True
-if __name__ == "__main__" and ls_test:
+def load_h2():
     data_dir = './data/h2/'
-    # ket = load_ket(data_dir+'fort.770').to_many_body_state()
-    # print("INITIAL KET\n", ket.coefficients)
-    bls = nt.make_bls()
-
-    # pairs_ij = [[0,1]]
-    # ls_type = 'linear'
-    # ls_type = 'full'
-
-    ket = load_ket(data_dir+'fort.770').to_many_body_state()
-    ket = g_linear_ls(bls, 0, 1) * ket
-    print("ket 1\n", ket.coefficients)
-    
-    ket = load_ket(data_dir+'fort.770').to_many_body_state()
-    ket = g_ls_onebody(bls, 0, 1) * ket
-    trace_factor = np.exp( + 0.125 * np.sum(bls**2))
-    ket = trace_factor * g_ls_twobody(bls, 0, 1) * ket                   
-    print("ket 2\n", ket.coefficients)
-    
-    # print("FINAL KET\n", ket.coefficients)
-    print('DONE')
-
-if __name__ == "__main__" and not ls_test:
-    data_dir = './data/h2/'
-    ket = load_ket(data_dir+'fort.770').to_many_body_state()
-    print("INITIAL KET\n", ket.coefficients)
+    c = read_coeffs(data_dir+'fort.770')
+    ket = OneBodyBasisSpinIsospinState(nt.num_particles, 'ket', c.reshape(-1, 1)).to_many_body_state()    
     asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
     asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
     atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
     vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
     bls = nt.make_bls()
+    return ket, asig, asigtau, atau, vcoul, bls
+
+
+ls_test = True
+if __name__ == "__main__" and ls_test:
+    bra, ket = nt.make_test_states(manybody=True)
+    
+    pots = nt.make_all_potentials(scale = 0.1)
+    gls = np.sum(pots['bls'], axis = 2)
+
+    ket_0 = ket.copy()
+    for i in range(nt.num_particles):
+        ket_0 = g_ls_linear(gls, i) * ket_0
+    
+    ket_1 = ket.copy()
+    trace_factor = np.exp( - 0.5 * np.sum(gls**2))
+    ket_1 = trace_factor * ket_1
+    for i in range(nt.num_particles):
+        ket_1 = g_ls_onebody(gls, i) * ket_1
+        for j in range(i):
+            ket_1 = g_ls_twobody(gls, i, j) * ket_1
+    
+    # print("linear ket: \n", ket_0)
+    # print("full ket: \n", ket_1)
+    print("linear bracket: \n", bra * ket_0)
+    print("full bracket: \n", bra * ket_1)
+    
+    print('DONE')
+
+if __name__ == "__main__" and not ls_test:
+    ket, asig, asigtau, atau, vcoul, bls = load_h2()
+    print("INITIAL KET\n", ket.coefficients)
 
     pairs_ij = [[0,1]]
     h = 1.0
@@ -160,7 +159,7 @@ if __name__ == "__main__" and not ls_test:
         if ls_type is None:
             pass
         elif ls_type == 'linear':
-            ket = g_linear_ls(bls, i, j) * ket
+            ket = g_ls_linear(bls, i, j) * ket
         elif ls_type == 'full':
             ket = g_ls_onebody(bls, i, j) * ket
             trace_factor = np.exp( 0.5 * np.sum(bls**2))

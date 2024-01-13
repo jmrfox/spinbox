@@ -8,40 +8,61 @@ from quap import *
 
 dt = 0.001
 n_samples = 10_000
-n_procs = os.cpu_count() - 2 
+n_procs = os.cpu_count() - 1
 run_tag = '_test'  #start with a _
 global_seed = 17
 
-def make_test_states(rng=None):
+num_particles = 2
+
+def make_test_states(rng=None, manybody=False):
     """returns one body basis spin-isospin states for testing"""
-    bra, ket = random_spinisospin_bra_ket(2, bra_seed=global_seed, ket_seed=global_seed+1)
+    bra, ket = random_spinisospin_bra_ket(num_particles, bra_seed=global_seed, ket_seed=global_seed*100)
+    if manybody:
+        bra = bra.to_many_body_state()
+        ket = ket.to_many_body_state()
     return bra, ket
 
-def make_potential(size, scale=10.0, rng=None):
+def make_potential(shape, scale=10.0, rng=None):
     if rng is not None:
-        out = scale * rng.standard_normal(size=size)
+        out = scale * rng.standard_normal(size=shape)
     else:
-        out = scale * np.ones(shape=size)
+        out = scale * np.ones(shape=shape)
     return out
 
 def make_asig(scale=10.0, rng=None):
-    return make_potential((3, 3), scale=scale, rng=rng)
+    v =  make_potential((3, num_particles, 3, num_particles), scale=scale, rng=rng)
+    for i in range(num_particles):
+        v[:, i, :, i] = 0
+    return v 
+
 
 def make_asigtau(scale=10.0, rng=None):
-    return make_potential((3, 3), scale=scale, rng=rng)
+    v = make_potential((3, num_particles, 3, num_particles), scale=scale, rng=rng)
+    for i in range(num_particles):
+        v[:, i, :, i] = 0
+    return v 
 
 def make_atau(scale=10.0, rng=None):
-    return make_potential((), scale=scale, rng=rng)
+    v =  make_potential((num_particles, num_particles), scale=scale, rng=rng)
+    for i in range(num_particles):
+        v[i, i] = 0
+    return v 
 
 def make_vcoul(scale=10.0, rng=None):
-    return make_potential((), scale=scale, rng=rng)
+    v =  make_potential((num_particles, num_particles), scale=scale, rng=rng)
+    for i in range(num_particles):
+        v[i, i] = 0
+    return v 
 
 def make_bls(scale=1.0, rng=None):
-    return make_potential((3), scale=scale, rng=rng)
+    v =  make_potential((3, num_particles, num_particles), scale=scale, rng=rng)
+    for i in range(num_particles):
+        v[:, i, i] = 0
+    return v 
 
 def make_all_potentials(scale=10.0, rng=None):
     out = {}
-    option = 'test'
+    option = 'all'
 
     if option=='all':
         out['asig'] = make_asig(scale=scale, rng=rng)
@@ -55,12 +76,7 @@ def make_all_potentials(scale=10.0, rng=None):
         out['atau'] = make_atau(scale=0., rng=rng)
         out['vcoul'] = make_vcoul(scale=scale, rng=rng)
         out['bls'] = make_bls(scale=0., rng=rng)
-    elif option=='test':
-        out['asig'] = make_asig(scale=scale, rng=rng)
-        out['asigtau'] = make_asigtau(scale=scale, rng=rng)
-        out['atau'] = make_atau(scale=scale, rng=rng)
-        out['vcoul'] = make_vcoul(scale=scale, rng=rng)
-        out['bls'] = make_bls(scale=0., rng=rng)
+
     return out
 
 
