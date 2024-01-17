@@ -17,24 +17,31 @@ from functools import reduce
 # functions
 
 def csqrt(x):
+    """Complex square root
+    """
     return np.sqrt(x, dtype=complex)
 
 def read_coeffs(filename):
-    """reads in complex spin coefficients from a text file
-    returns a numpy array
-    file contents are expected to be in a column form with real and imaginary coefficients in each row
+    """Reads complex spin coefficients from a file 
+
+    Args:
+        filename (str): name of file to load
+
+    Returns:
+        numpy.array 
     """
     def r2c(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
 
     c = np.loadtxt(filename)
-    sp = np.array([r2c(x) for x in c])
+    sp = np.array([r2c(x) for x in c], dtype=complex)
     return sp
 
 
 def prod(l: list):
-    """compute the product of items in a list"""
+    """Multiplies (*) elements of list, right to left
+    """
     lrev = l[::-1]
     out = lrev[0]
     for x in lrev[1:]:
@@ -122,7 +129,7 @@ def random_spinisospin_bra_ket(num_particles, bra_seed=None, ket_seed=None):
     ket = OneBodyBasisSpinIsospinState(num_particles, 'ket', coeffs_ket)
     return bra, ket
 
-
+ 
 def repeated_kronecker_product(matrices: list):
     """
     returns the tensor/kronecker product of a list of arrays

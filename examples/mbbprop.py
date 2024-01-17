@@ -117,7 +117,7 @@ if __name__ == "__main__" and ls_test:
         ket_0 = g_ls_linear(gls, i) * ket_0
     
     ket_1 = ket.copy()
-    trace_factor = np.exp( - 0.5 * np.sum(gls**2))
+    trace_factor = np.exp( 0.5 * np.sum(gls**2))
     ket_1 = trace_factor * ket_1
     for i in range(nt.num_particles):
         ket_1 = g_ls_onebody(gls, i) * ket_1
