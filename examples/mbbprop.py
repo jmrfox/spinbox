@@ -53,26 +53,19 @@ def g_coul_onebody(dt, v, i, j):
     return out.exponentiate()
 
 
-def g_ls_linear(gls, i):
+def g_ls_linear(gls, i, a):
     # linear approx to LS
-    out = ident
-    for a in range(3):
-        out += - 1.j * gls[a, i] * sig[i][a] 
+    out = ident - 1.j * gls[a, i] * sig[i][a] 
     return out
 
-def g_ls_onebody(gls, i):
+def g_ls_onebody(gls, i, a):
     # one-body part of the LS propagator factorization
-    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
-    for a in range(3):
-        out += - 1.j * gls[a, i] * sig[i][a]
+    out = - 1.j * gls[a, i] * sig[i][a]
     return out.exponentiate()
 
-def g_ls_twobody(gls, i, j):
+def g_ls_twobody(gls, i, j, a, b):
     # one-body part of the LS propagator factorization
-    out = ManyBodyBasisSpinIsospinOperator(nt.num_particles).zeros()
-    for a in range(3):
-        for b in range(3):
-            out += 0.5 * gls[a, i] * gls[b, j] * sig[i][a] * sig[j][b]
+    out = 0.5 * gls[a, i] * gls[b, j] * sig[i][a] * sig[j][b]
     return out.exponentiate()
 
 
@@ -114,15 +107,19 @@ if __name__ == "__main__" and ls_test:
 
     ket_0 = ket.copy()
     for i in range(nt.num_particles):
-        ket_0 = g_ls_linear(gls, i) * ket_0
+        for a in range(3):
+            ket_0 = g_ls_linear(gls, i, a) * ket_0
     
     ket_1 = ket.copy()
     trace_factor = np.exp( 0.5 * np.sum(gls**2))
     ket_1 = trace_factor * ket_1
     for i in range(nt.num_particles):
-        ket_1 = g_ls_onebody(gls, i) * ket_1
+        for a in range(3):
+            ket_1 = g_ls_onebody(gls, i, a) * ket_1
         for j in range(i):
-            ket_1 = g_ls_twobody(gls, i, j) * ket_1
+            for a in range(3):
+                for b in range(3):
+                    ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
     
     # print("linear ket: \n", ket_0)
     # print("full ket: \n", ket_1)

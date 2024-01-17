@@ -931,6 +931,11 @@ class ManyBodyBasisSpinIsospinOperator(SpinOperator):
         out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
         out.matrix = self.matrix.copy()
         return out
+    
+    def transpose(self):
+        out = self.copy()
+        out.matrix = self.matrix.T
+        return out
 
     def __mul__(self, other):
         if isinstance(other, ManyBodyBasisSpinIsospinState):
