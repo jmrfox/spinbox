@@ -71,18 +71,18 @@ def g_ls_twobody(gls, i, j, a, b):
 
 def g_gauss_sample(dt, a, x, opi, opj):
     k = csqrt(-0.5 * dt * a)
-    norm = np.exp(0.5 * dt * a)
-    gi = np.cosh(k * x) * ident + np.sinh(k * x) * opi
-    gj = np.cosh(k * x) * ident + np.sinh(k * x) * opj
+    norm = cexp(0.5 * dt * a)
+    gi = ccosh(k * x) * ident + csinh(k * x) * opi
+    gj = ccosh(k * x) * ident + csinh(k * x) * opj
     return norm * gi * gj
 
 
 def g_rbm_sample(dt, a, h, opi, opj):
-    norm = np.exp(-0.5 * dt * np.abs(a)) / 2
-    W = np.arctanh(csqrt(np.tanh(0.5 * dt * np.abs(a))))
+    norm = cexp(-0.5 * dt * np.abs(a)) / 2
+    W = carctanh(csqrt(ctanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
-    qi = np.cosh(arg) * ident + np.sinh(arg) * opi
-    qj = np.cosh(arg) * ident - np.sign(a) * np.sinh(arg) * opj
+    qi = ccosh(arg) * ident + csinh(arg) * opi
+    qj = ccosh(arg) * ident - np.sign(a) * csinh(arg) * opj
     return 2 * norm * qi * qj
 
 
@@ -102,7 +102,7 @@ ls_test = True
 if __name__ == "__main__" and ls_test:
     bra, ket = nt.make_test_states(manybody=True)
     
-    pots = nt.make_all_potentials(scale = 0.1)
+    pots = nt.make_all_potentials(scale = 0.0)
     gls = np.sum(pots['bls'], axis = 2)
 
     ket_0 = ket.copy()
@@ -111,15 +111,16 @@ if __name__ == "__main__" and ls_test:
             ket_0 = g_ls_linear(gls, i, a) * ket_0
     
     ket_1 = ket.copy()
-    trace_factor = np.exp( 0.5 * np.sum(gls**2))
-    ket_1 = trace_factor * ket_1
-    for i in range(nt.num_particles):
-        for a in range(3):
-            ket_1 = g_ls_onebody(gls, i, a) * ket_1
-        for j in range(i):
-            for a in range(3):
-                for b in range(3):
-                    ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
+    ket_1 = g_ls_onebody(gls,0,0) * ket_1
+    # trace_factor = cexp( 0.5 * np.sum(gls**2))
+    # ket_1 = trace_factor * ket_1
+    # for i in range(nt.num_particles):
+    #     for a in range(3):
+    #         ket_1 = g_ls_onebody(gls, i, a) * ket_1
+        # for j in range(i):
+        #     for a in range(3):
+        #         for b in range(3):
+        #             ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
     
     # print("linear ket: \n", ket_0)
     # print("full ket: \n", ket_1)
@@ -137,18 +138,18 @@ if __name__ == "__main__" and not ls_test:
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
-                norm = np.exp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
+                norm = cexp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
                 ket = (1/norm) * g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
         for a in range(3):
             for b in range(3):
                 for c in range(3):
-                    norm = np.exp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
+                    norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
                     ket = (1/norm) * g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
         for c in range(3):
-            norm = np.exp(-nt.dt * 0.5 * np.abs(atau[i, j]))
+            norm = cexp(-nt.dt * 0.5 * np.abs(atau[i, j]))
             ket = (1/norm) * g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
         # coulomb
-        norm = np.exp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
+        norm = cexp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
         ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         # LS
         ls_type = 'linear'
@@ -159,7 +160,7 @@ if __name__ == "__main__" and not ls_test:
             ket = g_ls_linear(bls, i, j) * ket
         elif ls_type == 'full':
             ket = g_ls_onebody(bls, i, j) * ket
-            trace_factor = np.exp( 0.5 * np.sum(bls**2))
+            trace_factor = cexp( 0.5 * np.sum(bls**2))
             ket = trace_factor * g_ls_twobody(bls, i, j) * ket                   
 
     print("FINAL KET\n", ket.coefficients)
