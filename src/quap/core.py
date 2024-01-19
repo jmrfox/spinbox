@@ -233,10 +233,10 @@ class Operator:
 # MANY-BODY BASIS CLASSES
 
 class ManyBodyBasisSpinState(State):
-    def __init__(self, num_particles: int, orientation: str, coefficients: np.ndarray):
+    def __init__(self, num_particles: int, orientation: str, coefficients: np.ndarray, n_basis=2):
         super().__init__(num_particles, orientation)
-
-        self.dim = 2 ** self.num_particles
+        self.n_basis = n_basis
+        self.dim = self.n_basis ** self.num_particles
         assert type(coefficients) == np.ndarray
         ket_condition = (coefficients.shape == (self.dim, 1)) and (orientation == 'ket')
         bra_condition = (coefficients.shape == (1, self.dim)) and (orientation == 'bra')
@@ -259,7 +259,7 @@ class ManyBodyBasisSpinState(State):
         if self.orientation == 'bra':  # inner product
             if isinstance(other, ManyBodyBasisSpinState):
                 assert other.orientation == 'ket'
-                out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
+                out = np.dot(self.coefficients, other.coefficients)
             elif isinstance(other, ManyBodyBasisSpinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients, other.matrix)
@@ -268,9 +268,8 @@ class ManyBodyBasisSpinState(State):
             return out
         elif self.orientation == 'ket':  # outer product
             assert other.orientation == 'bra'
-            c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
             out = ManyBodyBasisSpinOperator(self.num_particles)
-            out.matrix = c
+            out.matrix = np.matmul(self.coefficients, other.coefficients)
             return out
 
     def __rmul__(self, other):
@@ -282,89 +281,30 @@ class ManyBodyBasisSpinState(State):
         return out
 
     def dagger(self):
+        out = self.copy()
         if self.orientation == 'bra':
-            out = ManyBodyBasisSpinState(self.num_particles, 'ket', self.coefficients.conj().T)
-            return out
+            new_orientation = 'ket'
         elif self.orientation == 'ket':
-            out = ManyBodyBasisSpinState(self.num_particles, 'bra', self.coefficients.conj().T)
-            return out
-
+            new_orientation = 'bra'
+        out = ManyBodyBasisSpinState(self.num_particles, new_orientation, self.coefficients.conj().T)
+        return out
+        
     def __str__(self):
         out = [f'{self.__class__.__name__} {self.orientation} of {self.num_particles} particles:']
         out += [str(self.coefficients)]
         return "\n".join(out)
 
 
-class ManyBodyBasisSpinIsospinState(State):
+class ManyBodyBasisSpinIsospinState(ManyBodyBasisSpinState):
     def __init__(self, num_particles: int, orientation: str, coefficients: np.ndarray):
-        super().__init__(num_particles, orientation)
-
-        self.dim = 4 ** self.num_particles
-        assert type(coefficients) == np.ndarray
-        ket_condition = (coefficients.shape == (self.dim, 1)) and (orientation == 'ket')
-        bra_condition = (coefficients.shape == (1, self.dim)) and (orientation == 'bra')
-        if not ket_condition and not bra_condition:
-            raise ValueError('Inconsistent initialization of state vector')
-        else:
-            self.coefficients = coefficients.astype('complex')
-        self.friendly_operator = ManyBodyBasisSpinIsospinOperator
-
-    def __add__(self, other):
-        return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation,
-                                             self.coefficients + other.coefficients)
-
-    def __sub__(self, other):
-        return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation,
-                                             self.coefficients - other.coefficients)
-
-    def copy(self):
-        return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, self.coefficients.copy())
-
-    def __mul__(self, other):
-        if self.orientation == 'bra':  # inner product
-            if isinstance(other, ManyBodyBasisSpinIsospinState):
-                assert other.orientation == 'ket'
-                out = np.dot(self.coefficients.flatten(), other.coefficients.flatten())
-            elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
-                out = self.copy()
-                out.coefficients = np.matmul(self.coefficients, other.matrix)
-            else:
-                raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out
-        elif self.orientation == 'ket':  # outer product
-            assert other.orientation == 'bra'
-            c = np.outer(self.coefficients.flatten(), other.coefficients.flatten())
-            out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
-            out.matrix = c
-            return out
-
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.coefficients *= other
-        else:
-            raise TypeError(f'Not supported: {type(other)} * {self.__class__.__name__}')
-        return out
-
-    def dagger(self):
-        if self.orientation == 'bra':
-            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.conj().T)
-            return out
-        elif self.orientation == 'ket':
-            out = ManyBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.conj().T)
-            return out
-
-    def __str__(self):
-        out = [f'{self.__class__.__name__} {self.orientation} of {self.num_particles} particles:']
-        out += [str(self.coefficients)]
-        return "\n".join(out)
-
+        super().__init__(num_particles, orientation, n_basis=4)
 
 
 class ManyBodyBasisSpinOperator(Operator):
-    def __init__(self, num_particles: int):
+    def __init__(self, num_particles: int, n_basis=2):
         super().__init__(num_particles)
-        self.matrix = np.identity(2 ** num_particles, dtype=complex)
+        self.n_basis = n_basis
+        self.matrix = np.identity(self.n_basis ** num_particles, dtype=complex)
         self.friendly_state = ManyBodyBasisSpinState
 
     def __add__(self, other):
@@ -414,8 +354,8 @@ class ManyBodyBasisSpinOperator(Operator):
         return out
 
     def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
-        assert type(matrix) == np.ndarray and matrix.shape == (2, 2)
-        obo = [np.identity(2, dtype=complex) for _ in range(self.num_particles)]
+        assert type(matrix) == np.ndarray and matrix.shape == (self.n_basis, self.n_basis)
+        obo = [np.identity(self.n_basis, dtype=complex) for _ in range(self.num_particles)]
         obo[particle_index] = matrix
         obo = repeated_kronecker_product(obo)
         out = self.copy()
@@ -465,62 +405,9 @@ class ManyBodyBasisSpinOperator(Operator):
         return out
 
 
-class ManyBodyBasisSpinIsospinOperator(Operator):
+class ManyBodyBasisSpinIsospinOperator(ManyBodyBasisSpinOperator):
     def __init__(self, num_particles: int):
-        super().__init__(num_particles)
-        self.matrix = np.identity(4 ** num_particles, dtype=complex)
-        self.friendly_state = ManyBodyBasisSpinIsospinState
-
-    def __add__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
-        out = self.copy()
-        out.matrix = self.matrix + other.matrix
-        return out
-
-    def __sub__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
-        out = self.copy()
-        out.matrix = self.matrix - other.matrix
-        return out
-
-    def copy(self):
-        out = ManyBodyBasisSpinIsospinOperator(self.num_particles)
-        out.matrix = self.matrix.copy()
-        return out
-    
-    def transpose(self):
-        out = self.copy()
-        out.matrix = self.matrix.T
-        return out
-
-    def __mul__(self, other):
-        if isinstance(other, ManyBodyBasisSpinIsospinState):
-            assert other.orientation == 'ket'
-            out = other.copy()
-            out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
-            return out
-        elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
-            out = other.copy()
-            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
-            return out
-        else:
-            raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
-
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.matrix = other * out.matrix
-        else:
-            raise ValueError(f'rmul not set up for {self.__class__.__name__}')
-        return out
-
-    def __str__(self):
-        out = f"{self.__class__.__name__}"
-        re = str(np.real(self.matrix))
-        im = str(np.imag(self.matrix))
-        out += "Re=\n" + re + "\nIm:\n" + im
-        return out
+        super().__init__(num_particles, num_basis=4)
 
     def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
         assert type(isospin_matrix) == np.ndarray and isospin_matrix.shape == (2, 2)
@@ -544,42 +431,6 @@ class ManyBodyBasisSpinIsospinOperator(Operator):
         out = self.copy()
         out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
-        return out
-
-    def scalar_mult(self, particle_index: int, b):
-        """
-        multiply one particle by a scalar.
-        To multiply the whole state by a scalar, just do b * ManyBodySpinState.
-        :param particle_index:
-        :param b:
-        :return:
-        """
-        assert np.isscalar(b)
-        out = self.copy()
-        return b * out
-
-    def exchange(self, particle_a: int, particle_b: int):
-        P_1 = ManyBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
-        P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
-        P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
-        P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
-        P = (P_x + P_y + P_z + P_1)
-        out = 0.5 * P * self.copy()
-        return out
-
-    def exponentiate(self):
-        out = self.copy()
-        out.matrix = expm(out.matrix)
-        return out
-
-    def zeros(self):
-        out = self.copy()
-        out.matrix = np.zeros_like(out.matrix)
-        return out
-
-    def dagger(self):
-        out = self.copy()
-        out.matrix = self.matrix.conj().T
         return out
 
 
@@ -694,6 +545,18 @@ class OneBodyBasisSpinState(State):
         out.sp_stack *= b ** (1 / self.num_particles)
         return out
 
+    def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
+        assert matrix.shape == (self.n_basis, self.n_basis)
+        out = self.copy()
+        out.sp_stack[particle_index] = np.matmul(matrix, out.sp_stack[particle_index], dtype=complex)
+        return out
+
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
+
 
 class OneBodyBasisSpinOperator(Operator):
     def __init__(self, num_particles: int, n_basis=2):
@@ -800,6 +663,31 @@ class OneBodyBasisSpinIsospinState(OneBodyBasisSpinState):
         """
         super().__init__(num_particles, orientation, coefficients, n_basis=4)
 
+    def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+        assert isospin_matrix.shape == (2, 2)
+        assert spin_matrix.shape == (2, 2)
+        onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
+        out = self.copy()
+        out.sp_stack[particle_index] = np.matmul(onebody_matrix, out.sp_stack[particle_index], dtype=complex)
+        return out
+
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
+                                          isospin_matrix=np.identity(2, dtype=complex),
+                                          spin_matrix=pauli(dimension))
+        return out
+
+    def tau(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
+                                          isospin_matrix=pauli(dimension),
+                                          spin_matrix=np.identity(2, dtype=complex))
+        return out
+
+
 
 class OneBodyBasisSpinIsospinOperator(OneBodyBasisSpinOperator):
     def __init__(self, num_particles: int):
@@ -830,255 +718,4 @@ class OneBodyBasisSpinIsospinOperator(OneBodyBasisSpinOperator):
         return out
 
             
-
-# -------
-# class OneBodyBasisSpinIsospinState(State):
-#     """
-#     an array of single particle spinors with spin-1/2 and isospin-1/2
-
-#     e.g. one-body spinor = (p_up p_dn n_up n_dn)^T
-
-#     num_particles: number of single particle states
-#     coefficients: numpy.ndarray of length A*4, kets are columns, bras are rows
-#     orientation: 'bra' or 'ket'
-#     """
-
-#     def __init__(self, num_particles: int, orientation: str, coefficients: np.ndarray):
-#         super().__init__(num_particles, orientation)
-#         assert type(coefficients) == np.ndarray
-#         ket_condition = (coefficients.shape == (num_particles, 4, 1)) and (orientation == 'ket')
-#         bra_condition = (coefficients.shape == (num_particles, 1, 4)) and (orientation == 'bra')
-#         if not ket_condition and not bra_condition:
-#             raise ValueError('Inconsistent initialization of state vector')
-#         else:
-#             self.sp_stack = coefficients.astype('complex')        
-#         self.friendly_operator = OneBodyBasisSpinIsospinOperator
-
-#     # def __add__(self, other):
-#     #     return OneBodyBasisSpinState(self.num_particles, self.orientation, self.sp_stack + other.sp_stack)
-
-#     # def __sub__(self, other):
-#     #     return OneBodyBasisSpinState(self.num_particles, self.orientation, self.sp_stack - other.sp_stack)
-
-#     def copy(self):
-#         return OneBodyBasisSpinState(self.num_particles, self.orientation, self.sp_stack.copy())
-
-#     def to_list(self):
-#         return [self.sp_stack[i] for i in range(self.num_particles)]
-
-#     def __mul__(self, other):
-#         """
-#         bra can multiply a ket or a operator, ket can only multiply a bra
-#         """
-#         if self.orientation == 'bra':  # inner product
-#             if isinstance(other, OneBodyBasisSpinIsospinState):
-#                 assert other.orientation == 'ket'
-#                 c0 = self.to_list()
-#                 c1 = other.to_list()
-#                 return np.prod(
-#                     [np.dot(c0[i], c1[i]) for i in range(self.num_particles)])
-#             elif isinstance(other, OneBodyBasisSpinIsospinOperator):
-#                 out = self.copy()
-#                 out.coefficients = np.matmul(self.coefficients, other.matrix)
-#                 return out
-#         elif self.orientation == 'ket':  # outer product
-#             assert isinstance(other, OneBodyBasisSpinIsospinState) and other.orientation == 'bra'
-#             out = OneBodyBasisSpinIsospinOperator(num_particles=self.num_particles)
-#             for i in range(self.num_particles):
-#                 idx_i = i * 4
-#                 idx_f = (i + 1) * 4
-#                 out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(self.coefficients[idx_i:idx_f, 0:1],
-#                                                                  other.coefficients[0:1, idx_i:idx_f], dtype=complex)
-#             return out
-#         else:
-#             raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-
-#     def dagger(self):
-#         if self.orientation == 'bra':
-#             out = OneBodyBasisSpinIsospinState(self.num_particles, 'ket', self.coefficients.conj().T)
-#             return out
-#         elif self.orientation == 'ket':
-#             out = OneBodyBasisSpinIsospinState(self.num_particles, 'bra', self.coefficients.conj().T)
-#             return out
-
-#     def __str__(self):
-#         out = f"{self.__class__.__name__} {self.orientation} of {self.num_particles} particles: \n"
-#         for i, ci in enumerate(self.to_list()):
-#             out += f"{self.orientation} #{i}:\n"
-#             out += str(ci) + "\n"
-#         return out
-
-#     def to_many_body_state(self):
-#         """project the NxA TP state into the full N^A MB basis"""
-#         sp_mb = repeated_kronecker_product(self.to_list())
-#         if self.orientation == 'ket':
-#             sp_mb = sp_mb.reshape(4 ** self.num_particles, 1)
-#         elif self.orientation == 'bra':
-#             sp_mb = sp_mb.reshape(1, 4 ** self.num_particles)
-#         return ManyBodyBasisSpinIsospinState(self.num_particles, self.orientation, sp_mb)
-
-#     def normalize(self):
-#         out = self.copy()
-#         if self.orientation == 'ket':
-#             for i in range(self.num_particles):
-#                 n = np.linalg.norm(self.coefficients[i:i + 4, 0])
-#                 out.coefficients[i:i + 4, 0] /= n
-#         if self.orientation == 'bra':
-#             for i in range(self.num_particles):
-#                 n = np.linalg.norm(self.coefficients[0, i:i + 4])
-#                 out.coefficients[0, i:i + 4] /= n
-#         return out
-
-#     def scalar_mult(self, particle_index, b):
-#         out = self.copy()
-#         if self.orientation == 'ket':
-#             out.coefficients[particle_index * 4:(particle_index + 1) * 4, 0] *= b
-#         elif self.orientation == 'bra':
-#             out.coefficients[0, particle_index * 4:(particle_index + 1) * 4] *= b
-#         return out
-
-#     def spread_scalar_mult(self, b):
-#         assert np.isscalar(b)
-#         c = b ** (1 / self.num_particles)
-#         out = self.copy()
-#         for i in range(self.num_particles):
-#             out = out.scalar_mult(i, c)
-#         return out
-
-#     def __rmul__(self, other):
-#         if np.isscalar(other):
-#             out = self.copy().spread_scalar_mult(other)
-#             return out
-#         else:
-#             raise ValueError(f'Problem in rmul: got a {type(other)}')
- 
-
-# class OneBodyBasisSpinIsospinOperator(SpinOperator):
-#     def __init__(self, num_particles: int):
-#         super().__init__(num_particles)
-#         self.dim = num_particles * 4
-#         self.matrix = np.identity(self.dim, dtype=complex)
-#         self.friendly_state = OneBodyBasisSpinIsospinState
-
-#     def __add__(self, other):
-#         assert isinstance(other, OneBodyBasisSpinIsospinOperator)
-#         out = self.copy()
-#         out.matrix = self.matrix + other.matrix
-#         return out
-
-#     def __sub__(self, other):
-#         assert isinstance(other, OneBodyBasisSpinIsospinOperator)
-#         out = self.copy()
-#         out.matrix = self.matrix - other.matrix
-#         return out
-
-#     def copy(self):
-#         out = OneBodyBasisSpinIsospinOperator(self.num_particles)
-#         out.matrix = self.matrix.copy()
-#         return out
-
-#     def __mul__(self, other):
-#         if isinstance(other, OneBodyBasisSpinIsospinState):
-#             assert other.orientation == 'ket'
-#             out = other.copy()
-#             out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
-#             return out
-#         elif isinstance(other, OneBodyBasisSpinIsospinOperator):
-#             out = other.copy()
-#             out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
-#             return out
-#         else:
-#             raise ValueError(
-#                 f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
-
-#     def __str__(self):
-#         out = f"{self.__class__.__name__}\n"
-#         re = str(np.real(self.matrix))
-#         im = str(np.imag(self.matrix))
-#         out += "Re=\n" + re + "\nIm:\n" + im
-#         return out
-
-#     def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
-#         assert isospin_matrix.shape == (2, 2)
-#         assert spin_matrix.shape == (2, 2)
-#         onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
-#         idx_i = particle_index * 4
-#         idx_f = (particle_index + 1) * 4
-#         out = self.copy()
-#         out.matrix[idx_i:idx_f, idx_i:idx_f] = np.matmul(onebody_matrix, out.matrix[idx_i:idx_f, idx_i:idx_f],
-#                                                          dtype=complex)
-#         return out
-
-#     def sigma(self, particle_index, dimension):
-#         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-#         out = self.copy()
-#         out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex),
-#                                           spin_matrix=pauli(dimension))
-#         return out
-
-#     def tau(self, particle_index, dimension):
-#         assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
-#         out = self.copy()
-#         out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),
-#                                           spin_matrix=np.identity(2, dtype=complex))
-#         return out
-
-#     # def scalar_mult(self, particle_index, b):
-#     #     assert np.isscalar(b)
-#     #     out = self.copy()
-#     #     out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=b * np.identity(2),spin_matrix=np.identity(2, dtype=complex))
-#     #     return out
-#     def scalar_mult(self, particle_index, b):
-#         assert np.isscalar(b)
-#         out = self.copy()
-#         idx_i = particle_index * 4
-#         idx_f = (particle_index + 1) * 4
-#         out.matrix[idx_i:idx_f, idx_i:idx_f] = b * out.matrix[idx_i:idx_f, idx_i:idx_f]
-#         return out
-
-#     def spread_scalar_mult(self, b):
-#         assert np.isscalar(b)
-#         c = np.array(b, dtype=complex) ** (1 / self.num_particles)
-#         out = self.copy()
-#         for i in range(self.num_particles):
-#             out = out.scalar_mult(i, c)
-#         return out
-
-#     def __rmul__(self, other):
-#         if np.isscalar(other):
-#             # out = self.copy().spread_scalar_mult(other)
-#             # return out
-#             raise ValueError('Cannot multiply this way! Use .scalar_mult() instead!')
-#         else:
-#             raise ValueError(f'rmul not supported for {other.__class__.__name__} * {self.__class__.__name__}')
-
-#     def exchange(self, particle_a: int, particle_b: int):
-#         broken = True
-#         if broken:
-#             raise ValueError('Exchange for the spin-isospin basis is not set up!')
-#         else:
-#             out = self.copy()
-#             idx_ai = particle_a * 4
-#             idx_af = (particle_a + 1) * 4
-#             idx_bi = particle_b * 4
-#             idx_bf = (particle_b + 1) * 4
-#             temp = out.matrix.copy()
-#             out.matrix[idx_ai:idx_af, idx_ai:idx_af] = temp[idx_ai:idx_af, idx_bi:idx_bf]
-#             out.matrix[idx_ai:idx_af, idx_bi:idx_bf] = temp[idx_ai:idx_af, idx_ai:idx_af]
-#             out.matrix[idx_bi:idx_bf, idx_bi:idx_bf] = temp[idx_bi:idx_bf, idx_ai:idx_af]
-#             out.matrix[idx_bi:idx_bf, idx_ai:idx_af] = temp[idx_bi:idx_bf, idx_bi:idx_bf]
-#             return out
-
-#     def zeros(self):
-#         out = self.copy()
-#         out.matrix = np.zeros_like(out.matrix)
-#         return out
-
-#     def dagger(self):
-#         out = self.copy()
-#         out.matrix = self.matrix.conj().T
-#         return out
-
-
-
 
