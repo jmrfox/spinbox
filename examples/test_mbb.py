@@ -9,7 +9,7 @@ num_particles = 2
 # sig[particle][xyz]
 
 def test_states():
-    print('RANDOM OBB STATES')
+    print('RANDOM STATES')
     bra_seed, ket_seed = 15, 1500001
     bra, ket = random_spin_bra_ket(num_particles, bra_seed, ket_seed)
     s0, s1 = ket, bra.dagger()

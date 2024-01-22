@@ -1,9 +1,10 @@
 import nuctest as nt
 from quap import *
-from tqdm import tqdm
-from cProfile import Profile
-from pstats import SortKey, Stats
-from multiprocessing.pool import Pool
+
+# from tqdm import tqdm
+# from cProfile import Profile
+# from pstats import SortKey, Stats
+# from multiprocessing.pool import Pool
 
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.num_particles)
@@ -46,11 +47,17 @@ def g_pade_coul(dt, v, i, j):
     return out.exponentiate()
 
 
-def g_coul_onebody(dt, v, i, j):
+def g_coulomb_onebody(dt, v, i):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
-    out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2])
+    out = - 0.125 * v * dt * tau[i][2]
     return out.exponentiate()
+
+# def g_coul_onebody(dt, v, i, j):
+#     """just the one-body part of the expanded coulomb propagator
+#     for use along with auxiliary field propagators"""
+#     out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2])
+#     return out.exponentiate()
 
 
 def g_ls_linear(gls, i, a):
@@ -89,7 +96,7 @@ def g_rbm_sample(dt, a, h, opi, opj):
 def load_h2():
     data_dir = './data/h2/'
     c = read_coeffs(data_dir+'fort.770')
-    ket = OneBodyBasisSpinIsospinState(nt.num_particles, 'ket', c.reshape(-1, 1)).to_many_body_state()    
+    ket = OneBodyBasisSpinIsospinState(nt.num_particles, 'ket', c.reshape(nt.num_particles, 4, 1)).to_many_body_state()    
     asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
     asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
     atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
@@ -98,70 +105,83 @@ def load_h2():
     return ket, asig, asigtau, atau, vcoul, bls
 
 
-ls_test = True
-if __name__ == "__main__" and ls_test:
-    bra, ket = nt.make_test_states(manybody=True)
+# ls_test = True
+# if __name__ == "__main__" and ls_test:
+#     bra, ket = nt.make_test_states(manybody=True)
     
-    pots = nt.make_all_potentials(scale = 0.0)
-    gls = np.sum(pots['bls'], axis = 2)
+#     pots = nt.make_all_potentials(scale = 0.0)
+#     gls = np.sum(pots['bls'], axis = 2)
 
-    ket_0 = ket.copy()
-    for i in range(nt.num_particles):
-        for a in range(3):
-            ket_0 = g_ls_linear(gls, i, a) * ket_0
+#     ket_0 = ket.copy()
+#     for i in range(nt.num_particles):
+#         for a in range(3):
+#             ket_0 = g_ls_linear(gls, i, a) * ket_0
     
-    ket_1 = ket.copy()
-    ket_1 = g_ls_onebody(gls,0,0) * ket_1
-    # trace_factor = cexp( 0.5 * np.sum(gls**2))
-    # ket_1 = trace_factor * ket_1
-    # for i in range(nt.num_particles):
-    #     for a in range(3):
-    #         ket_1 = g_ls_onebody(gls, i, a) * ket_1
-        # for j in range(i):
-        #     for a in range(3):
-        #         for b in range(3):
-        #             ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
+#     ket_1 = ket.copy()
+#     ket_1 = g_ls_onebody(gls,0,0) * ket_1
+#     # trace_factor = cexp( 0.5 * np.sum(gls**2))
+#     # ket_1 = trace_factor * ket_1
+#     # for i in range(nt.num_particles):
+#     #     for a in range(3):
+#     #         ket_1 = g_ls_onebody(gls, i, a) * ket_1
+#         # for j in range(i):
+#         #     for a in range(3):
+#         #         for b in range(3):
+#         #             ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
     
-    # print("linear ket: \n", ket_0)
-    # print("full ket: \n", ket_1)
-    print("linear bracket: \n", bra * ket_0)
-    print("full bracket: \n", bra * ket_1)
+#     # print("linear ket: \n", ket_0)
+#     # print("full ket: \n", ket_1)
+#     print("linear bracket: \n", bra * ket_0)
+#     print("full bracket: \n", bra * ket_1)
     
-    print('DONE')
+#     print('DONE')
 
-if __name__ == "__main__" and not ls_test:
+if __name__ == "__main__":
     ket, asig, asigtau, atau, vcoul, bls = load_h2()
     print("INITIAL KET\n", ket.coefficients)
 
     pairs_ij = [[0,1]]
     h = 1.0
+    # SIGMA
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
                 norm = cexp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
                 ket = (1/norm) * g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
+    # SIGMA TAU
+    for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
                 for c in range(3):
                     norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
                     ket = (1/norm) * g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
+    # TAU
+    for i,j in pairs_ij:
         for c in range(3):
             norm = cexp(-nt.dt * 0.5 * np.abs(atau[i, j]))
             ket = (1/norm) * g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
-        # coulomb
-        norm = cexp(-nt.dt * 0.125 * (vcoul[i, j] + np.abs(vcoul[i, j])))
-        ket = (1/norm) * g_coul_onebody(nt.dt, vcoul[i, j], i, j) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
-        # LS
-        ls_type = 'linear'
-        # ls_type = 'full'
-        if ls_type is None:
-            pass
-        elif ls_type == 'linear':
+    # COULOMB
+    for i,j in pairs_ij:
+        norm_1b = cexp(-nt.dt * 0.125 * vcoul[i, j])
+        norm_rbm = cexp(-nt.dt * 0.125 * np.abs(vcoul[i, j]))
+        ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
+        ket = (1/norm) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
+    # LS
+    ls_type = 'none'
+    # ls_type = 'linear'
+    # ls_type = 'full'
+    if ls_type is None:
+        pass
+    elif ls_type == 'linear':
+        for i in range(nt.num_particles):
             ket = g_ls_linear(bls, i, j) * ket
-        elif ls_type == 'full':
+    elif ls_type == 'full':
+        for i in range(nt.num_particles):
             ket = g_ls_onebody(bls, i, j) * ket
-            trace_factor = cexp( 0.5 * np.sum(bls**2))
-            ket = trace_factor * g_ls_twobody(bls, i, j) * ket                   
+        for i,j in pairs_ij:
+            ket = g_ls_twobody(bls, i, j) * ket                   
+        trace_factor = cexp( 0.5 * np.sum(bls**2))
+        ket *= trace_factor
 
     print("FINAL KET\n", ket.coefficients)
     print('DONE')
