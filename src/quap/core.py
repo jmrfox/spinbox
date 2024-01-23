@@ -894,12 +894,12 @@ class OneBodyBasisSpinOperator(Operator):
             assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
-                out.sp_stack = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
+                out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
             return out
         elif isinstance(other, OneBodyBasisSpinOperator):
             out = other.copy()
             for i in range(self.n_particles):
-                out.sp_stack = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
+                out.sp_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
             return out
         else:
             raise ValueError(
@@ -954,7 +954,7 @@ class OneBodyBasisSpinOperator(Operator):
 class OneBodyBasisSpinIsospinOperator(Operator):
     def __init__(self, n_particles: int):
         super().__init__(n_particles)
-        self.op_stack = np.stack(self.n_particles*[np.identity(2)], dtype=complex)    
+        self.op_stack = np.stack(self.n_particles*[np.identity(4)], dtype=complex)    
         self.friendly_state = OneBodyBasisSpinIsospinState
 
     def __add__(self, other):
@@ -977,12 +977,12 @@ class OneBodyBasisSpinIsospinOperator(Operator):
             assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
-                out.sp_stack = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
+                out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
             return out
         elif isinstance(other, OneBodyBasisSpinIsospinOperator):
             out = other.copy()
             for i in range(self.n_particles):
-                out.sp_stack = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
+                out.op_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
             return out
         else:
             raise ValueError(

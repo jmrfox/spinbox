@@ -12,11 +12,12 @@ n_procs = os.cpu_count() - 1
 run_tag = '_test'  #start with a _
 global_seed = 17
 
-num_particles = 2
+n_particles = 2
 
 def make_test_states(rng=None, manybody=False):
     """returns one body basis spin-isospin states for testing"""
-    bra, ket = random_spinisospin_bra_ket(num_particles, bra_seed=global_seed, ket_seed=global_seed*100)
+    bra = OneBodyBasisSpinIsospinState(n_particles, 'bra', np.zeros(shape=(n_particles, 1, 4))).randomize(100)
+    ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
     if manybody:
         bra = bra.to_many_body_state()
         ket = ket.to_many_body_state()
@@ -30,33 +31,33 @@ def make_potential(shape, scale=10.0, rng=None):
     return out
 
 def make_asig(scale=10.0, rng=None):
-    v =  make_potential((3, num_particles, 3, num_particles), scale=scale, rng=rng)
-    for i in range(num_particles):
+    v =  make_potential((3, n_particles, 3, n_particles), scale=scale, rng=rng)
+    for i in range(n_particles):
         v[:, i, :, i] = 0
     return v 
 
 
 def make_asigtau(scale=10.0, rng=None):
-    v = make_potential((3, num_particles, 3, num_particles), scale=scale, rng=rng)
-    for i in range(num_particles):
+    v = make_potential((3, n_particles, 3, n_particles), scale=scale, rng=rng)
+    for i in range(n_particles):
         v[:, i, :, i] = 0
     return v 
 
 def make_atau(scale=10.0, rng=None):
-    v =  make_potential((num_particles, num_particles), scale=scale, rng=rng)
-    for i in range(num_particles):
+    v =  make_potential((n_particles, n_particles), scale=scale, rng=rng)
+    for i in range(n_particles):
         v[i, i] = 0
     return v 
 
 def make_vcoul(scale=10.0, rng=None):
-    v =  make_potential((num_particles, num_particles), scale=scale, rng=rng)
-    for i in range(num_particles):
+    v =  make_potential((n_particles, n_particles), scale=scale, rng=rng)
+    for i in range(n_particles):
         v[i, i] = 0
     return v 
 
 def make_bls(scale=1.0, rng=None):
-    v =  make_potential((3, num_particles, num_particles), scale=scale, rng=rng)
-    for i in range(num_particles):
+    v =  make_potential((3, n_particles, n_particles), scale=scale, rng=rng)
+    for i in range(n_particles):
         v[:, i, i] = 0
     return v 
 
