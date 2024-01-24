@@ -105,50 +105,20 @@ def load_h2():
     return ket, asig, asigtau, atau, vcoul, bls
 
 
-# ls_test = True
-# if __name__ == "__main__" and ls_test:
-#     bra, ket = nt.make_test_states(manybody=True)
-#     pots = nt.make_all_potentials(scale = 0.0)
-#     gls = np.sum(pots['bls'], axis = 2)
-
-#     ket_0 = ket.copy()
-#     for i in range(nt.num_particles):
-#         for a in range(3):
-#             ket_0 = g_ls_linear(gls, i, a) * ket_0
-    
-#     ket_1 = ket.copy()
-#     ket_1 = g_ls_onebody(gls,0,0) * ket_1
-#     # trace_factor = cexp( 0.5 * np.sum(gls**2))
-#     # ket_1 = trace_factor * ket_1
-#     # for i in range(nt.num_particles):
-#     #     for a in range(3):
-#     #         ket_1 = g_ls_onebody(gls, i, a) * ket_1
-#         # for j in range(i):
-#         #     for a in range(3):
-#         #         for b in range(3):
-#         #             ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
-    
-#     # print("linear ket: \n", ket_0)
-#     # print("full ket: \n", ket_1)
-#     print("linear bracket: \n", bra * ket_0)
-#     print("full bracket: \n", bra * ket_1)
-    
-#     print('DONE')
 
 if __name__ == "__main__":
     # ket, asig, asigtau, atau, vcoul, bls = load_h2()
     bra, ket = nt.make_test_states(manybody=True)
-    pots = nt.make_all_potentials(scale = 0.5)
+    pots = nt.make_all_potentials(scale = 1.0)
     asig = pots['asig'] 
-    asigtau = pots['asigtau'] 
-    atau = pots['atau'] 
-    vcoul = pots['vcoul'] 
-    bls = pots['bls']
-    gls = np.sum(pots['bls'], axis = 2)
-    # print(gls)
-
-
+    asigtau = pots['asigtau'] *0
+    atau = pots['atau'] *0
+    vcoul = pots['vcoul'] *0
+    bls = pots['bls'] *0
+    gls = np.sum(pots['bls'], axis = 2) *0
+    
     # print("INITIAL KET\n", ket)
+    # print('norm = ', ket.dagger() * ket)
 
     pairs_ij = [[0,1]]
     h = 1.0
@@ -192,7 +162,8 @@ if __name__ == "__main__":
         #     for a in range(3):
         #         ket = ( ident - 1.j * bls[a, i, j] * ( sig[i][a] + sig[j][a])) * ket
         for i in range(nt.n_particles):
-            ket = g_ls_linear(gls[a, i], i, a) * ket
+            for a in range(3):
+                ket = g_ls_linear(gls[a, i], i, a) * ket
     elif ls_type=='full':
         for i in range(nt.n_particles):
             for a in range(3):
@@ -208,6 +179,40 @@ if __name__ == "__main__":
         # trace_factor = cexp( 0.5 * np.sum(gls**2))
         # ket *= trace_factor
 
-    # print("FINAL KET\n", ket.coefficients)
+    print("FINAL KET\n", ket.coefficients)
+    print('norm = ', ket.dagger() * ket)
     print('MBB bracket = ', bra * ket)
     print('DONE')
+
+
+
+
+# ls_test = True
+# if __name__ == "__main__" and ls_test:
+#     bra, ket = nt.make_test_states(manybody=True)
+#     pots = nt.make_all_potentials(scale = 0.0)
+#     gls = np.sum(pots['bls'], axis = 2)
+
+#     ket_0 = ket.copy()
+#     for i in range(nt.num_particles):
+#         for a in range(3):
+#             ket_0 = g_ls_linear(gls, i, a) * ket_0
+    
+#     ket_1 = ket.copy()
+#     ket_1 = g_ls_onebody(gls,0,0) * ket_1
+#     # trace_factor = cexp( 0.5 * np.sum(gls**2))
+#     # ket_1 = trace_factor * ket_1
+#     # for i in range(nt.num_particles):
+#     #     for a in range(3):
+#     #         ket_1 = g_ls_onebody(gls, i, a) * ket_1
+#         # for j in range(i):
+#         #     for a in range(3):
+#         #         for b in range(3):
+#         #             ket_1 = g_ls_twobody(gls, i, j, a ,b) * ket_1
+    
+#     # print("linear ket: \n", ket_0)
+#     # print("full ket: \n", ket_1)
+#     print("linear bracket: \n", bra * ket_0)
+#     print("full bracket: \n", bra * ket_1)
+    
+#     print('DONE')

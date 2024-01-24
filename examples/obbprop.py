@@ -162,8 +162,8 @@ if __name__ == "__main__":
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[2], tau[2]) * ket
     # LS
-    # ls_type = 'none'
-    ls_type = 'full'
+    ls_type = 'none'
+    # ls_type = 'full'
     if ls_type=='none':
         pass
     elif ls_type=='full':
