@@ -1,12 +1,6 @@
 import nuctest as nt
 from quap import *
 
-# from tqdm import tqdm
-# from cProfile import Profile
-# from pstats import SortKey, Stats
-# from multiprocessing.pool import Pool
-
-
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
 sig = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
