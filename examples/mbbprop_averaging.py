@@ -44,6 +44,20 @@ def g_pade_coul(dt, v):
     out = -0.125 * v * dt * out
     return out.exponentiate()
 
+def g_ls_linear(gls_ai, i, a):
+    # linear approx to LS
+    out = ident - 1.j * gls_ai * sig[i][a] 
+    return out
+
+def g_ls_onebody(gls_ai, i, a):
+    # one-body part of the LS propagator factorization
+    out = - 1.j * gls_ai * sig[i][a]
+    return out.exponentiate()
+
+def g_ls_twobody(gls_ai, gls_bj, i, j, a, b):
+    # one-body part of the LS propagator factorization
+    out = 0.5 * gls_ai * gls_bj * sig[i][a] * sig[j][b]
+    return out.exponentiate()
 
 def g_coul_onebody(dt,v):
     """just the one-body part of the expanded coulomb propagator
@@ -73,24 +87,31 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
     idx = [[0, 1, 2] for _ in range(6)]
     if rng_mix is not None: # no evidence that mixing helps.
         idx = rng_mix.choice(2,size=(6,3))
+    # SIGMA
     for a in idx[0]:
         for b in idx[1]:
             ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], sig[0][a], sig[1][b]) * ket_p
             ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], sig[0][a], sig[1][b]) * ket_m
             n += 1
+    # SIGMA TAU
     for a in idx[2]:
         for b in idx[3]:
             for c in idx[4]:
                 ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
                 ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
                 n += 1
+    # TAU
     for c in idx[5]:
         ket_p = g_gauss_sample(nt.dt, atau, x[n], tau[0][c], tau[1][c]) * ket_p
         ket_m = g_gauss_sample(nt.dt, atau, -x[n], tau[0][c], tau[1][c]) * ket_m
         n += 1
 
+    # COULOMB
     ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], tau[0][2], tau[1][2]) * ket_m
+    
+    # LS
+
     return 0.5 * (bra * ket_p + bra * ket_m)
 
 
