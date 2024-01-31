@@ -206,6 +206,15 @@ def pmat(x, heatmap=False, lims=None, print_zeros=False):
         plt.show()
 
 
+def scalar(x: np.ndarray):
+    """turns a 1-element array  x into a scalar
+    is there a better way to do this?
+    """
+    assert type(x) == np.ndarray
+    assert list(x.shape) == [1 for _ in range(len(x.shape))]
+    out = x.flatten()[0]
+    return out
+
 # SHARED BASE CLASSES
 
 class State:

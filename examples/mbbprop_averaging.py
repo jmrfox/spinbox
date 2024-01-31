@@ -97,7 +97,7 @@ def g_ls_onebody(gls_ai, i, a):
     return out.exponentiate()
 
 def g_ls_twobody(gls_ai, gls_bj, i, j, a, b):
-    # one-body part of the LS propagator factorization
+    # two-body part of the LS propagator factorization
     out = 0.5 * gls_ai * gls_bj * sig[i][a] * sig[j][b]
     return out.exponentiate()
 
@@ -165,7 +165,7 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
     ket_p = trace_factor * ket_p
     ket_m = trace_factor * ket_m
     
-    return 0.5 * (bra * ket_p + bra * ket_m)
+    return 0.5 * scalar(bra * ket_p + bra * ket_m)
 
 
 
@@ -203,13 +203,17 @@ def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqd
     rng = default_rng(seed=nt.global_seed)
     x_set = rng.standard_normal((n_samples, n_aux))  # different x for each x,y,z
     with Pool(processes=nt.n_procs) as pool:
-        b_list = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
-    
-    if plot:
-        nt.plot_samples(b_list, filename=f'hsprop_mb{nt.run_tag}.pdf', title='HS (MBB)')
+        b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
+    b_array = np.array(b_array)
 
-    b_gauss = np.mean(b_list)
-    s_gauss = np.std(b_list) / np.sqrt(n_samples)
+    print(b_array)
+    print(b_array.shape)
+
+    if plot:
+        nt.plot_samples(b_array, filename=f'hsprop_mb{nt.run_tag}.pdf', title='HS (MBB)')
+
+    b_gauss = np.mean(b_array)
+    s_gauss = np.std(b_array) / np.sqrt(n_samples)
     print('exact = ', b_exact)
     print(f'gauss = {b_gauss}  +/-  {s_gauss}')
     print('error = ', b_exact - b_gauss)
@@ -258,6 +262,19 @@ def rbm_task(h, bra, ket, pot_dict):
     ket_p = g_coulomb_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, h[n], tau[0][2], tau[1][2]) * ket_p
     ket_m = g_coulomb_onebody(nt.dt, vcoul) * g_rbm_sample(nt.dt, 0.25 * vcoul, 1 - h[n], tau[0][2], tau[1][2]) * ket_m
     # LS
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket_p = g_ls_onebody(gls[a, i], i, a) * ket_p
+            ket_m = g_ls_onebody(gls[a, i], i, a) * ket_m
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = - gls[a, i]* gls[b, j]
+                ket_p = g_rbm_sample(1, asigls, h[n], sig[i][a], sig[j][b]) * ket_p
+                ket_m = g_rbm_sample(1, asigls, 1 - h[n], sig[i][a], sig[j][b]) * ket_m
+    trace_factor = cexp( 0.5 * np.sum(gls**2))
+    ket_p = trace_factor * ket_p
+    ket_m = trace_factor * ket_m
 
     return 0.5 * (bra * ket_p + bra * ket_m)
 
@@ -268,24 +285,11 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
-    pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
-    asig = pot_dict['asig']
-    asigtau = pot_dict['asigtau']
-    atau = pot_dict['atau']
-    vcoul = pot_dict['vcoul']
-    gls = pot_dict['gls']
-
     # compute exact bracket
-    g_exact = ident.copy()
-    g_exact = g_pade_sig(nt.dt, asig) * g_exact
-    g_exact = g_pade_sigtau(nt.dt, asigtau) * g_exact 
-    g_exact = g_pade_tau(nt.dt, atau) * g_exact
-    g_exact = g_pade_coul(nt.dt, vcoul) * g_exact
-    for i in range(nt.n_particles):
-        for a in range(3):
-            g_exact = g_ls_linear(gls[a,i], i, a) * g_exact
+    pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
+    g_exact = make_g_exact(pot_dict)
     b_exact = bra * g_exact * ket
-    
+
     # make population of identical wfns
 
     n_aux = 9 + 27 + 3 + 1 + 3 + 9
@@ -294,6 +298,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 
     with Pool(processes=nt.n_procs) as pool:
         b_list = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True)).get()
+    
 
     if plot:
         nt.plot_samples(b_list, filename=f'rbmprop_mb{nt.run_tag}.pdf', title='RBM (MBB)')
@@ -306,7 +311,7 @@ def rbm_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=Fal
 
 
 if __name__ == "__main__":
-    plot = False
+    plot = True
     disable_tqdm = False
     bra, ket = nt.make_test_states()
     bracket_t0 = bra * ket

@@ -7,8 +7,8 @@ import itertools
 # import matplotlib
 # matplotlib.use('Agg', force=True)
 
-dt = 0.001
-n_samples = 100_000
+dt = 0.01
+n_samples = 50_000
 n_procs = os.cpu_count() - 1
 run_tag = '_test'  #start with a _
 global_seed = 17
@@ -80,7 +80,7 @@ def make_all_potentials(scale=10.0, rng=None):
         out['asigtau'] = make_asigtau(scale=5, rng=rng)
         out['atau'] = make_atau(scale=5, rng=rng)
         out['vcoul'] = make_vcoul(scale=5, rng=rng)
-        out['bls'] = make_bls(scale=0.1, rng=rng)
+        out['bls'] = make_bls(scale=0.0125, rng=rng)
         out['gls'] = np.sum(out['bls'], axis = 2) 
     return out
 
