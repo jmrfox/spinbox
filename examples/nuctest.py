@@ -1,18 +1,20 @@
 import matplotlib.pyplot as plt
 import os
 from quap import *
+import itertools 
 
 #from icecream import ic
 # import matplotlib
 # matplotlib.use('Agg', force=True)
 
 dt = 0.001
-n_samples = 10_000
+n_samples = 100_000
 n_procs = os.cpu_count() - 1
 run_tag = '_test'  #start with a _
 global_seed = 17
 
 n_particles = 2
+pairs_ij = list(itertools.combinations(range(n_particles), 2))
 
 def make_test_states(rng=None, manybody=False):
     """returns one body basis spin-isospin states for testing"""
@@ -55,7 +57,7 @@ def make_vcoul(scale=10.0, rng=None):
         v[i, i] = 0
     return v 
 
-def make_bls(scale=1.0, rng=None):
+def make_bls(scale=0.1, rng=None):
     v =  make_potential((3, n_particles, n_particles), scale=scale, rng=rng)
     for i in range(n_particles):
         v[:, i, i] = 0
@@ -63,21 +65,23 @@ def make_bls(scale=1.0, rng=None):
 
 def make_all_potentials(scale=10.0, rng=None):
     out = {}
-    option = 'all'
 
-    if option=='all':
+    mode = 'test'
+    if mode=='normal':
         out['asig'] = make_asig(scale=scale, rng=rng)
         out['asigtau'] = make_asigtau(scale=scale, rng=rng)
         out['atau'] = make_atau(scale=scale, rng=rng)
         out['vcoul'] = make_vcoul(scale=scale, rng=rng)
         out['bls'] = make_bls(scale=scale, rng=rng)
-    elif option=='coul':
-        out['asig'] = make_asig(scale=0., rng=rng)
-        out['asigtau'] = make_asigtau(scale=0., rng=rng)
-        out['atau'] = make_atau(scale=0., rng=rng)
-        out['vcoul'] = make_vcoul(scale=scale, rng=rng)
-        out['bls'] = make_bls(scale=0., rng=rng)
-
+        out['gls'] = np.sum(out['bls'], axis = 2) 
+    elif mode=='test':
+        print("make_all_potentials IS IN TEST MODE!!!!")
+        out['asig'] = make_asig(scale=5, rng=rng)
+        out['asigtau'] = make_asigtau(scale=5, rng=rng)
+        out['atau'] = make_atau(scale=5, rng=rng)
+        out['vcoul'] = make_vcoul(scale=5, rng=rng)
+        out['bls'] = make_bls(scale=0.1, rng=rng)
+        out['gls'] = np.sum(out['bls'], axis = 2) 
     return out
 
 
