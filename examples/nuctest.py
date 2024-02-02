@@ -9,7 +9,8 @@ import itertools
 
 dt = 0.01
 n_samples = 10_000
-n_procs = os.cpu_count() - 1
+# n_procs = os.cpu_count() - 1
+n_procs = 16
 run_tag = '_test'  #start with a _
 global_seed = 17
 

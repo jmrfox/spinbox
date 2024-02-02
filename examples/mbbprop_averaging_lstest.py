@@ -4,10 +4,9 @@ from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
-
+from itertools import starmap
 
 #  this script does the same as mbbprop_averaging except for several values of B_LS and plots
-
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
@@ -297,15 +296,16 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_sca
     h_set = rng.integers(0, 2, size=(n_samples, n_aux))
 
     print(f'# PROCESSES = {nt.n_procs}')
-    do_parallel = True
+    do_parallel = False
     if do_parallel:
         with Pool(processes=nt.n_procs) as pool:
-            b_array = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True)).get()
+            b_array = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True), chunksize=10).get()
     else:
         print("SERIAL...")
-        b_array = []
-        for args in tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True):
-            b_array.append(gauss_task(*args))
+        # b_array = []
+        # for args in tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True):
+        #     b_array.append(gauss_task(*args))
+        b_array = list(starmap(gauss_task, tqdm([(h, bra, ket, pot_dict) for h in h_set])))
 
     b_array = np.array(b_array)
 
