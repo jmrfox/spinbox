@@ -8,8 +8,9 @@ import itertools
 # matplotlib.use('Agg', force=True)
 
 dt = 0.01
-n_samples = 50_000
+n_samples = 10_000
 n_procs = os.cpu_count() - 1
+# print(f'# PROCESSES = {n_procs}')
 run_tag = '_test'  #start with a _
 global_seed = 17
 
@@ -66,7 +67,7 @@ def make_bls(scale=0.1, rng=None):
 def make_all_potentials(scale=10.0, rng=None):
     out = {}
 
-    mode = 'test'
+    mode = 'ls_test'
     if mode=='normal':
         out['asig'] = make_asig(scale=scale, rng=rng)
         out['asigtau'] = make_asigtau(scale=scale, rng=rng)
@@ -74,13 +75,13 @@ def make_all_potentials(scale=10.0, rng=None):
         out['vcoul'] = make_vcoul(scale=scale, rng=rng)
         out['bls'] = make_bls(scale=scale, rng=rng)
         out['gls'] = np.sum(out['bls'], axis = 2) 
-    elif mode=='test':
+    elif mode=='ls_test':
         print("make_all_potentials IS IN TEST MODE!!!!")
-        out['asig'] = make_asig(scale=5, rng=rng)
-        out['asigtau'] = make_asigtau(scale=5, rng=rng)
-        out['atau'] = make_atau(scale=5, rng=rng)
-        out['vcoul'] = make_vcoul(scale=5, rng=rng)
-        out['bls'] = make_bls(scale=0.0125, rng=rng)
+        out['asig'] = make_asig(scale=0, rng=rng)
+        out['asigtau'] = make_asigtau(scale=0, rng=rng)
+        out['atau'] = make_atau(scale=0, rng=rng)
+        out['vcoul'] = make_vcoul(scale=0, rng=rng)
+        out['bls'] = make_bls(scale=scale, rng=rng)
         out['gls'] = np.sum(out['bls'], axis = 2) 
     return out
 
