@@ -202,22 +202,32 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
 
 
 
-def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False):
+def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_scale=1.0):
     print('HS brackets')
     bra, ket = nt.make_test_states()
     bra = bra.to_many_body_state()
     ket = ket.to_many_body_state()
 
     # pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
-    pot_dict = nt.make_all_potentials(scale = 0.01)
+    pot_dict = nt.make_all_potentials(scale=pot_scale)
     g_exact = make_g_exact(pot_dict)
     b_exact = bra * g_exact * ket
 
     n_aux = nt.n_particles**2 * (9 + 27 + 3 + 1 + 3 + 9)
     rng = default_rng(seed=nt.global_seed)
     x_set = rng.standard_normal((n_samples, n_aux))  # different x for each x,y,z
-    with Pool(processes=nt.n_procs) as pool:
-        b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
+
+    print(f'# PROCESSES = {nt.n_procs}')
+    do_parallel = False
+    if do_parallel:
+        with Pool(processes=nt.n_procs) as pool:
+            b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
+    else:
+        input("SERIAL...")
+        b_array = []
+        for args in tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True):
+            b_array.append(gauss_task(*args))
+
     b_array = np.array(b_array)
 
     if plot:
@@ -300,7 +310,7 @@ def rbm_task(h, bra, ket, pot_dict, rng_mix=None):
     return 0.5 * scalar(bra * ket_p + bra * ket_m)
 
 
-def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False):
+def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_scale=1.0):
     print('RBM brackets')
     bra, ket = nt.make_test_states()
     bra = bra.to_many_body_state()
@@ -308,7 +318,7 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False):
 
     # compute exact bracket
     # pot_dict = nt.make_all_potentials(rng=default_rng(seed=nt.global_seed))
-    pot_dict = nt.make_all_potentials(scale=0.01)
+    pot_dict = nt.make_all_potentials(scale=pot_scale)
     g_exact = make_g_exact(pot_dict)
     b_exact = bra * g_exact * ket
 
@@ -333,12 +343,13 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False):
 if __name__ == "__main__":
     plot = False
     disable_tqdm = False
+    pot_scale = 0.1
     bra, ket = nt.make_test_states()
     bracket_t0 = bra * ket
     print(f'<G(t=0)> = {bracket_t0}')
     
     with Profile() as profile:
-        # gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
-        rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
+        gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+        # rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
     print('DONE')
