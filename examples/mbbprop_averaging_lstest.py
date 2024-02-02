@@ -5,6 +5,10 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
+
+#  this script does the same as mbbprop_averaging except for several values of B_LS and plots
+
+
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
 sig = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
@@ -167,9 +171,6 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
 
 
 
-
-
-
 def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_scale=1.0):
     print('HS brackets')
     bra, ket = nt.make_test_states()
@@ -327,7 +328,7 @@ if __name__ == "__main__":
     print(f'<G(t=0)> = {bracket_t0}')
     
     with Profile() as profile:
-        gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
-        # rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
+        # gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+        rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
     print('DONE')
