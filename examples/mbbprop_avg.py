@@ -4,6 +4,7 @@ from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
+# from concurrent.futures import ProcessPoolExecutor
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
@@ -167,9 +168,6 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
 
 
 
-
-
-
 def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_scale=1.0):
     print('HS brackets')
     bra, ket = nt.make_test_states()
@@ -188,6 +186,7 @@ def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, po
     print(f'# PROCESSES = {nt.n_procs}')
     do_parallel = True
     if do_parallel:
+        print('PARALLEL...')
         with Pool(processes=nt.n_procs) as pool:
             b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
     else:
