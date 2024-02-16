@@ -3,7 +3,7 @@ from quap import *
 from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
-from multiprocessing.pool import Pool, ThreadPool
+from multiprocessing.pool import Pool
 # from concurrent.futures import ProcessPoolExecutor
 from time import time
 
@@ -188,7 +188,7 @@ def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, po
     do_parallel = True
     if do_parallel:
         print('PARALLEL...')
-        with ThreadPool(processes=nt.n_procs) as pool:
+        with Pool(processes=nt.n_procs) as pool:
             b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
     else:
         input("SERIAL...")
