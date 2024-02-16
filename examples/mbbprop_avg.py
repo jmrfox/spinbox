@@ -109,7 +109,7 @@ def g_gauss_sample(dt, a, x, opi, opj):
     return norm * gi * gj
 
 
-def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
+def gauss_prop(x, bra, ket, pot_dict, rng_mix=None):
     ket_p = ket.copy()
     ket_m = ket.copy()
 
@@ -157,9 +157,9 @@ def gauss_task(x, bra, ket, pot_dict, rng_mix=None):
     for i,j in nt.pairs_ij:
         for a in range(3):
             for b in range(3):
-                asigls = - gls[a, i]* gls[b, j]
-                ket_p = g_gauss_sample(1, asigls, x[n], sig[i][a], sig[j][b]) * ket_p
-                ket_m = g_gauss_sample(1, asigls, -x[n], sig[i][a], sig[j][b]) * ket_m
+                asigls = gls[a, i]* gls[b, j]
+                ket_p = g_gauss_sample(1, - asigls, x[n], sig[i][a], sig[j][b]) * ket_p
+                ket_m = g_gauss_sample(1, - asigls, -x[n], sig[i][a], sig[j][b]) * ket_m
     trace_factor = cexp( 0.5 * np.sum(gls**2))
     ket_p = trace_factor * ket_p
     ket_m = trace_factor * ket_m
@@ -189,12 +189,12 @@ def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, po
     if do_parallel:
         print('PARALLEL...')
         with Pool(processes=nt.n_procs) as pool:
-            b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
+            b_array = pool.starmap_async(gauss_prop, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
     else:
         print("SERIAL...")
         b_array = []
         for args in tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True):
-            b_array.append(gauss_task(*args))
+            b_array.append(gauss_prop(*args))
 
     b_array = np.array(b_array)
 
@@ -220,7 +220,7 @@ def g_rbm_sample(dt, a, h, opi, opj):
     return norm * qi * qj
 
 
-def rbm_task(h, bra, ket, pot_dict, rng_mix=None):
+def rbm_prop(h, bra, ket, pot_dict, rng_mix=None):
     ket_p = ket.copy()
     ket_m = ket.copy()
     
@@ -268,9 +268,9 @@ def rbm_task(h, bra, ket, pot_dict, rng_mix=None):
     for i,j in nt.pairs_ij:
         for a in range(3):
             for b in range(3):
-                asigls = - gls[a, i]* gls[b, j]
-                ket_p = g_rbm_sample(1, asigls, h[n], sig[i][a], sig[j][b]) * ket_p
-                ket_m = g_rbm_sample(1, asigls, 1-h[n], sig[i][a], sig[j][b]) * ket_m
+                asigls = gls[a, i]* gls[b, j]
+                ket_p = g_rbm_sample(1, - asigls, h[n], sig[i][a], sig[j][b]) * ket_p
+                ket_m = g_rbm_sample(1, - asigls, 1-h[n], sig[i][a], sig[j][b]) * ket_m
     trace_factor = cexp( 0.5 * np.sum(gls**2))
     ket_p = trace_factor * ket_p
     ket_m = trace_factor * ket_m
@@ -298,13 +298,14 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_sca
     print(f'# PROCESSES = {nt.n_procs}')
     do_parallel = True
     if do_parallel:
+        print("PARALLEL...")
         with Pool(processes=nt.n_procs) as pool:
-            b_array = pool.starmap_async(rbm_task, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True)).get()
+            b_array = pool.starmap_async(rbm_prop, tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True)).get()
     else:
         print("SERIAL...")
         b_array = []
         for args in tqdm([(h, bra, ket, pot_dict) for h in h_set], disable=disable_tqdm, leave=True):
-            b_array.append(gauss_task(*args))
+            b_array.append(rbm_prop(*args))
 
     b_array = np.array(b_array)
 
@@ -316,7 +317,9 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_sca
     print('exact = ', b_exact)
     print(f'rbm = {b_rbm}  +/-  {s_rbm}')
     print('error = ', b_exact - b_rbm)
+    print('square ratio = ', np.linalg.norm(b_exact/b_rbm) )
 
+    
 
 if __name__ == "__main__":
     plot = False
@@ -328,9 +331,8 @@ if __name__ == "__main__":
     
     with Profile() as profile:
         t0 = time()
-        gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
-        print(f'total time = {time() - t0}')
-
-        # rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
+        # gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+        rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
+        print(f'total time = {time() - t0}')
     print('DONE')

@@ -208,8 +208,8 @@ def prop_rbm_fixed(bra, ket, pots, h):
         for i,j in nt.pairs_ij:
             for a in range(3):
                 for b in range(3):
-                    asigls = - gls[a, i]* gls[b, j]
-                    ket = g_rbm_sample(1, asigls, h, sig[i][a], sig[j][b]) * ket
+                    asigls = gls[a, i]* gls[b, j]
+                    ket = g_rbm_sample(1, - asigls, h, sig[i][a], sig[j][b]) * ket
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 

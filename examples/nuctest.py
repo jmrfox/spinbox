@@ -7,17 +7,17 @@ import itertools
 # import matplotlib
 # matplotlib.use('Agg', force=True)
 
-os.environ["OMP_NUM_THREADS"] = 1
+os.environ["OMP_NUM_THREADS"] = "1"
 
 
 dt = 0.01
 n_samples = 1000
-# n_procs = os.cpu_count() - 1
-n_procs = 8
+n_procs = os.cpu_count() 
+# n_procs = 8
 run_tag = '_test'  #start with a _
 global_seed = 17
 
-n_particles = 2
+n_particles = 3
 pairs_ij = list(itertools.combinations(range(n_particles), 2))
 
 def make_test_states(rng=None, manybody=False):
