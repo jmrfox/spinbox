@@ -7,6 +7,9 @@ import itertools
 # import matplotlib
 # matplotlib.use('Agg', force=True)
 
+os.environ["OMP_NUM_THREADS"] = 1
+
+
 dt = 0.01
 n_samples = 1000
 # n_procs = os.cpu_count() - 1

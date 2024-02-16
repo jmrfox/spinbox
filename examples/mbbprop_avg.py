@@ -191,7 +191,7 @@ def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, po
         with Pool(processes=nt.n_procs) as pool:
             b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
     else:
-        input("SERIAL...")
+        print("SERIAL...")
         b_array = []
         for args in tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True):
             b_array.append(gauss_task(*args))

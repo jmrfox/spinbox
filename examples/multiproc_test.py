@@ -25,7 +25,7 @@ def matmuls(n, dim):
 
 
 do_parallel = True
-n_procs = 4
+n_procs = 1
 n_jobs = 100
 
 def task(i):
