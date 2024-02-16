@@ -1,4 +1,4 @@
-from multiprocessing.pool import Pool
+from multiprocessing.pool import Pool, ThreadPool
 import numpy as np
 from tqdm import tqdm
 from time import time
@@ -37,7 +37,7 @@ def main():
     with Profile() as profile:
         t0 = time()
         if do_parallel:
-            with Pool(processes=n_procs) as pool:
+            with ThreadPool(processes=n_procs) as pool:
                 result = pool.map(task, tqdm(inputs) )
         else:
             result = list(map(task, tqdm(inputs) ) )

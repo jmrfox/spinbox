@@ -3,8 +3,9 @@ from quap import *
 from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
-from multiprocessing.pool import Pool
+from multiprocessing.pool import Pool, ThreadPool
 # from concurrent.futures import ProcessPoolExecutor
+from time import time
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
@@ -187,7 +188,7 @@ def gaussian_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, po
     do_parallel = True
     if do_parallel:
         print('PARALLEL...')
-        with Pool(processes=nt.n_procs) as pool:
+        with ThreadPool(processes=nt.n_procs) as pool:
             b_array = pool.starmap_async(gauss_task, tqdm([(x, bra, ket, pot_dict) for x in x_set], disable=disable_tqdm, leave=True)).get()
     else:
         input("SERIAL...")
@@ -326,7 +327,10 @@ if __name__ == "__main__":
     print(f'<G(t=0)> = {bracket_t0}')
     
     with Profile() as profile:
+        t0 = time()
         gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+        print(f'total time = {time() - t0}')
+
         # rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm)
         # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
     print('DONE')
