@@ -23,13 +23,25 @@ def matmuls(n, dim):
         # print(out)
     return np.mean(out)
 
+def factors(n):
+    from sympy import factorint
+    rng = np.random.default_rng(seed=1)
+    k = 10
+    out = []
+    for _ in range(n):
+        x = int( rng.uniform(10**k, 10**(k+1)) )
+        res = factorint(x)
+        out.append(sum(list(res)))
+    return np.mean(out)
 
 do_parallel = True
 n_procs = 4
 n_jobs = 100
 
 def task(i):
-    return matmuls(100,100)
+    # return matmuls(100,100)
+    return factors(1)
+
 
 inputs = range(n_jobs)
 

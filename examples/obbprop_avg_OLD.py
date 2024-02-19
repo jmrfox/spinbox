@@ -12,53 +12,81 @@ tau = [[OneBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 
 # access like sig[particle][xyz]
 
 
-def g_coulomb_onebody(dt, v, i):
-    """just the one-body part of the factored coulomb propagator
-    for use along with auxiliary field propagator for 2 body part"""
+def g_coul_onebody(dt, v):
+    """just the one-body part of the expanded coulomb propagator
+    for use along with auxiliary field propagators"""
     k = - 0.125 * v * dt
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
-    out.op_stack[i] = ccosh(k) * ident + csinh(k) * tau[2]
-    return out
-
-def g_ls_onebody(gls_ai, i, a):
-    """just the one-body part of the factored LS propagator
-    """
-    k = - 1.j * gls_ai
-    ck, sk = ccosh(k), csinh(k)
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
-    out.op_stack[i] = ck * ident + sk * sig[a]
-    return out
-
+    norm = np.exp(k)
+    ck, sk = np.cosh(k), np.sinh(k)
+    out = ident.scalar_mult(0, ck).scalar_mult(1, ck) + tau[0][2].scalar_mult(0, sk) * tau[1][2].scalar_mult(1, sk)
+    return out.spread_scalar_mult(norm)
 
 def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
-    k = csqrt(-0.5 * dt * a)
-    norm = cexp(0.5 * dt * a)
-    # out = ident.scalar_mult(i, ccosh(k * x)).scalar_mult(j, ccosh(k * x)) + opi.scalar_mult(i, csinh(k * x)) * opj.scalar_mult(j, csinh(k * x))
-    # return out.spread_scalar_mult(norm)
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
-    out.op_stack[i] = ccosh(k) * ident + csinh(k) * opi
-    out.op_stack[j] = ccosh(k) * ident + csinh(k) * opj
-    out.op_stack[i] *= csqrt(norm)
-    out.op_stack[j] *= csqrt(norm)
-    return out
+    k = np.sqrt(-0.5 * dt * a, dtype=complex)
+    norm = np.exp(0.5 * dt * a)
+    out = ident.scalar_mult(i, np.cosh(k * x)).scalar_mult(j, np.cosh(k * x)) + opi.scalar_mult(i, np.sinh(k * x)) * opj.scalar_mult(j, np.sinh(k * x))
+    return out.spread_scalar_mult(norm)
 
 
-def g_rbm_sample(dt, a, h, i, j, opi, opj):
-    norm = cexp(-0.5 * dt * np.abs(a))
-    W = carctanh(csqrt(ctanh(0.5 * dt * np.abs(a))))
-    arg = W * (2 * h - 1)
-    # out = ident.scalar_mult(i, ccosh(arg)).scalar_mult(j, ccosh(arg)) + opi.scalar_mult(i, csinh(arg)) * opj.scalar_mult(j, -np.sign(a) * csinh(arg))
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
-    # return out
-    out.op_stack[i] = ccosh(arg) * ident + csinh(arg) * opi
-    out.op_stack[j] = ccosh(arg) * ident - np.sign(a) * csinh(arg) * opj
-    # out.op_stack[i] *= csqrt(norm)
-    # out.op_stack[j] *= csqrt(norm)
-    out = out.spread_scalar_mult(norm)
-    return out
+def gauss_task(x, bra, ket, pot_dict):
+    ket_p = ket.copy()
+    ket_m = ket.copy()
+    
+    asig = pot_dict['asig']
+    asigtau = pot_dict['asigtau']
+    atau = pot_dict['atau']
+    vcoul = pot_dict['vcoul']
+    bls = pot_dict['bls']
+    
+    n = 0
+    for a in [0, 1, 2]:
+        for b in [0, 1, 2]:
+            ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], 0, 1, sig[0][a], sig[1][b]) * ket_p
+            ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], 0, 1, sig[0][a], sig[1][b]) * ket_m
+            n += 1
+    for a in [0, 1, 2]:
+        for b in [0, 1, 2]:
+            for c in [0, 1, 2]:
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                n += 1
+    for c in [0, 1, 2]:
+        ket_p = g_gauss_sample(nt.dt, atau, x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau, -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
+        n += 1
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tau[0][2], tau[1][2]) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tau[0][2], tau[1][2]) * ket_m
+    return 0.5 * (bra * ket_p + bra * ket_m)
 
-
-
+def gauss_task(x, bra, ket, pot_dict):
+    ket_p = ket.copy()
+    ket_m = ket.copy()
+    
+    asig = pot_dict['asig']
+    asigtau = pot_dict['asigtau']
+    atau = pot_dict['atau']
+    vcoul = pot_dict['vcoul']
+    bls = pot_dict['bls']
+    
+    n = 0
+    for a in [0, 1, 2]:
+        for b in [0, 1, 2]:
+            ket_p = g_gauss_sample(nt.dt, asig[a, b], x[n], 0, 1, sig[0][a], sig[1][b]) * ket_p
+            ket_m = g_gauss_sample(nt.dt, asig[a, b], -x[n], 0, 1, sig[0][a], sig[1][b]) * ket_m
+            n += 1
+    for a in [0, 1, 2]:
+        for b in [0, 1, 2]:
+            for c in [0, 1, 2]:
+                ket_p = g_gauss_sample(nt.dt, asigtau[a, b], x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_p
+                ket_m = g_gauss_sample(nt.dt, asigtau[a, b], -x[n], 0, 1, sig[0][a] * tau[0][c], sig[1][b] * tau[1][c]) * ket_m
+                n += 1
+    for c in [0, 1, 2]:
+        ket_p = g_gauss_sample(nt.dt, atau, x[n], 0, 1, tau[0][c], tau[1][c]) * ket_p
+        ket_m = g_gauss_sample(nt.dt, atau, -x[n], 0, 1, tau[0][c], tau[1][c]) * ket_m
+        n += 1
+    ket_p = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, x[n], 0, 1, tau[0][2], tau[1][2]) * ket_p
+    ket_m = g_coul_onebody(nt.dt, vcoul) * g_gauss_sample(nt.dt, 0.25 * vcoul, -x[n], 0, 1, tau[0][2], tau[1][2]) * ket_m
+    return 0.5 * (bra * ket_p + bra * ket_m)
 
 
 def gaussian_brackets_parallel(n_samples=100, mix=False, plot=False, disable_tqdm=False):

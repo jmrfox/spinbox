@@ -9,7 +9,6 @@ import itertools
 
 os.environ["OMP_NUM_THREADS"] = "1"
 
-
 dt = 0.01
 n_samples = 1000
 n_procs = os.cpu_count() 
@@ -20,10 +19,11 @@ global_seed = 17
 n_particles = 3
 pairs_ij = list(itertools.combinations(range(n_particles), 2))
 
-def make_test_states(rng=None, manybody=False):
+def make_test_states(manybody=False):
     """returns one body basis spin-isospin states for testing"""
     bra = OneBodyBasisSpinIsospinState(n_particles, 'bra', np.zeros(shape=(n_particles, 1, 4))).randomize(100)
-    ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
+    # ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
+    ket = bra.copy().dagger()
     if manybody:
         bra = bra.to_many_body_state()
         ket = ket.to_many_body_state()
@@ -67,16 +67,15 @@ def make_bls(scale=0.1, rng=None):
         v[:, i, i] = 0
     return v 
 
-def make_all_potentials(scale=10.0, rng=None):
+def make_all_potentials(scale=1.0, rng=None, mode='normal'):
     out = {}
 
-    mode = 'ls_test'
     if mode=='normal':
-        out['asig'] = make_asig(scale=scale, rng=rng)
-        out['asigtau'] = make_asigtau(scale=scale, rng=rng)
+        out['asig'] = make_asig(scale=scale*-1, rng=rng)
+        out['asigtau'] = make_asigtau(scale=scale*-1, rng=rng)
         out['atau'] = make_atau(scale=scale, rng=rng)
-        out['vcoul'] = make_vcoul(scale=scale, rng=rng)
-        out['bls'] = make_bls(scale=scale, rng=rng)
+        out['vcoul'] = make_vcoul(scale=scale*0.1, rng=rng)
+        out['bls'] = make_bls(scale=scale*0.1, rng=rng)
         out['gls'] = np.sum(out['bls'], axis = 2) 
     elif mode=='ls_test':
         print("make_all_potentials IS IN TEST MODE!!!!")
@@ -84,7 +83,7 @@ def make_all_potentials(scale=10.0, rng=None):
         out['asigtau'] = make_asigtau(scale=0, rng=rng)
         out['atau'] = make_atau(scale=0, rng=rng)
         out['vcoul'] = make_vcoul(scale=0, rng=rng)
-        out['bls'] = make_bls(scale=scale, rng=rng)
+        out['bls'] = make_bls(scale=scale*0.1, rng=rng)
         out['gls'] = np.sum(out['bls'], axis = 2) 
     return out
 

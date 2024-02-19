@@ -4,7 +4,6 @@ from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
-# from concurrent.futures import ProcessPoolExecutor
 from time import time
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)

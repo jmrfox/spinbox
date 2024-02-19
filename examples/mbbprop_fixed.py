@@ -139,7 +139,7 @@ def prop_gauss_fixed(bra, ket, pots, x):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_gauss_sample(nt.dt, 0.25 * vcoul[i, j], x, tau[i][2], tau[j][2]) * ket
     # LS
-    do_ls = True
+    do_ls = False
     if do_ls:
         for i in range(nt.n_particles):
             for a in range(3):
@@ -152,11 +152,9 @@ def prop_gauss_fixed(bra, ket, pots, x):
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 
-    print("FINAL KET\n", ket.coefficients)
     print('norm = ', ket.dagger() * ket)
-    print('MBB bracket = ', bra * ket)
-    print('GAUSS DONE')
-
+    print('MBB HS bracket = ', bra * ket)
+    
 
 
 def prop_rbm_fixed(bra, ket, pots, h):
@@ -200,7 +198,7 @@ def prop_rbm_fixed(bra, ket, pots, h):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
     # LS
-    do_ls = True
+    do_ls = False
     if do_ls:
         for i in range(nt.n_particles):
             for a in range(3):
@@ -213,15 +211,14 @@ def prop_rbm_fixed(bra, ket, pots, h):
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 
-    print("FINAL KET\n", ket.coefficients)
+    # print("FINAL KET\n", ket.coefficients)
     print('norm = ', ket.dagger() * ket)
-    print('MBB bracket = ', bra * ket)
-    print('RBM DONE')
+    print('MBB RBM bracket = ', bra * ket)
 
 if __name__ == "__main__":
     # ket, asig, asigtau, atau, vcoul, bls = load_h2()
     bra, ket = nt.make_test_states(manybody=True)
-    pots = nt.make_all_potentials(scale = 1.0)
+    pots = nt.make_all_potentials(scale=1.0, mode='normal')
 
     prop_gauss_fixed(bra, ket, pots, x=1.0)
     prop_rbm_fixed(bra, ket, pots, h=1.0)   
