@@ -232,12 +232,14 @@ def prop_rbm_fixed_unnorm(bra, ket, pots, h):
 
 
 if __name__ == "__main__":
-    ket, pots, ket_ref = nt.load_h2(manybody=True)
+    ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
     bra = ket.dagger()
     # bra, ket = nt.make_test_states(manybody=True)
     # pots = nt.make_all_potentials(scale=1.0, mode='normal')
 
     # prop_gauss_fixed(bra, ket, pots, x=1.0)
+
+    print("INITIAL KET\n", ket.coefficients)
     prop_rbm_fixed_unnorm(bra, ket, pots, h=1.0)
-    print('REFERENCE', ket_ref)
+    print("REFERENCE\n", ket_ref.coefficients)
     

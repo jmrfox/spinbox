@@ -105,8 +105,8 @@ def plot_samples(X, filename, title, bins='auto', range=None):
     plt.savefig(filename)
 
 
-def load_h2(manybody=False):
-    data_dir = './data/h2/'
+def load_h2(manybody=False, data_dir = './data/h2/'):
+    # data_dir = './data/h2/'
     c = read_coeffs(data_dir+'fort.770')
     c_ref = read_coeffs(data_dir+'fort.775')
     ket = OneBodyBasisSpinIsospinState(2, 'ket', c.reshape(2, 4, 1)) 
