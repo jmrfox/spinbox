@@ -1,5 +1,5 @@
-import examples.nuctest as nt
 from quap import *
+import nuctest as nt
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
@@ -8,50 +8,12 @@ tau = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1
 # sig[particle][xyz]
 
 
-def g_pade_sig(dt, asig, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
-    for a in range(3):
-        for b in range(3):
-            out += asig[a, b] * sig[i][a] * sig[j][b]
-    out = -0.5 * dt * out
-    return out.exponentiate()
-
-
-def g_pade_sigtau(dt, asigtau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
-    for a in range(3):
-        for b in range(3):
-            for c in range(3):
-                out += asigtau[a, b] * sig[i][a] * sig[j][b] * tau[i][c] * tau[j][c]
-    out = -0.5 * dt * out
-    return out.exponentiate()
-
-
-def g_pade_tau(dt, atau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
-    for c in range(3):
-        out += atau * tau[i][c] * tau[j][c]
-    out = -0.5 * dt * out
-    return out.exponentiate()
-
-
-def g_pade_coul(dt, v, i, j):
-    out = ident + tau[i][2] + tau[j][2] + tau[i][2] * tau[j][2]
-    out = -0.125 * v * dt * out
-    return out.exponentiate()
-
 
 def g_coulomb_onebody(dt, v, i):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
     out = - 0.125 * v * dt * tau[i][2]
     return out.exponentiate()
-
-# def g_coul_onebody(dt, v, i, j):
-#     """just the one-body part of the expanded coulomb propagator
-#     for use along with auxiliary field propagators"""
-#     out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2])
-#     return out.exponentiate()
 
 
 def g_ls_linear(gls_ai, i, a):
@@ -87,16 +49,7 @@ def g_rbm_sample(dt, a, h, opi, opj):
     return norm * qi * qj
 
 
-def load_h2():
-    data_dir = './data/h2/'
-    c = read_coeffs(data_dir+'fort.770')
-    ket = OneBodyBasisSpinIsospinState(nt.n_particles, 'ket', c.reshape(nt.n_particles, 4, 1)).to_many_body_state()    
-    asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
-    asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
-    atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
-    vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
-    bls = nt.make_bls()
-    return ket, asig, asigtau, atau, vcoul, bls
+
 
 
 def prop_gauss_fixed(bra, ket, pots, x):
@@ -163,8 +116,9 @@ def prop_rbm_fixed(bra, ket, pots, h):
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    bls = pots['bls']
-    gls = np.sum(pots['bls'], axis = 2)
+    # bls = pots['bls']
+    # gls = np.sum(pots['bls'], axis = 2)
+    gls = pots['gls']
 
     # FIXED AUX FIELD CALCULATION
     
@@ -211,15 +165,17 @@ def prop_rbm_fixed(bra, ket, pots, h):
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 
-    # print("FINAL KET\n", ket.coefficients)
-    print('norm = ', ket.dagger() * ket)
-    print('MBB RBM bracket = ', bra * ket)
+    print("FINAL KET\n", ket.coefficients)
+    # print('norm = ', ket.dagger() * ket)
+    # print('MBB RBM bracket = ', bra * ket)
 
 if __name__ == "__main__":
-    # ket, asig, asigtau, atau, vcoul, bls = load_h2()
-    bra, ket = nt.make_test_states(manybody=True)
-    pots = nt.make_all_potentials(scale=1.0, mode='normal')
+    ket, pots, ket_ref = nt.load_h2(manybody=True)
+    bra = ket.dagger()
+    # bra, ket = nt.make_test_states(manybody=True)
+    # pots = nt.make_all_potentials(scale=1.0, mode='normal')
 
-    prop_gauss_fixed(bra, ket, pots, x=1.0)
-    prop_rbm_fixed(bra, ket, pots, h=1.0)   
+    # prop_gauss_fixed(bra, ket, pots, x=1.0)
+    prop_rbm_fixed(bra, ket, pots, h=1.0)
+    print('REFERENCE', ket_ref)
     

@@ -16,7 +16,7 @@ n_procs = os.cpu_count()
 run_tag = '_test'  #start with a _
 global_seed = 17
 
-n_particles = 3
+n_particles = 2
 pairs_ij = list(itertools.combinations(range(n_particles), 2))
 
 def make_test_states(manybody=False):
@@ -103,3 +103,30 @@ def plot_samples(X, filename, title, bins='auto', range=None):
     plt.legend()
     plt.tight_layout()
     plt.savefig(filename)
+
+
+def load_h2(manybody=False):
+    data_dir = './data/h2/'
+    c = read_coeffs(data_dir+'fort.770')
+    c_ref = read_coeffs(data_dir+'fort.775')
+    ket = OneBodyBasisSpinIsospinState(2, 'ket', c.reshape(2, 4, 1)) 
+    ket_ref = OneBodyBasisSpinIsospinState(2, 'ket', c_ref.reshape(2, 4, 1)) 
+    if manybody:
+        ket = ket.to_many_body_state()
+        ket_ref = ket_ref.to_many_body_state()
+    asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
+    asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
+    atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
+    vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
+    gls = np.loadtxt(data_dir+'fort.7705').reshape((3,2), order='F')
+    asigls = np.loadtxt(data_dir+'fort.7706').reshape((3,2,3,2), order='F')
+
+    pot_dict={}
+    pot_dict['asig'] = asig
+    pot_dict['asigtau'] = asigtau
+    pot_dict['atau'] = atau
+    pot_dict['vcoul'] = vcoul
+    pot_dict['gls'] = gls
+    pot_dict['asigls'] = asigls
+    # return ket, asig, asigtau, atau, vcoul, gls, asigls
+    return ket, pot_dict, ket_ref
