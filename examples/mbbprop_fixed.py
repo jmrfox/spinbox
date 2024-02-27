@@ -8,7 +8,6 @@ tau = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1
 # sig[particle][xyz]
 
 
-
 def g_coulomb_onebody(dt, v, i):
     """just the one-body part of the expanded coulomb propagator
     for use along with auxiliary field propagators"""
@@ -52,15 +51,13 @@ def g_rbm_sample(dt, a, h, opi, opj):
 
 
 
-def prop_gauss_fixed(bra, ket, pots, x):
+def prop_gauss_fixed(ket, pots, x):
     print('GAUSS')
     asig = pots['asig'] 
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    bls = pots['bls']
-    gls = np.sum(pots['bls'], axis = 2)
-
+    gls = pots['gls']
 
     # SIGMA
     for i,j in nt.pairs_ij:
@@ -105,19 +102,15 @@ def prop_gauss_fixed(bra, ket, pots, x):
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 
-    print('norm = ', ket.dagger() * ket)
-    print('MBB HS bracket = ', bra * ket)
-    
+    return ket
 
 
-def prop_rbm_fixed(bra, ket, pots, h):
+def prop_rbm_fixed(ket, pots, h):
     print('RBM')
     asig = pots['asig'] 
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    # bls = pots['bls']
-    # gls = np.sum(pots['bls'], axis = 2)
     gls = pots['gls']
 
     # FIXED AUX FIELD CALCULATION
@@ -165,19 +158,15 @@ def prop_rbm_fixed(bra, ket, pots, h):
         trace_factor = cexp( 0.5 * np.sum(gls**2))
         ket = trace_factor * ket
 
-    print("FINAL KET\n", ket.coefficients)
-    # print('norm = ', ket.dagger() * ket)
-    # print('MBB RBM bracket = ', bra * ket)
+    return ket
 
 
-def prop_rbm_fixed_unnorm(bra, ket, pots, h):
+def prop_rbm_fixed_unnorm(ket, pots, h):
     print('RBM')
     asig = pots['asig'] 
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    # bls = pots['bls']
-    # gls = np.sum(pots['bls'], axis = 2)
     gls = pots['gls']
 
     # FIXED AUX FIELD CALCULATION
@@ -226,20 +215,26 @@ def prop_rbm_fixed_unnorm(bra, ket, pots, h):
         # trace_factor = cexp( 0.5 * np.sum(gls**2))
         # ket = trace_factor * ket
 
-    print("FINAL KET\n", ket.coefficients)
-    # print('norm = ', ket.dagger() * ket)
-    # print('MBB RBM bracket = ', bra * ket)
-
+    return ket
 
 if __name__ == "__main__":
     ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
+    pots['asig'] = 1*pots['asig']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
+    pots['vcoul'] = 0*pots['vcoul']
+    pots['gls'] = 0*pots['gls']
     bra = ket.dagger()
+    
     # bra, ket = nt.make_test_states(manybody=True)
     # pots = nt.make_all_potentials(scale=1.0, mode='normal')
 
     # prop_gauss_fixed(bra, ket, pots, x=1.0)
 
     print("INITIAL KET\n", ket.coefficients)
-    prop_rbm_fixed_unnorm(bra, ket, pots, h=1.0)
-    print("REFERENCE\n", ket_ref.coefficients)
+    # ket = prop_gauss_fixed(ket, pots, x=1.0)
+    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
+    print("FINAL KET\n", ket.coefficients)
+    print("bracket = ", bra * ket)
+    # print("REFERENCE\n", ket_ref.coefficients)
     

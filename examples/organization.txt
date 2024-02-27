@@ -1,8 +1,8 @@
 Calculations to check
 
 AVERAGING
-- MBB Exact vs Gaussian vs RBM 
-- MBB exact vs OBB gaussian vs OBB rbm
+1. MBB Exact vs Gaussian vs RBM 
+2. MBB exact vs OBB gaussian vs OBB rbm
 
 FIXED AUX FIELD
 1. Gaussian MBB vs OBB

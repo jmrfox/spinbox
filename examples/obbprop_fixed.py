@@ -79,14 +79,13 @@ def g_rbm_sample(dt, a, h, i, j, opi, opj):
 
 
 
-def prop_gauss_fixed(bra, ket, pots, x):
+def prop_gauss_fixed(ket, pots, x):
     print('GAUSS')
     asig = pots['asig'] 
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    bls = pots['bls']
-    gls = np.sum(pots['bls'], axis = 2)
+    gls = pots['gls']
 
     # SIGMA
     for i,j in nt.pairs_ij:
@@ -110,36 +109,31 @@ def prop_gauss_fixed(bra, ket, pots, x):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_gauss_sample(nt.dt, 0.25 * vcoul[i, j], x, i, j, tau[2], tau[2]) * ket
     # LS
-    ls_type = 'none'
-    # ls_type = 'full'
-    if ls_type=='none':
-        pass
-    elif ls_type=='full':
+    do_ls = False
+    if do_ls:
         for i in range(nt.n_particles):
             for a in range(3):
                 ket = g_ls_onebody(gls[a, i], i, a) * ket
         for i,j in nt.pairs_ij:
             for a in range(3):
                 for b in range(3):
-                    asigls = - gls[a, i]* gls[b, j]
-                    ket = g_rbm_sample(1, asigls, h, i, j, sig[a], sig[b]) * ket
+                    asigls = gls[a, i]* gls[b, j]
+                    ket = g_gauss_sample(1, - asigls, x, i, j, sig[a], sig[b]) * ket
         trace = cexp(0.5 * np.sum(gls**2))
         ket = ket.spread_scalar_mult(trace)
 
-    print('norm = ', ket.dagger() * ket)
-    print('OBB HS bracket = ', bra * ket)
+    return ket
     
 
-def prop_rbm_fixed(bra, ket, pots, h):
+def prop_rbm_fixed(ket, pots, h):
+    print('RBM')
     asig = pots['asig'] 
-    asigtau = pots['asigtau'] 
-    atau = pots['atau'] 
+    asigtau = pots['asigtau']
+    atau = pots['atau']
     vcoul = pots['vcoul']
     # bls = pots['bls']
-    gls = np.sum(pots['bls'], axis = 2)
-    # print(gls)
-
-    # print("INITIAL KET\n", ket.to_many_body_state().coefficients)
+    # gls = np.sum(pots['bls'], axis = 2)
+    gls = pots['gls']
             
     # SIGMA
     for i,j in nt.pairs_ij:
@@ -163,46 +157,91 @@ def prop_rbm_fixed(bra, ket, pots, h):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[2], tau[2]) * ket
     # LS
-    ls_type = 'none'
-    # ls_type = 'full'
-    if ls_type=='none':
-        pass
-    elif ls_type=='full':
+    do_ls = False
+    if do_ls:
         for i in range(nt.n_particles):
             for a in range(3):
                 ket = g_ls_onebody(gls[a, i], i, a) * ket
         for i,j in nt.pairs_ij:
             for a in range(3):
                 for b in range(3):
-                    asigls = - gls[a, i]* gls[b, j]
-                    ket = g_rbm_sample(1, asigls, h, i, j, sig[a], sig[b]) * ket
-        trace = cexp(0.5 * np.sum(gls**2))
-        ket = ket.spread_scalar_mult(trace)
-
-    print('norm = ', ket.dagger() * ket)
-    print('OBB RBM bracket = ', bra * ket)
+                    asigls = gls[a, i]* gls[b, j]
+                    ket = g_rbm_sample(1, - asigls, h, i, j, sig[a], sig[b]) * ket
+        trace = cexp( 0.5 * np.sum(gls**2))
+        ket = trace * ket
     
+    return ket
 
+def prop_rbm_fixed_unnorm(ket, pots, h):
+    print('RBM')
+    asig = pots['asig'] 
+    asigtau = pots['asigtau']
+    atau = pots['atau']
+    vcoul = pots['vcoul']
+    # bls = pots['bls']
+    # gls = np.sum(pots['bls'], axis = 2)
+    gls = pots['gls']
 
+    # FIXED AUX FIELD CALCULATION
+    
+    # SIGMA
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                norm = cexp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
+                ket = g_rbm_sample(nt.dt, asig[a, i, b, j], h, i, j, sig[a], sig[b]).spread_scalar_mult(1/norm) * ket
+    # SIGMA TAU
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                for c in range(3):
+                    norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
+                    opi = sig[i][a] @ tau[i][c]
+                    opj = sig[j][b] @ tau[j][c]
+                    ket = g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, i, j, opi, opj).spread_scalar_mult(1/norm) * ket
+    # TAU
+    for i,j in nt.pairs_ij:
+        for c in range(3):
+            norm = cexp(-nt.dt * 0.5 * np.abs(atau[i, j]))
+            ket = g_rbm_sample(nt.dt, atau[i, j], h, i, j, tau[c], tau[c]).spread_scalar_mult(1/norm) * ket
+    # COULOMB
+    for i,j in nt.pairs_ij:
+        norm_1b = cexp(-nt.dt * 0.125 * vcoul[i, j])
+        norm_rbm = cexp(-nt.dt * 0.125 * np.abs(vcoul[i, j]))
+        ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i).spread_scalar_mult(1/norm_1b) * g_coulomb_onebody(nt.dt, vcoul[i, j], j).spread_scalar_mult(1/norm_1b) * ket
+        ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[2], tau[2]).spread_scalar_mult(1/norm_rbm) * ket
+    # LS
+    do_ls = False
+    if do_ls:
+        for i in range(nt.n_particles):
+            for a in range(3):
+                ket = g_ls_onebody(gls[a, i], i, a) * ket
+        for i,j in nt.pairs_ij:
+            for a in range(3):
+                for b in range(3):
+                    asigls = gls[a, i]* gls[b, j]
+                    norm = cexp(0.5 * np.abs(asigls))
+                    ket = g_rbm_sample(1, - asigls, h, i, j, sig[a], sig[b]).spread_scalar_mult(1/norm) * ket
 
-def load_h2():
-    data_dir = './data/h2/'
-    c = read_coeffs(data_dir+'fort.770')
-    ket = OneBodyBasisSpinIsospinState(nt.n_particles, 'ket', c.reshape(-1, 1)).to_many_body_state()    
-    asig = np.loadtxt(data_dir+'fort.7701').reshape((3,2,3,2), order='F')
-    asigtau = np.loadtxt(data_dir+'fort.7702').reshape((3,2,3,2), order='F')
-    atau = np.loadtxt(data_dir+'fort.7703').reshape((2,2), order='F')
-    vcoul = np.loadtxt(data_dir+'fort.7704').reshape((2,2), order='F')
-    bls = nt.make_bls()
-    return ket, asig, asigtau, atau, vcoul, bls
-
-
-
+    
+    return ket
 
 if __name__ == "__main__":
-    # ket, asig, asigtau, atau, vcoul, bls = load_h2()
-    bra, ket = nt.make_test_states(manybody=False)
-    pots = nt.make_all_potentials(scale = 0.01)
+    # bra, ket = nt.make_test_states(manybody=False)
+    # pots = nt.make_all_potentials(mode='test')
 
-    prop_gauss_fixed(bra, ket, pots, x=1.0)
-    prop_rbm_fixed(bra, ket, pots, h=1.0)   
+    ket, pots, ket_ref = nt.load_h2(data_dir = './data/h2/')
+    pots['asig'] = 1*pots['asig']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
+    pots['vcoul'] = 0*pots['vcoul']
+    pots['gls'] = 0*pots['gls']
+    bra = ket.dagger()
+    
+    print("INITIAL KET\n", ket)
+    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
+    # ket = prop_gauss_fixed(ket, pots, x=1.0)
+    print("FINAL KET\n", ket)
+    print("bracket = ", bra * ket)
+    # print("REFERENCE\n", ket_ref)
+    
