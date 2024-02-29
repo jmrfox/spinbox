@@ -22,16 +22,17 @@ def load_ket(filename):
     sp = OneBodyBasisSpinIsospinState(nt.n_particles, 'ket', c.reshape(-1, 1))
     return sp
 
-# def g_coulomb_onebody(dt, v, i, j):
-#     """just the one-body part of the factored coulomb propagator
-#     for use along with auxiliary field propagator for 2 body part
-#     although I call this one-body factor, it in fact acts on both particles, just individually"""
-#     k = - 0.125 * v * dt
-#     norm = cexp(k)
-#     ck, sk = ccosh(k), csinh(k)
-#     out = OneBodyBasisSpinIsospinOperator(nt.num_particles)
-#     out.op_stack[i] 
-#     return out.spread_scalar_mult(norm)
+def g_coulomb_pair(dt, v, i, j):
+    """just the one-body part of the factored coulomb propagator
+    for use along with auxiliary field propagator for 2 body part
+    although I call this one-body factor, it in fact acts on both particles, just individually"""
+    k = - 0.125 * v * dt
+    norm = cexp(k)
+    ck, sk = ccosh(k), csinh(k)
+    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out.op_stack[i] = (ccosh(k) * ident + csinh(k) * tau[2]) @ out.op_stack[i]
+    out.op_stack[j] = (ccosh(k) * ident + csinh(k) * tau[2]) @ out.op_stack[j]
+    return out.spread_scalar_mult(norm)
 
 def g_coulomb_onebody(dt, v, i):
     """just the one-body part of the factored coulomb propagator
@@ -109,18 +110,16 @@ def prop_gauss_fixed(ket, pots, x):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_gauss_sample(nt.dt, 0.25 * vcoul[i, j], x, i, j, tau[2], tau[2]) * ket
     # LS
-    do_ls = False
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = gls[a, i]* gls[b, j]
-                    ket = g_gauss_sample(1, - asigls, x, i, j, sig[a], sig[b]) * ket
-        trace = cexp(0.5 * np.sum(gls**2))
-        ket = ket.spread_scalar_mult(trace)
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = gls[a, i]* gls[b, j]
+                ket = g_gauss_sample(1, - asigls, x, i, j, sig[a], sig[b]) * ket
+    trace = cexp(0.5 * np.sum(gls**2))
+    ket = ket.spread_scalar_mult(trace)
 
     return ket
     
@@ -157,18 +156,16 @@ def prop_rbm_fixed(ket, pots, h):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[2], tau[2]) * ket
     # LS
-    do_ls = False
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = gls[a, i]* gls[b, j]
-                    ket = g_rbm_sample(1, - asigls, h, i, j, sig[a], sig[b]) * ket
-        trace = cexp( 0.5 * np.sum(gls**2))
-        ket = trace * ket
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = gls[a, i]* gls[b, j]
+                ket = g_rbm_sample(1, - asigls, h, i, j, sig[a], sig[b]) * ket
+    trace = cexp( 0.5 * np.sum(gls**2))
+    ket = trace * ket
     
     return ket
 
@@ -178,8 +175,6 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
     asigtau = pots['asigtau']
     atau = pots['atau']
     vcoul = pots['vcoul']
-    # bls = pots['bls']
-    # gls = np.sum(pots['bls'], axis = 2)
     gls = pots['gls']
 
     # FIXED AUX FIELD CALCULATION
@@ -196,8 +191,8 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
             for b in range(3):
                 for c in range(3):
                     norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
-                    opi = sig[i][a] @ tau[i][c]
-                    opj = sig[j][b] @ tau[j][c]
+                    opi = sig[a] @ tau[c]
+                    opj = sig[b] @ tau[c]
                     ket = g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, i, j, opi, opj).spread_scalar_mult(1/norm) * ket
     # TAU
     for i,j in nt.pairs_ij:
@@ -208,22 +203,20 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
     for i,j in nt.pairs_ij:
         norm_1b = cexp(-nt.dt * 0.125 * vcoul[i, j])
         norm_rbm = cexp(-nt.dt * 0.125 * np.abs(vcoul[i, j]))
-        ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i).spread_scalar_mult(1/norm_1b) * g_coulomb_onebody(nt.dt, vcoul[i, j], j).spread_scalar_mult(1/norm_1b) * ket
+        # ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i).spread_scalar_mult(1/norm_1b) * g_coulomb_onebody(nt.dt, vcoul[i, j], j).spread_scalar_mult(1/norm_1b) * ket
+        ket = g_coulomb_pair(nt.dt, vcoul[i, j], i, j).spread_scalar_mult(1/norm_1b) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, i, j, tau[2], tau[2]).spread_scalar_mult(1/norm_rbm) * ket
     # LS
-    do_ls = False
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = gls[a, i]* gls[b, j]
-                    norm = cexp(0.5 * np.abs(asigls))
-                    ket = g_rbm_sample(1, - asigls, h, i, j, sig[a], sig[b]).spread_scalar_mult(1/norm) * ket
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = gls[a, i]* gls[b, j]
+                norm = cexp(0.5 * np.abs(asigls))
+                ket = g_rbm_sample(1, -asigls, h, i, j, sig[a], sig[b]).spread_scalar_mult(1/norm) * ket
 
-    
     return ket
 
 if __name__ == "__main__":
@@ -232,16 +225,15 @@ if __name__ == "__main__":
 
     ket, pots, ket_ref = nt.load_h2(data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
-    pots['asigtau'] = 0*pots['asigtau']
-    pots['atau'] = 0*pots['atau']
-    pots['vcoul'] = 0*pots['vcoul']
-    pots['gls'] = 0*pots['gls']
+    pots['asigtau'] = 1*pots['asigtau']
+    pots['atau'] = 1*pots['atau']
+    pots['vcoul'] = 1*pots['vcoul']
+    pots['gls'] = 1*pots['gls']
     bra = ket.dagger()
     
     print("INITIAL KET\n", ket)
-    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
     # ket = prop_gauss_fixed(ket, pots, x=1.0)
+    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
     print("FINAL KET\n", ket)
     print("bracket = ", bra * ket)
     # print("REFERENCE\n", ket_ref)
-    

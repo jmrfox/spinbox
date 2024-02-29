@@ -8,12 +8,13 @@ tau = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1
 # sig[particle][xyz]
 
 
-def g_coulomb_onebody(dt, v, i):
-    """just the one-body part of the expanded coulomb propagator
-    for use along with auxiliary field propagators"""
-    out = - 0.125 * v * dt * tau[i][2]
+def g_coulomb_pair(dt, v, i, j):
+    out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2]) 
     return out.exponentiate()
 
+def g_coulomb_onebody(dt, v, i):
+    out = - 0.125 * v * dt * tau[i][2]
+    return out.exponentiate()
 
 def g_ls_linear(gls_ai, i, a):
     # linear approx to LS
@@ -89,18 +90,16 @@ def prop_gauss_fixed(ket, pots, x):
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_gauss_sample(nt.dt, 0.25 * vcoul[i, j], x, tau[i][2], tau[j][2]) * ket
     # LS
-    do_ls = False
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = - gls[a, i]* gls[b, j]
-                    ket = g_gauss_sample(1, asigls, x, sig[i][a], sig[j][b]) * ket
-        trace_factor = cexp( 0.5 * np.sum(gls**2))
-        ket = trace_factor * ket
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = - gls[a, i]* gls[b, j]
+                ket = g_gauss_sample(1, asigls, x, sig[i][a], sig[j][b]) * ket
+    trace_factor = cexp( 0.5 * np.sum(gls**2))
+    ket = trace_factor * ket
 
     return ket
 
@@ -119,44 +118,32 @@ def prop_rbm_fixed(ket, pots, h):
     for i,j in nt.pairs_ij:
         for a in range(3):
             for b in range(3):
-                # norm = cexp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
-                # ket = (1/norm) * g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
                 ket = g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
     # SIGMA TAU
     for i,j in nt.pairs_ij:
         for a in range(3):
             for b in range(3):
                 for c in range(3):
-                    # norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
-                    # ket = (1/norm) * g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
                     ket = g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
     # TAU
     for i,j in nt.pairs_ij:
         for c in range(3):
-            # norm = cexp(-nt.dt * 0.5 * np.abs(atau[i, j]))
-            # ket = (1/norm) * g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
             ket = g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
     # COULOMB
     for i,j in nt.pairs_ij:
-        # norm_1b = cexp(-nt.dt * 0.125 * vcoul[i, j])
-        # norm_rbm = cexp(-nt.dt * 0.125 * np.abs(vcoul[i, j]))
-        # ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
-        # ket = (1/norm) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
         ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
         ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
     # LS
-    do_ls = True
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = gls[a, i]* gls[b, j]
-                    ket = g_rbm_sample(1, - asigls, h, sig[i][a], sig[j][b]) * ket
-        trace_factor = cexp( 0.5 * np.sum(gls**2))
-        ket = trace_factor * ket
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = gls[a, i]* gls[b, j]
+                ket = g_rbm_sample(1, - asigls, h, sig[i][a], sig[j][b]) * ket
+    trace_factor = cexp( 0.5 * np.sum(gls**2))
+    ket = trace_factor * ket
 
     return ket
 
@@ -177,7 +164,6 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
             for b in range(3):
                 norm = cexp(-nt.dt * 0.5 * np.abs(asig[a, i, b, j]))
                 ket = (1/norm) * g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
-                # ket = g_rbm_sample(nt.dt, asig[a, i, b, j], h, sig[i][a], sig[j][b]) * ket
     # SIGMA TAU
     for i,j in nt.pairs_ij:
         for a in range(3):
@@ -185,35 +171,27 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
                 for c in range(3):
                     norm = cexp(-nt.dt * 0.5 * np.abs(asigtau[a, i, b, j]))
                     ket = (1/norm) * g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
-                    # ket = g_rbm_sample(nt.dt, asigtau[a, i, b, j], h, sig[i][a] * tau[i][c], sig[j][b] * tau[j][c]) * ket
     # TAU
     for i,j in nt.pairs_ij:
         for c in range(3):
             norm = cexp(-nt.dt * 0.5 * np.abs(atau[i, j]))
             ket = (1/norm) * g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
-            # ket = g_rbm_sample(nt.dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
     # COULOMB
     for i,j in nt.pairs_ij:
         norm_1b = cexp(-nt.dt * 0.125 * vcoul[i, j])
         norm_rbm = cexp(-nt.dt * 0.125 * np.abs(vcoul[i, j]))
-        ket = (1/norm_1b)**2 * g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
+        ket = (1/norm_1b) * g_coulomb_pair(nt.dt, vcoul[i, j], i, j) * ket
         ket = (1/norm_rbm) * g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
-        # ket = g_coulomb_onebody(nt.dt, vcoul[i, j], i) * g_coulomb_onebody(nt.dt, vcoul[i, j], j) * ket
-        # ket = g_rbm_sample(nt.dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
     # LS
-    do_ls = False
-    if do_ls:
-        for i in range(nt.n_particles):
-            for a in range(3):
-                ket = g_ls_onebody(gls[a, i], i, a) * ket
-        for i,j in nt.pairs_ij:
-            for a in range(3):
-                for b in range(3):
-                    asigls = gls[a, i]* gls[b, j]
-                    norm = cexp(0.5 * np.abs(asigls))
-                    ket = (1/norm) * g_rbm_sample(1, - asigls, h, sig[i][a], sig[j][b]) * ket
-        # trace_factor = cexp( 0.5 * np.sum(gls**2))
-        # ket = trace_factor * ket
+    for i in range(nt.n_particles):
+        for a in range(3):
+            ket = g_ls_onebody(gls[a, i], i, a) * ket
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):
+                asigls = gls[a, i]* gls[b, j]
+                norm = cexp(0.5 * np.abs(asigls))
+                ket = (1/norm) * g_rbm_sample(1, - asigls, h, sig[i][a], sig[j][b]) * ket
 
     return ket
 
@@ -221,7 +199,7 @@ if __name__ == "__main__":
     ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
     pots['asigtau'] = 0*pots['asigtau']
-    pots['atau'] = 0*pots['atau']
+    pots['atau'] = 1*pots['atau']
     pots['vcoul'] = 0*pots['vcoul']
     pots['gls'] = 0*pots['gls']
     bra = ket.dagger()
@@ -237,4 +215,5 @@ if __name__ == "__main__":
     print("FINAL KET\n", ket.coefficients)
     print("bracket = ", bra * ket)
     # print("REFERENCE\n", ket_ref.coefficients)
+    
     
