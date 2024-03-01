@@ -195,11 +195,12 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
 
     return ket
 
-if __name__ == "__main__":
+
+def main():
     ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
     pots['asigtau'] = 0*pots['asigtau']
-    pots['atau'] = 1*pots['atau']
+    pots['atau'] = 0*pots['atau']
     pots['vcoul'] = 0*pots['vcoul']
     pots['gls'] = 0*pots['gls']
     bra = ket.dagger()
@@ -207,13 +208,32 @@ if __name__ == "__main__":
     # bra, ket = nt.make_test_states(manybody=True)
     # pots = nt.make_all_potentials(scale=1.0, mode='normal')
 
-    # prop_gauss_fixed(bra, ket, pots, x=1.0)
-
     print("INITIAL KET\n", ket.coefficients)
-    # ket = prop_gauss_fixed(ket, pots, x=1.0)
-    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
+    ket = prop_gauss_fixed(ket, pots, x=1.0)
+    # ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
     print("FINAL KET\n", ket.coefficients)
     print("bracket = ", bra * ket)
     # print("REFERENCE\n", ket_ref.coefficients)
+
+
+def debug():
+    ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
+    pots['asig'] = 1*pots['asig']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
+    pots['vcoul'] = 0*pots['vcoul']
+    pots['gls'] = 0*pots['gls']
+    bra = ket.dagger()
     
+    print("INITIAL KET\n", ket.coefficients)
+    
+    ket = g_gauss_sample(1,1,1,sig[0][0],sig[1][0]) * ket
+
+    print("FINAL KET\n", ket.coefficients)
+    print("bracket = ", bra * ket)
+    
+
+
+if __name__ == "__main__":
+    debug()
     
