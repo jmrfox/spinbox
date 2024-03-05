@@ -176,7 +176,7 @@ def repeated_kronecker_product(matrices: list):
     :param matrices:
     :return:
     """
-    return np.array(reduce(np.kron, matrices))
+    return np.array(reduce(np.kron, matrices), dtype=complex)
 
 
 def pmat(x, heatmap=False, lims=None, print_zeros=False):
