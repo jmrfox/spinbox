@@ -152,7 +152,7 @@ def main():
     pots['asig'] = 1*pots['asig']
     pots['asigtau'] = 1*pots['asigtau']
     pots['atau'] = 1*pots['atau']
-    pots['vcoul'] = 1*pots['vcoul']
+    pots['vcoul'] = 0*pots['vcoul']
     pots['gls'] = 1*pots['gls']
     bra = ket.dagger()
     
