@@ -86,7 +86,7 @@ def prop_gauss_fixed(ket, pots, x):
     for i,j in nt.pairs_ij:
         for a in range(3):
             for b in range(3):
-                asigls = gls[a, i]* gls[b, j]
+                asigls = gls[a, i] * gls[b, j]
                 ket = g_gauss_sample(- 0.5 * asigls, x, i, j, sig[a], sig[b]) * ket
     trace = cexp(0.5 * np.sum(gls**2))
     ket = ket.spread_scalar_mult(trace)
@@ -103,7 +103,7 @@ def prop_rbm_fixed(ket, pots, h, normalize=True):
     # bls = pots['bls']
     # gls = np.sum(pots['bls'], axis = 2)
     gls = pots['gls']
-            
+
     # SIGMA
     for i,j in nt.pairs_ij:
         for a in range(3):
@@ -137,6 +137,7 @@ def prop_rbm_fixed(ket, pots, h, normalize=True):
             for b in range(3):
                 asigls = gls[a, i]* gls[b, j]
                 ket = g_rbm_sample(-0.5 * asigls, h, i, j, sig[a], sig[b], normalize=normalize) * ket
+                print(ket.sp_stack[i])
     if normalize:
         trace = cexp(0.5 * np.sum(gls**2))
         ket = ket.spread_scalar_mult(trace)
