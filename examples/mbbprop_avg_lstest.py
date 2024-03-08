@@ -87,16 +87,16 @@ def make_g_exact(pots):
         g_exact = g_pade_tau(nt.dt, atau, i, j) * g_exact
         g_exact = g_pade_coul(nt.dt, vcoul, i, j) * g_exact
     #  LS
+    for i in range(nt.n_particles):
+        g_exact = g_ls_linear(gls, i) * g_exact
     # for i in range(nt.n_particles):
-    #     g_exact = g_ls_linear(gls, i) * g_exact
-    for i in range(nt.n_particles):
-        for a in range(3):
-            g_exact = g_ls_onebody(gls[a, i], i, a) * g_exact
-    for i in range(nt.n_particles):
-        for j in range(nt.n_particles):
-            for a in range(3):
-                for b in range(3):
-                    g_exact = g_ls_twobody(gls[a, i], gls[b, j], i, j, a, b) * g_exact
+    #     for a in range(3):
+    #         g_exact = g_ls_onebody(gls[a, i], i, a) * g_exact
+    # for i in range(nt.n_particles):
+    #     for j in range(nt.n_particles):
+    #         for a in range(3):
+    #             for b in range(3):
+    #                 g_exact = g_ls_twobody(gls[a, i], gls[b, j], i, j, a, b) * g_exact
     return g_exact
 
 
@@ -319,16 +319,36 @@ def rbm_brackets_parallel(n_samples=100, plot=False, disable_tqdm=False, pot_sca
     print('error = ', b_exact - b_rbm)
 
 
-if __name__ == "__main__":
-    plot = False
-    disable_tqdm = False
-    pot_scale = 0.01
-    bra, ket = nt.make_test_states()
-    bracket_t0 = bra * ket
-    print(f'<G(t=0)> = {bracket_t0}')
+def main():
+    ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
+    bra = ket.dagger()
     
-    with Profile() as profile:
-        # gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
-        rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
-        # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
-    print('DONE')
+    pots['asig'] = 1*pots['asig']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
+    pots['vcoul'] = 0*pots['vcoul']
+    pots['gls'] = 0*pots['gls']
+    pots['asigls'] = 0*pots['asigls']
+    
+    g_exact = make_g_exact(pots)
+    b_exact = bra * g_exact * ket
+    print('exact = ',b_exact)
+
+
+if __name__ == "__main__":
+
+    main()
+
+    # plot = False
+    # disable_tqdm = False
+    # pot_scale = 0.01
+    # bra, ket = nt.make_test_states()
+    # bracket_t0 = bra * ket
+    # print(f'<G(t=0)> = {bracket_t0}')
+    
+    # with Profile() as profile:
+    #     # gaussian_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+    #     rbm_brackets_parallel(n_samples=nt.n_samples, plot=plot, disable_tqdm=disable_tqdm, pot_scale=pot_scale)
+    #     # Stats(profile).strip_dirs().sort_stats(SortKey.CALLS).print_stats()
+    # print('DONE')
+

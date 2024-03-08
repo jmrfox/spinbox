@@ -103,6 +103,7 @@ def prop_rbm_fixed(ket, pots, h, normalize=True):
     # bls = pots['bls']
     # gls = np.sum(pots['bls'], axis = 2)
     gls = pots['gls']
+    asigls = pots['asigls']
             
     # SIGMA
     for i,j in nt.pairs_ij:
@@ -129,14 +130,15 @@ def prop_rbm_fixed(ket, pots, h, normalize=True):
         ket = g_onebody(0.125 * nt.dt * vcoul[i, j], j, tau[2]) * ket
         ket = g_rbm_sample(0.125 * nt.dt * vcoul[i, j], h, i, j, tau[2], tau[2], normalize=normalize) * ket
     # LS
+    for i,j in nt.pairs_ij:
+        for a in range(3):
+            for b in range(3):  
+                asigls = gls[a, i]* gls[b, j]
+                ket = g_rbm_sample(-0.5 * asigls, h, i, j, sig[a], sig[b], normalize=normalize) * ket
+                # ket = g_rbm_sample(0.5 * asigls[a,i,b,j], h, i, j, sig[a], sig[b], normalize=normalize) * ket
     for i in range(nt.n_particles):
         for a in range(3):
             ket = g_onebody(1.j * gls[a, i], i, sig[a]) * ket
-    for i,j in nt.pairs_ij:
-        for a in range(3):
-            for b in range(3):
-                asigls = gls[a, i]* gls[b, j]
-                ket = g_rbm_sample(-0.5 * asigls, h, i, j, sig[a], sig[b], normalize=normalize) * ket
     if normalize:
         trace = cexp(0.5 * np.sum(gls**2))
         ket = ket.spread_scalar_mult(trace)
@@ -150,17 +152,25 @@ def main():
 
     ket, pots, ket_ref = nt.load_h2(data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
-    pots['asigtau'] = 1*pots['asigtau']
-    pots['atau'] = 1*pots['atau']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
     pots['vcoul'] = 0*pots['vcoul']
-    pots['gls'] = 1*pots['gls']
+    pots['gls'] = 0*pots['gls']
+    pots['asigls'] = 0*pots['asigls']
     bra = ket.dagger()
     
     # print("INITIAL KET\n", ket)
     ket = prop_rbm_fixed(ket, pots, h=1.0, normalize=False)
-    print("FINAL KET\n", ket)
-    # print("bracket = ", bra * ket)
+    # print("FINAL KET\n", ket)
+    print("bracket = ", bra * ket)
     # print("REFERENCE\n", ket_ref)
+
+    # check = np.zeros_like(pots['asigls'])
+    # for a in range(3):
+    #     for b in range(3):
+    #         check[a,0,b,1] = - pots['gls'][a,0] * pots['gls'][b,1]
+    #         check[a,1,b,0] = - pots['gls'][a,0] * pots['gls'][b,1]
+    # print(pots['asigls'] - check)
 
 
 
