@@ -22,8 +22,8 @@ pairs_ij = list(itertools.combinations(range(n_particles), 2))
 def make_test_states(manybody=False):
     """returns one body basis spin-isospin states for testing"""
     bra = OneBodyBasisSpinIsospinState(n_particles, 'bra', np.zeros(shape=(n_particles, 1, 4))).randomize(100)
-    # ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
-    ket = bra.copy().dagger()
+    ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
+    # ket = bra.copy().dagger()
     if manybody:
         bra = bra.to_many_body_state()
         ket = ket.to_many_body_state()
@@ -76,7 +76,7 @@ def make_all_potentials(scale=1.0, rng=None, mode='normal'):
         out['atau'] = make_atau(scale=scale, rng=rng)
         out['vcoul'] = make_vcoul(scale=scale, rng=rng)
         out['bls'] = make_bls(scale=scale, rng=rng)
-        out['gls'] = np.sum(out['bls'], axis = 2) 
+        out['gls'] = np.sum(out['bls'], axis = 2)
     elif mode=='test':
         print("make_all_potentials IS IN TEST MODE!!!!")
         out['asig'] = make_asig(scale=0, rng=rng)
