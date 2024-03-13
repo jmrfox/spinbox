@@ -88,7 +88,7 @@ def make_all_potentials(scale=1.0, rng=None, mode='normal'):
     return out
 
 
-def plot_samples(X, filename, title, bins='auto', range=None):
+def histogram(X, filename, title, bins='auto', range=None):
     plt.figure(figsize=(7, 5))
     n = len(X)
     Xre = np.real(X)
