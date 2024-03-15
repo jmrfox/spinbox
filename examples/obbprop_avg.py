@@ -1,4 +1,4 @@
-import nuctest as nt
+import nuclear as nt
 from quap import *
 from tqdm import tqdm
 from cProfile import Profile

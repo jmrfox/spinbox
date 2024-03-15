@@ -13,6 +13,7 @@ from numpy.random import default_rng
 from scipy.linalg import expm
 from functools import reduce
 
+from dataclasses import dataclass
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
@@ -61,8 +62,8 @@ def carctanh(x):
     return np.arctanh(x, dtype=complex)
 
 
-def read_coeffs(filename):
-    """Reads complex spin coefficients from a file 
+def read_from_file(filename, complex=False, shape=None, order='F'):
+    """Reads numbers from a file 
 
     Args:
         filename (str): name of file to load
@@ -70,23 +71,20 @@ def read_coeffs(filename):
     Returns:
         numpy.array 
     """
-    def r2c(x):
+    def tuple_to_complex(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
 
     c = np.loadtxt(filename)
-    sp = np.array([r2c(x) for x in c], dtype=complex)
+    if complex:
+        sp = np.array([tuple_to_complex(x) for x in c], dtype=complex)
+    else:
+        sp = np.array(c)
+
+    if shape is not None:
+        sp = sp.reshape(shape, order=order)
+
     return sp
-
-
-def prod(l: list):
-    """Multiplies (*) elements of list, right to left
-    """
-    lrev = l[::-1]
-    out = lrev[0]
-    for x in lrev[1:]:
-        out = x * out
-    return out
 
 
 def pauli(arg):
@@ -146,30 +144,6 @@ def spinor4(state, orientation, seed=None):
         return sp.reshape((1, 4)) / np.linalg.norm(sp)
 
 
-def random_spin_bra_ket(n_particles, bra_seed=None, ket_seed=None):
-    sp_bra, sp_ket = [], []
-    for i in range(n_particles):
-        sp_bra.append(spinor2('random', 'bra', seed=bra_seed + i))
-        sp_ket.append(spinor2('random', 'ket', seed=ket_seed + i))
-    coeffs_bra = np.stack(sp_bra)
-    coeffs_ket = np.stack(sp_ket)
-    bra = OneBodyBasisSpinState(n_particles, 'bra', coeffs_bra)
-    ket = OneBodyBasisSpinState(n_particles, 'ket', coeffs_ket)
-    return bra, ket
-
-
-def random_spinisospin_bra_ket(n_particles, bra_seed=None, ket_seed=None):
-    sp_bra, sp_ket = [], []
-    for i in range(n_particles):
-        sp_bra.append(spinor4('random', 'bra', seed=bra_seed + i))
-        sp_ket.append(spinor4('random', 'ket', seed=ket_seed + i))
-    coeffs_bra = np.concatenate(sp_bra, axis=1)
-    coeffs_ket = np.concatenate(sp_ket, axis=0)
-    bra = OneBodyBasisSpinIsospinState(n_particles, 'bra', coeffs_bra)
-    ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', coeffs_ket)
-    return bra, ket
-
- 
 def repeated_kronecker_product(matrices: list):
     """
     returns the tensor/kronecker product of a list of arrays
@@ -312,6 +286,7 @@ class ManyBodyBasisSpinState(State):
         out.coefficients = rng.standard_normal(size=self.coefficients.shape)
         out.coefficients /= np.linalg.norm(out.coefficients)
         return out
+    
 
 class ManyBodyBasisSpinIsospinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
@@ -384,7 +359,6 @@ class ManyBodyBasisSpinIsospinState(State):
         out.coefficients = rng.standard_normal(size=self.coefficients.shape)
         out.coefficients /= np.linalg.norm(out.coefficients)
         return out
-
 
 
 class ManyBodyBasisSpinOperator(Operator):
@@ -679,7 +653,7 @@ class OneBodyBasisSpinState(State):
             out += str(ci) + "\n"
         return out
 
-    def to_many_body_state(self):
+    def to_manybody_basis(self):
         """project the NxA TP state into the full N^A MB basis"""
         sp_mb = repeated_kronecker_product(self.to_list())
         if self.orientation == 'ket':
@@ -726,14 +700,15 @@ class OneBodyBasisSpinState(State):
         for i in range(self.n_particles):
             out.sp_stack[i] /= np.linalg.norm(out.sp_stack[i])
         return out
+    
 
 class OneBodyBasisSpinIsospinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         """an array of single particle spinors
 
         Orientation must be consistent with array shape!
-        The shape of a bra is (A, 2, 1)
-        The shape of a ket is (A, 1, 2)
+        The shape of a bra is (A, 4, 1)
+        The shape of a ket is (A, 1, 4)
 
         Args:
             n_particles (int): number of single particle states
@@ -804,7 +779,7 @@ class OneBodyBasisSpinIsospinState(State):
             out += str(ci) + "\n"
         return out
 
-    def to_many_body_state(self):
+    def to_manybody_basis(self):
         """project the NxA TP state into the full N^A MB basis"""
         sp_mb = repeated_kronecker_product(self.to_list())
         if self.orientation == 'ket':
@@ -1058,4 +1033,185 @@ class OneBodyBasisSpinIsospinOperator(Operator):
     
     
             
+
+# POTENTIAL CLASSES
+
+class SigmaCoupling:
+    """container class for couplings A^sigma (a,i,b,j)
+    for i, j = 0 .. n_particles - 1
+    and a, b = 0, 1, 2  (x, y, z)
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    for a in range(3):
+                        for b in range(3):
+                            assert coefficients[a,i,b,j]==coefficients[b,j,a,i]
+        
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+    
+    def copy(self):
+        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
+class SigmaTauCoupling:
+    """container class for couplings A ^ sigma tau (a,i,b,j)
+    for i, j = 0 .. n_particles - 1
+    and a, b = 0, 1, 2  (x, y, z)
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    for a in range(3):
+                        for b in range(3):
+                            assert coefficients[a,i,b,j]==coefficients[b,j,a,i]
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+    
+    def copy(self):
+        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
+class TauCoupling:
+    """container class for couplings A^tau (i,j)
+    for i, j = 0 .. n_particles - 1
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    assert coefficients[i,j]==coefficients[j,i]
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+    
+    def copy(self):
+        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
+class CoulombCoupling:
+    """container class for couplings V^coul (i,j)
+    for i, j = 0 .. n_particles - 1
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    assert coefficients[i,j]==coefficients[j,i]
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+    
+    def copy(self):
+        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
+
+class SpinOrbitCoupling:
+    """container class for couplings g_LS (a,i,j)
+    for i, j = 0 .. n_particles - 1
+    and a = 0, 1, 2  (x, y, z)
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    for a in range(3):
+                        assert coefficients[a,i,j]==coefficients[a,j,i]
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+    
+    def copy(self):
+        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+    
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
+
+class ArgonnePotential:
+    def __init__(self, n_particles):
+        self.sigma = SigmaCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
+        self.sigmatau = SigmaTauCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
+        self.tau = TauCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
+        self.coulomb = CoulombCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
+        self.spinorbit = SpinOrbitCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,n_particles)))
+    
+    def read_sigma(self, filename):
+        self.sigma = self.sigma.read(filename)
+
+    def read_sigmatau(self, filename):
+        self.sigmatau = self.sigmatau.read(filename)
+
+    def read_tau(self, filename):
+        self.tau = self.tau.read(filename)
+
+    def read_coulomb(self, filename):
+        self.coulomb = self.coulomb.read(filename)
+
+    def read_spinorbit(self, filename):
+        self.spinorbit = self.spinorbit.read(filename)
+
+
+    
+
+# PROPAGATOR CLASSES
 

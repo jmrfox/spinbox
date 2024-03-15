@@ -1,4 +1,4 @@
-import nuctest as nt
+import nuclear as nt
 from quap import *
 
 ident = np.identity(4)

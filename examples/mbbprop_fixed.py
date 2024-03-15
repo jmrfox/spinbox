@@ -1,5 +1,5 @@
 from quap import *
-import nuctest as nt
+import nuclear as nt
 
 ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
