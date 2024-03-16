@@ -1220,3 +1220,6 @@ class ArgonnePotential:
 
 # PROPAGATOR CLASSES
 
+class Propagator():
+    def __init__(self) -> None:
+        pass
