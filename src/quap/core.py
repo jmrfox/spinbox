@@ -1220,6 +1220,6 @@ class ArgonnePotential:
 
 # PROPAGATOR CLASSES
 
-class Propagator():
-    def __init__(self) -> None:
+class ManyBodyBasisPropagator():
+    def __init__(self, n_particles) -> None:
         pass
