@@ -1068,6 +1068,7 @@ class SigmaCoupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
@@ -1099,6 +1100,7 @@ class SigmaTauCoupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
@@ -1127,6 +1129,7 @@ class TauCoupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
@@ -1155,6 +1158,7 @@ class CoulombCoupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
@@ -1186,6 +1190,7 @@ class SpinOrbitCoupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
