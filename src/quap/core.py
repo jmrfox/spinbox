@@ -224,7 +224,7 @@ class Operator:
 
 # MANY-BODY BASIS CLASSES
 
-class ManyBodyBasisSpinState(State):
+class GFMCSpinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         super().__init__(n_particles, orientation)
         self.dim = 2 ** self.n_particles
@@ -235,10 +235,10 @@ class ManyBodyBasisSpinState(State):
             raise ValueError('Inconsistent initialization of state vector')
         else:
             self.coefficients = coefficients.astype('complex')
-        self.friendly_operator = ManyBodyBasisSpinOperator
+        self.friendly_operator = GFMCSpinOperator
 
     def copy(self):
-        return ManyBodyBasisSpinState(self.n_particles, self.orientation, self.coefficients.copy())
+        return GFMCSpinState(self.n_particles, self.orientation, self.coefficients.copy())
     
     def __add__(self, other):
         out = self.copy()
@@ -252,10 +252,10 @@ class ManyBodyBasisSpinState(State):
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
-            if isinstance(other, ManyBodyBasisSpinState):
+            if isinstance(other, GFMCSpinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients, other.coefficients)
-            elif isinstance(other, ManyBodyBasisSpinOperator):
+            elif isinstance(other, GFMCSpinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients, other.matrix)
             else:
@@ -263,7 +263,7 @@ class ManyBodyBasisSpinState(State):
             return out
         elif self.orientation == 'ket':  # outer product
             assert other.orientation == 'bra'
-            out = ManyBodyBasisSpinOperator(self.n_particles)
+            out = GFMCSpinOperator(self.n_particles)
             out.matrix = np.matmul(self.coefficients, other.coefficients)
             return out
 
@@ -281,7 +281,7 @@ class ManyBodyBasisSpinState(State):
             new_orientation = 'ket'
         elif self.orientation == 'ket':
             new_orientation = 'bra'
-        out = ManyBodyBasisSpinState(self.n_particles, new_orientation, self.coefficients.conj().T)
+        out = GFMCSpinState(self.n_particles, new_orientation, self.coefficients.conj().T)
         return out
         
     def __str__(self):
@@ -297,7 +297,7 @@ class ManyBodyBasisSpinState(State):
         return out
     
 
-class ManyBodyBasisSpinIsospinState(State):
+class GFMCSpinIsospinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         super().__init__(n_particles, orientation)
         self.dim = 4 ** self.n_particles
@@ -308,10 +308,10 @@ class ManyBodyBasisSpinIsospinState(State):
             raise ValueError('Inconsistent initialization of state vector')
         else:
             self.coefficients = coefficients.astype('complex')
-        self.friendly_operator = ManyBodyBasisSpinIsospinOperator
+        self.friendly_operator = GFMCSpinIsospinOperator
     
     def copy(self):
-        return ManyBodyBasisSpinIsospinState(self.n_particles, self.orientation, self.coefficients.copy())
+        return GFMCSpinIsospinState(self.n_particles, self.orientation, self.coefficients.copy())
     
     def __add__(self, other):
         out = self.copy()
@@ -325,10 +325,10 @@ class ManyBodyBasisSpinIsospinState(State):
 
     def __mul__(self, other):
         if self.orientation == 'bra':  # inner product
-            if isinstance(other, ManyBodyBasisSpinIsospinState):
+            if isinstance(other, GFMCSpinIsospinState):
                 assert other.orientation == 'ket'
                 out = np.dot(self.coefficients, other.coefficients)
-            elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
+            elif isinstance(other, GFMCSpinIsospinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients, other.matrix)
             else:
@@ -336,7 +336,7 @@ class ManyBodyBasisSpinIsospinState(State):
             return out
         elif self.orientation == 'ket':  # outer product
             assert other.orientation == 'bra'
-            out = ManyBodyBasisSpinIsospinOperator(self.n_particles)
+            out = GFMCSpinIsospinOperator(self.n_particles)
             out.matrix = np.matmul(self.coefficients, other.coefficients)
             return out
 
@@ -354,7 +354,7 @@ class ManyBodyBasisSpinIsospinState(State):
             new_orientation = 'ket'
         elif self.orientation == 'ket':
             new_orientation = 'bra'
-        out = ManyBodyBasisSpinIsospinState(self.n_particles, new_orientation, self.coefficients.conj().T)
+        out = GFMCSpinIsospinState(self.n_particles, new_orientation, self.coefficients.conj().T)
         return out
         
     def __str__(self):
@@ -370,36 +370,36 @@ class ManyBodyBasisSpinIsospinState(State):
         return out
 
 
-class ManyBodyBasisSpinOperator(Operator):
+class GFMCSpinOperator(Operator):
     def __init__(self, n_particles: int):
         super().__init__(n_particles)
         self.matrix = np.identity(2 ** n_particles, dtype=complex)
-        self.friendly_state = ManyBodyBasisSpinState
+        self.friendly_state = GFMCSpinState
 
     def copy(self):
-        out = ManyBodyBasisSpinOperator(self.n_particles)
+        out = GFMCSpinOperator(self.n_particles)
         out.matrix = self.matrix.copy()
         return out
     
     def __add__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinOperator)
+        assert isinstance(other, GFMCSpinOperator)
         out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinOperator)
+        assert isinstance(other, GFMCSpinOperator)
         out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
     def __mul__(self, other):
-        if isinstance(other, ManyBodyBasisSpinState):
+        if isinstance(other, GFMCSpinState):
             assert other.orientation == 'ket'
             out = other.copy()
             out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
             return out
-        elif isinstance(other, ManyBodyBasisSpinOperator):
+        elif isinstance(other, GFMCSpinOperator):
             out = other.copy()
             out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
@@ -450,7 +450,7 @@ class ManyBodyBasisSpinOperator(Operator):
         return out
 
     def exchange(self, particle_a: int, particle_b: int):
-        P_1 = ManyBodyBasisSpinOperator(n_particles=self.n_particles)
+        P_1 = GFMCSpinOperator(n_particles=self.n_particles)
         P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
@@ -474,36 +474,36 @@ class ManyBodyBasisSpinOperator(Operator):
         return out
 
 
-class ManyBodyBasisSpinIsospinOperator(Operator):
+class GFMCSpinIsospinOperator(Operator):
     def __init__(self, n_particles: int):
         super().__init__(n_particles)
         self.matrix = np.identity(4 ** n_particles, dtype=complex)
-        self.friendly_state = ManyBodyBasisSpinIsospinState
+        self.friendly_state = GFMCSpinIsospinState
 
     def copy(self):
-        out = ManyBodyBasisSpinIsospinOperator(self.n_particles)
+        out = GFMCSpinIsospinOperator(self.n_particles)
         out.matrix = self.matrix.copy()
         return out
     
     def __add__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
+        assert isinstance(other, GFMCSpinIsospinOperator)
         out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
-        assert isinstance(other, ManyBodyBasisSpinIsospinOperator)
+        assert isinstance(other, GFMCSpinIsospinOperator)
         out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
     def __mul__(self, other):
-        if isinstance(other, ManyBodyBasisSpinIsospinState):
+        if isinstance(other, GFMCSpinIsospinState):
             assert other.orientation == 'ket'
             out = other.copy()
             out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
             return out
-        elif isinstance(other, ManyBodyBasisSpinIsospinOperator):
+        elif isinstance(other, GFMCSpinIsospinOperator):
             out = other.copy()
             out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
@@ -556,7 +556,7 @@ class ManyBodyBasisSpinIsospinOperator(Operator):
         return out
 
     def exchange(self, particle_a: int, particle_b: int):
-        P_1 = ManyBodyBasisSpinIsospinOperator(n_particles=self.n_particles)
+        P_1 = GFMCSpinIsospinOperator(n_particles=self.n_particles)
         P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
         P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
         P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
@@ -585,7 +585,7 @@ class ManyBodyBasisSpinIsospinOperator(Operator):
 # ONE-BODY BASIS CLASSES
         
 
-class OneBodyBasisSpinState(State):
+class AFDMCSpinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         """an array of single particle spinors
 
@@ -609,7 +609,7 @@ class OneBodyBasisSpinState(State):
             raise ValueError('Inconsistent initialization of state vector')
         else:
             self.sp_stack = coefficients.astype(complex)
-        self.friendly_operator = OneBodyBasisSpinOperator
+        self.friendly_operator = AFDMCSpinOperator
         
 
     def __add__(self, other):
@@ -619,7 +619,7 @@ class OneBodyBasisSpinState(State):
         raise SyntaxError('You should not be subtracting a OBB states')
 
     def copy(self):
-        return OneBodyBasisSpinState(self.n_particles, self.orientation, self.sp_stack.copy())
+        return AFDMCSpinState(self.n_particles, self.orientation, self.sp_stack.copy())
 
     def to_list(self):
         return [self.sp_stack[i] for i in range(self.n_particles)]
@@ -629,10 +629,10 @@ class OneBodyBasisSpinState(State):
         bra can multiply a ket or an operator, ket can only multiply a bra
         """
         if self.orientation == 'bra':  # inner product
-            if isinstance(other, OneBodyBasisSpinState):
+            if isinstance(other, AFDMCSpinState):
                 assert other.orientation == 'ket'
                 out = np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)])
-            elif isinstance(other, OneBodyBasisSpinOperator):
+            elif isinstance(other, AFDMCSpinOperator):
                 out = self.copy()
                 for i in range(self.n_particles):
                     out.sp_stack[i] = np.matmul(self.sp_stack[i], other.op_stack[i], dtype=complex)
@@ -640,8 +640,8 @@ class OneBodyBasisSpinState(State):
                 raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out
         elif self.orientation == 'ket':  # outer product
-            assert isinstance(other, OneBodyBasisSpinState) and other.orientation == 'bra'
-            out = OneBodyBasisSpinOperator(n_particles=self.n_particles)
+            assert isinstance(other, AFDMCSpinState) and other.orientation == 'bra'
+            out = AFDMCSpinOperator(n_particles=self.n_particles)
             for i in range(self.n_particles):
                 out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
             return out
@@ -669,7 +669,7 @@ class OneBodyBasisSpinState(State):
             sp_mb = sp_mb.reshape(2 ** self.n_particles, 1)
         elif self.orientation == 'bra':
             sp_mb = sp_mb.reshape(1, 2 ** self.n_particles)
-        return ManyBodyBasisSpinState(self.n_particles, self.orientation, sp_mb)
+        return GFMCSpinState(self.n_particles, self.orientation, sp_mb)
 
     def normalize(self):
         out = self.copy()
@@ -711,7 +711,7 @@ class OneBodyBasisSpinState(State):
         return out
     
 
-class OneBodyBasisSpinIsospinState(State):
+class AFDMCSpinIsospinState(State):
     def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         """an array of single particle spinors
 
@@ -735,7 +735,7 @@ class OneBodyBasisSpinIsospinState(State):
             raise ValueError('Inconsistent initialization of state vector')
         else:
             self.sp_stack = coefficients.astype(complex)
-        self.friendly_operator = OneBodyBasisSpinIsospinOperator
+        self.friendly_operator = AFDMCSpinIsospinOperator
         
 
     def __add__(self, other):
@@ -745,7 +745,7 @@ class OneBodyBasisSpinIsospinState(State):
         raise SyntaxError('You should not be subtracting a OBB states')
 
     def copy(self):
-        return OneBodyBasisSpinIsospinState(self.n_particles, self.orientation, self.sp_stack.copy())
+        return AFDMCSpinIsospinState(self.n_particles, self.orientation, self.sp_stack.copy())
 
     def to_list(self):
         return [self.sp_stack[i] for i in range(self.n_particles)]
@@ -755,10 +755,10 @@ class OneBodyBasisSpinIsospinState(State):
         bra can multiply a ket or an operator, ket can only multiply a bra
         """
         if self.orientation == 'bra':  # inner product
-            if isinstance(other, OneBodyBasisSpinIsospinState):
+            if isinstance(other, AFDMCSpinIsospinState):
                 assert other.orientation == 'ket'
                 out = np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)])
-            elif isinstance(other, OneBodyBasisSpinIsospinOperator):
+            elif isinstance(other, AFDMCSpinIsospinOperator):
                 out = self.copy()
                 for i in range(self.n_particles):
                     out.sp_stack[i] = np.matmul(self.sp_stack[i], other.op_stack[i], dtype=complex)
@@ -766,8 +766,8 @@ class OneBodyBasisSpinIsospinState(State):
                 raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out
         elif self.orientation == 'ket':  # outer product
-            assert isinstance(other, OneBodyBasisSpinIsospinState) and other.orientation == 'bra'
-            out = OneBodyBasisSpinIsospinOperator(n_particles=self.n_particles)
+            assert isinstance(other, AFDMCSpinIsospinState) and other.orientation == 'bra'
+            out = AFDMCSpinIsospinOperator(n_particles=self.n_particles)
             for i in range(self.n_particles):
                 out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
             return out
@@ -795,7 +795,7 @@ class OneBodyBasisSpinIsospinState(State):
             sp_mb = sp_mb.reshape(4 ** self.n_particles, 1)
         elif self.orientation == 'bra':
             sp_mb = sp_mb.reshape(1, 4 ** self.n_particles)
-        return ManyBodyBasisSpinIsospinState(self.n_particles, self.orientation, sp_mb)
+        return GFMCSpinIsospinState(self.n_particles, self.orientation, sp_mb)
 
     def normalize(self):
         out = self.copy()
@@ -861,11 +861,11 @@ class OneBodyBasisSpinIsospinState(State):
         return out
 
 
-class OneBodyBasisSpinOperator(Operator):
+class AFDMCSpinOperator(Operator):
     def __init__(self, n_particles: int):
         super().__init__(n_particles)
         self.op_stack = np.stack(self.n_particles*[np.identity(2)], dtype=complex)    
-        self.friendly_state = OneBodyBasisSpinState
+        self.friendly_state = AFDMCSpinState
 
     def __add__(self, other):
         raise SyntaxError('You should not be adding OBB operators')
@@ -874,7 +874,7 @@ class OneBodyBasisSpinOperator(Operator):
         raise SyntaxError('You should not be subtracting OBB operators')
 
     def copy(self):
-        out = OneBodyBasisSpinOperator(self.n_particles)
+        out = AFDMCSpinOperator(self.n_particles)
         for i in range(self.n_particles):
             out.op_stack[i] = self.op_stack[i]
         return out
@@ -883,13 +883,13 @@ class OneBodyBasisSpinOperator(Operator):
         return [self.op_stack[i] for i in range(self.n_particles)]
     
     def __mul__(self, other):
-        if isinstance(other, OneBodyBasisSpinState):
+        if isinstance(other, AFDMCSpinState):
             assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
             return out
-        elif isinstance(other, OneBodyBasisSpinOperator):
+        elif isinstance(other, AFDMCSpinOperator):
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
@@ -944,11 +944,11 @@ class OneBodyBasisSpinOperator(Operator):
         return out
     
 
-class OneBodyBasisSpinIsospinOperator(Operator):
+class AFDMCSpinIsospinOperator(Operator):
     def __init__(self, n_particles: int):
         super().__init__(n_particles)
         self.op_stack = np.stack(self.n_particles*[np.identity(4)], dtype=complex)    
-        self.friendly_state = OneBodyBasisSpinIsospinState
+        self.friendly_state = AFDMCSpinIsospinState
 
     def __add__(self, other):
         raise SyntaxError('You should not be adding OBB operators')
@@ -957,7 +957,7 @@ class OneBodyBasisSpinIsospinOperator(Operator):
         raise SyntaxError('You should not be subtracting OBB operators')
 
     def copy(self):
-        out = OneBodyBasisSpinIsospinOperator(self.n_particles)
+        out = AFDMCSpinIsospinOperator(self.n_particles)
         for i in range(self.n_particles):
             out.op_stack[i] = self.op_stack[i]
         return out
@@ -966,13 +966,13 @@ class OneBodyBasisSpinIsospinOperator(Operator):
         return [self.op_stack[i] for i in range(self.n_particles)]
     
     def __mul__(self, other):
-        if isinstance(other, OneBodyBasisSpinIsospinState):
+        if isinstance(other, AFDMCSpinIsospinState):
             assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
             return out
-        elif isinstance(other, OneBodyBasisSpinIsospinOperator):
+        elif isinstance(other, AFDMCSpinIsospinOperator):
             out = other.copy()
             for i in range(self.n_particles):
                 out.op_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
@@ -1265,7 +1265,17 @@ class ThreeBodyCoupling:
 
 # PROPAGATOR CLASSES
 
-class ManyBodyBasisGaussianPropagator:
+class GFMCPropagatorHS():
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, k, operator_i, operator_j) -> None:
-        pass
+    def __init__(self, n_particles, couplings, operator_i, operator_j) -> None:
+        self.couplings = couplings
+        self.shape = couplings.shape
+        self.n_particles = n_particles
+        self.operator_i = operator_i
+        self.operator_j = operator_j
+
+        self.propagator = GFMCSpinIsospinOperator(self.n_particles)
+
+    def step(self, ket):
+        assert type(ket)==GFMCSpinIsospinState
+        return self.propagator * ket
