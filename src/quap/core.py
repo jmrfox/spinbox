@@ -15,6 +15,8 @@ from functools import reduce
 
 from dataclasses import dataclass
 
+import itertools
+
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
 # numpy.sqrt will complain if you give it a negative number, so i'm not taking any chances
@@ -60,6 +62,13 @@ def carctanh(x):
     """Complex incerse hyp. tangent
     """
     return np.arctanh(x, dtype=complex)
+
+
+def interaction_indices(n, m = 2):
+    """ returns a list of all possible m-plets of n objects (labelled 0 to n-1)
+    default: m=2, giving all possible pairs
+    """
+    return list(itertools.combinations(range(n), m))
 
 
 def read_from_file(filename, complex=False, shape=None, order='F'):
@@ -1049,13 +1058,13 @@ class SigmaCoupling:
                 for j in range(n_particles):
                     for a in range(3):
                         for b in range(3):
-                            assert coefficients[a,i,b,j]==coefficients[b,j,a,i]
+                            assert coefficients[a,i,b,j]==coefficients[a,j,b,i]
         
         self.n_particles = n_particles
         self.coefficients = coefficients
     
     def copy(self):
-        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        out = SigmaCoupling(self.n_particles, self.coefficients)
         return out
 
     def __mult__(self, other):
@@ -1081,12 +1090,12 @@ class SigmaTauCoupling:
                 for j in range(n_particles):
                     for a in range(3):
                         for b in range(3):
-                            assert coefficients[a,i,b,j]==coefficients[b,j,a,i]
+                            assert coefficients[a,i,b,j]==coefficients[a,j,b,i]
         self.n_particles = n_particles
         self.coefficients = coefficients
     
     def copy(self):
-        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        out = SigmaTauCoupling(self.n_particles, self.coefficients)
         return out
 
     def __mult__(self, other):
@@ -1104,7 +1113,7 @@ class TauCoupling:
     for i, j = 0 .. n_particles - 1
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        self.shape = (3, n_particles, 3, n_particles)
+        self.shape = (n_particles, n_particles)
         if validate:
             assert coefficients.shape()==self.shape
             for i in range(n_particles):
@@ -1114,7 +1123,7 @@ class TauCoupling:
         self.coefficients = coefficients
     
     def copy(self):
-        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        out = TauCoupling(self.n_particles, self.coefficients)
         return out
 
     def __mult__(self, other):
@@ -1132,7 +1141,7 @@ class CoulombCoupling:
     for i, j = 0 .. n_particles - 1
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        self.shape = (3, n_particles, 3, n_particles)
+        self.shape = (n_particles, n_particles)
         if validate:
             assert coefficients.shape()==self.shape
             for i in range(n_particles):
@@ -1142,7 +1151,7 @@ class CoulombCoupling:
         self.coefficients = coefficients
     
     def copy(self):
-        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
+        out = CoulombCoupling(self.n_particles, self.coefficients)
         return out
 
     def __mult__(self, other):
@@ -1162,7 +1171,7 @@ class SpinOrbitCoupling:
     and a = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        self.shape = (3, n_particles, 3, n_particles)
+        self.shape = (3, n_particles, n_particles)
         if validate:
             assert coefficients.shape()==self.shape
             for i in range(n_particles):
@@ -1211,7 +1220,47 @@ class ArgonnePotential:
         self.spinorbit = self.spinorbit.read(filename)
 
 
+class ThreeBodyCoupling:
+    """container class for couplings A(a,i,b,j,c,k)
+    for i, j, k = 0 .. n_particles - 1
+    and a = 0, 1, 2  (x, y, z)
+    """
+    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        self.shape = (3, n_particles, 3, n_particles, 3, n_particles)
+        if validate:
+            assert coefficients.shape()==self.shape
+            for i in range(n_particles):
+                for j in range(n_particles):
+                    for k in range(n_particles):
+                        for a in range(3):
+                            for b in range(3):
+                                for c in range(3):
+                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,i,b,k,c,j]
+                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,j,b,i,c,k]
+                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,j,b,k,c,i]
+                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,k,b,i,c,j]
+                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,k,b,j,c,i]
+        self.n_particles = n_particles
+        self.coefficients = coefficients
     
+    def copy(self):
+        out = ThreeBodyCoupling(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+    
+    def read(self, filename):
+        out = self.copy()
+        out.coefficients = read_from_file(filename, shape=self.shape)
+        return out
+
 
 # PROPAGATOR CLASSES
 
+class ManyBodyBasisGaussianPropagator:
+    """ exp( - k op_i op_j )"""
+    def __init__(self, n_particles, k, operator_i, operator_j) -> None:
+        pass

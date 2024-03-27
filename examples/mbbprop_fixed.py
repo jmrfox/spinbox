@@ -49,9 +49,6 @@ def g_rbm_sample(dt, a, h, opi, opj):
     return norm * qi * qj
 
 
-
-
-
 def prop_gauss_fixed(ket, pots, x):
     print('GAUSS')
     asig = pots['asig'] 

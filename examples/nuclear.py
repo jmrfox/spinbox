@@ -17,7 +17,7 @@ run_tag = '_test'  #start with a _
 global_seed = 17
 
 n_particles = 2
-pairs_ij = list(itertools.combinations(range(n_particles), 2))
+pairs_ij = interaction_indices(n_particles)
 
 def make_test_states(manybody=False):
     """returns one body basis spin-isospin states for testing"""
@@ -69,7 +69,6 @@ def make_bls(scale=1.0, rng=None):
 
 def make_all_potentials(scale=1.0, rng=None, mode='normal'):
     out = {}
-
     if mode=='normal':
         out['asig'] = make_asig(scale=scale, rng=rng)
         out['asigtau'] = make_asigtau(scale=scale, rng=rng)
