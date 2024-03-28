@@ -7,7 +7,7 @@ tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]
 
 def g_onebody(k, i, opi):
     """exp (- k opi)"""
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     out.op_stack[i] = ccosh(k) * ident - csinh(k) * opi
     return out
 
@@ -19,7 +19,7 @@ def g_gauss_sample(k, x, i: int, j: int, opi, opj, normalize=True):
         prefactor = cexp(k)
     else:
         prefactor = 1.0
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     arg = csqrt(-k)*x
     print('arg = ', arg)
     out.op_stack[i] = ccosh(arg) * ident + csinh(arg) * opi
@@ -35,7 +35,7 @@ def g_rbm_sample(k, h, i: int, j: int, opi, opj, normalize=True):
         prefactor = cexp(-abs(k))
     else:
         prefactor = 1.0
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     W = carctanh(csqrt(ctanh(np.abs(k))))
     arg = W * (2 * h - 1)
     out.op_stack[i] = ccosh(arg) * ident + csinh(arg) * opi

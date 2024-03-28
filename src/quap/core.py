@@ -613,10 +613,10 @@ class AFDMCSpinState(State):
         
 
     def __add__(self, other):
-        raise SyntaxError('You should not be adding a OBB states')
+        raise SyntaxError('You should probably not be adding a AFDMC states')
     
     def __sub__(self, other):
-        raise SyntaxError('You should not be subtracting a OBB states')
+        raise SyntaxError('You should probably not be subtracting a AFDMC states')
 
     def copy(self):
         return AFDMCSpinState(self.n_particles, self.orientation, self.sp_stack.copy())
@@ -739,10 +739,10 @@ class AFDMCSpinIsospinState(State):
         
 
     def __add__(self, other):
-        raise SyntaxError('You should not be adding a OBB states')
+        raise SyntaxError('You should probably not be adding a AFDMC states')
     
     def __sub__(self, other):
-        raise SyntaxError('You should not be subtracting a OBB states')
+        raise SyntaxError('You should probably not be subtracting a AFDMC states')
 
     def copy(self):
         return AFDMCSpinIsospinState(self.n_particles, self.orientation, self.sp_stack.copy())
@@ -868,10 +868,10 @@ class AFDMCSpinOperator(Operator):
         self.friendly_state = AFDMCSpinState
 
     def __add__(self, other):
-        raise SyntaxError('You should not be adding OBB operators')
+        raise SyntaxError('You should probably not be adding AFDMC operators')
     
     def __sub__(self, other):
-        raise SyntaxError('You should not be subtracting OBB operators')
+        raise SyntaxError('You should probably not be subtracting AFDMC operators')
 
     def copy(self):
         out = AFDMCSpinOperator(self.n_particles)
@@ -951,10 +951,10 @@ class AFDMCSpinIsospinOperator(Operator):
         self.friendly_state = AFDMCSpinIsospinState
 
     def __add__(self, other):
-        raise SyntaxError('You should not be adding OBB operators')
+        raise SyntaxError('You should probably not be adding AFDMC operators')
     
     def __sub__(self, other):
-        raise SyntaxError('You should not be subtracting OBB operators')
+        raise SyntaxError('You should probably not be subtracting AFDMC operators')
 
     def copy(self):
         out = AFDMCSpinIsospinOperator(self.n_particles)
@@ -1267,15 +1267,25 @@ class ThreeBodyCoupling:
 
 class GFMCPropagatorHS():
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, couplings, operator_i, operator_j) -> None:
+    def __init__(self, n_particles, dt, couplings, operator_i, operator_j) -> None:
         self.couplings = couplings
         self.shape = couplings.shape
         self.n_particles = n_particles
         self.operator_i = operator_i
         self.operator_j = operator_j
+        self.dt = dt
+        self.dt_factor = 0.5
+        self.include_prefactor = True
+        self.ident = GFMCSpinIsospinOperator(self.n_particles)
 
-        self.propagator = GFMCSpinIsospinOperator(self.n_particles)
-
-    def step(self, ket):
+    def sample(self, ket, coupling, x):
         assert type(ket)==GFMCSpinIsospinState
-        return self.propagator * ket
+        k = self.dt_factor * self.dt * coupling
+        arg = csqrt(-k)*x
+        if self.include_prefactor:
+            prefactor = cexp(k)
+        else:
+            prefactor = 1.0
+        gi = ccosh(arg) * self.ident + csinh(arg) * self.operator_i
+        gj = ccosh(arg) * self.ident + csinh(arg) * self.operator_j
+        return prefactor *gi * gj * ket

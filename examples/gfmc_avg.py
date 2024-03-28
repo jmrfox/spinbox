@@ -8,15 +8,15 @@ from itertools import starmap
 
 #  this script does the same as mbbprop_averaging except for several values of B_LS and plots
 
-ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
+ident = GFMCSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
-sig = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
-tau = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
+sig = [[GFMCSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
+tau = [[GFMCSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
 # access like sig[particle][xyz]
 
 
 def g_pade_sig(dt, asig, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
+    out = GFMCSpinIsospinOperator(nt.n_particles).zeros()
     for a in range(3):
         for b in range(3):
             out += asig[a, i, b, j] * sig[i][a] * sig[j][b]
@@ -25,7 +25,7 @@ def g_pade_sig(dt, asig, i, j):
 
 
 def g_pade_sigtau(dt, asigtau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
+    out = GFMCSpinIsospinOperator(nt.n_particles).zeros()
     for a in range(3):
         for b in range(3):
             for c in range(3):
@@ -35,7 +35,7 @@ def g_pade_sigtau(dt, asigtau, i, j):
 
 
 def g_pade_tau(dt, atau, i, j):
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles).zeros()
+    out = GFMCSpinIsospinOperator(nt.n_particles).zeros()
     for c in range(3):
         out += atau[i, j] * tau[i][c] * tau[j][c]
     out = -0.5 * dt * out
@@ -57,7 +57,7 @@ def g_coulomb_onebody(dt, v, i):
 
 def g_ls_linear(gls, i):
     # linear approx to LS
-    out = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = GFMCSpinIsospinOperator(nt.n_particles)
     for a in range(3):
         out = (ident - 1.j * gls[a, i] * sig[i][a]) * out 
     return out

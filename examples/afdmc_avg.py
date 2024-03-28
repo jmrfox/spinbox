@@ -5,10 +5,10 @@ from cProfile import Profile
 from pstats import SortKey, Stats
 from multiprocessing.pool import Pool
 
-ident = OneBodyBasisSpinIsospinOperator(num_particles)
+ident = AFDMCSpinIsospinOperator(num_particles)
 # list constructors make generating operators more streamlined
-sig = [[OneBodyBasisSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
-tau = [[OneBodyBasisSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
+sig = [[AFDMCSpinIsospinOperator(num_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
+tau = [[AFDMCSpinIsospinOperator(num_particles).tau(i,a) for a in [0, 1, 2]] for i in range(num_particles)]
 # access like sig[particle][xyz]
 
 
@@ -16,7 +16,7 @@ def g_coulomb_onebody(dt, v, i):
     """just the one-body part of the factored coulomb propagator
     for use along with auxiliary field propagator for 2 body part"""
     k = - 0.125 * v * dt
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     out.op_stack[i] = ccosh(k) * ident + csinh(k) * tau[2]
     return out
 
@@ -25,17 +25,17 @@ def g_ls_onebody(gls_ai, i, a):
     """
     k = - 1.j * gls_ai
     ck, sk = ccosh(k), csinh(k)
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     out.op_stack[i] = ck * ident + sk * sig[a]
     return out
 
 
-def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: OneBodyBasisSpinIsospinOperator, opj: OneBodyBasisSpinIsospinOperator):
+def g_gauss_sample(dt: float, a: float, x, i: int, j: int, opi: AFDMCSpinIsospinOperator, opj: AFDMCSpinIsospinOperator):
     k = csqrt(-0.5 * dt * a)
     norm = cexp(0.5 * dt * a)
     # out = ident.scalar_mult(i, ccosh(k * x)).scalar_mult(j, ccosh(k * x)) + opi.scalar_mult(i, csinh(k * x)) * opj.scalar_mult(j, csinh(k * x))
     # return out.spread_scalar_mult(norm)
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     out.op_stack[i] = ccosh(k) * ident + csinh(k) * opi
     out.op_stack[j] = ccosh(k) * ident + csinh(k) * opj
     out.op_stack[i] *= csqrt(norm)
@@ -48,7 +48,7 @@ def g_rbm_sample(dt, a, h, i, j, opi, opj):
     W = carctanh(csqrt(ctanh(0.5 * dt * np.abs(a))))
     arg = W * (2 * h - 1)
     # out = ident.scalar_mult(i, ccosh(arg)).scalar_mult(j, ccosh(arg)) + opi.scalar_mult(i, csinh(arg)) * opj.scalar_mult(j, -np.sign(a) * csinh(arg))
-    out = OneBodyBasisSpinIsospinOperator(nt.n_particles)
+    out = AFDMCSpinIsospinOperator(nt.n_particles)
     # return out
     out.op_stack[i] = ccosh(arg) * ident + csinh(arg) * opi
     out.op_stack[j] = ccosh(arg) * ident - np.sign(a) * csinh(arg) * opj

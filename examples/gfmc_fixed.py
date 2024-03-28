@@ -1,10 +1,10 @@
 from quap import *
 import nuclear as nt
 
-ident = ManyBodyBasisSpinIsospinOperator(nt.n_particles)
+ident = GFMCSpinIsospinOperator(nt.n_particles)
 # list constructors make generating operators more streamlined
-sig = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
-tau = [[ManyBodyBasisSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
+sig = [[GFMCSpinIsospinOperator(nt.n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
+tau = [[GFMCSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1, 2]] for i in range(nt.n_particles)]
 # sig[particle][xyz]
 
 
