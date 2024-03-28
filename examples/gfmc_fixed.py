@@ -217,6 +217,12 @@ def main():
 
 
 if __name__ == "__main__":
-    print('MBB')
-    main()
-    
+    A=2; dt = 0.001
+    ket = AFDMCSpinIsospinState(A,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
+    pot = ArgonnePotential(A)
+    pot.read_sigma("./data/h2/fort.7701")
+    pot.read_sigmatau("./data/h2/fort.7702")
+    pot.read_tau("./data/h2/fort.7703")
+    pot.read_coulomb("./data/h2/fort.7704")
+    pot.read_spinorbit("./data/h2/fort.7705")
+    hsprop = GFMCPropagatorHS(A, dt)

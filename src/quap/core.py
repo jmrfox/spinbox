@@ -19,8 +19,8 @@ import itertools
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
-# numpy.sqrt will complain if you give it a negative number, so i'm not taking any chances
-
+# numpy.sqrt will raise warning (NOT error) if you give it a negative number, so i'm not taking any chances
+# these nuse numpy instead of math to be safe with ndarrays
 
 def csqrt(x):
     """Complex square root
@@ -86,7 +86,7 @@ def read_from_file(filename, complex=False, shape=None, order='F'):
 
     c = np.loadtxt(filename)
     if complex:
-        sp = np.array([tuple_to_complex(x) for x in c], dtype=complex)
+        sp = np.array([tuple_to_complex(x) for x in c], dtype='complex')
     else:
         sp = np.array(c)
 
@@ -190,8 +190,7 @@ def pmat(x, heatmap=False, lims=None, print_zeros=False):
 
 
 def scalar(x: np.ndarray):
-    """turns a 1-element array  x into a scalar
-    is there a better way to do this?
+    """turns a 1-element array  x into an actual scalar
     """
     assert type(x) == np.ndarray
     assert list(x.shape) == [1 for _ in range(len(x.shape))]
@@ -232,7 +231,8 @@ class GFMCSpinState(State):
         ket_condition = (coefficients.shape == (self.dim, 1)) and (orientation == 'ket')
         bra_condition = (coefficients.shape == (1, self.dim)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
-            raise ValueError('Inconsistent initialization of state vector')
+            raise ValueError("Inconsistent initialization of state vector. \n\
+                             Did you get the shape right?")
         else:
             self.coefficients = coefficients.astype('complex')
         self.friendly_operator = GFMCSpinOperator
@@ -606,7 +606,8 @@ class AFDMCSpinState(State):
         ket_condition = (coefficients.shape == (n_particles, 2, 1)) and (orientation == 'ket')
         bra_condition = (coefficients.shape == (n_particles, 1, 2)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
-            raise ValueError('Inconsistent initialization of state vector')
+            ValueError("Inconsistent initialization of state vector. \n\
+                             Did you get the shape right?")
         else:
             self.sp_stack = coefficients.astype(complex)
         self.friendly_operator = AFDMCSpinOperator
@@ -732,7 +733,8 @@ class AFDMCSpinIsospinState(State):
         ket_condition = (coefficients.shape == (n_particles, 4, 1)) and (orientation == 'ket')
         bra_condition = (coefficients.shape == (n_particles, 1, 4)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
-            raise ValueError('Inconsistent initialization of state vector')
+            raise ValueError("Inconsistent initialization of state vector. \n\
+                             Did you get the shape right?")
         else:
             self.sp_stack = coefficients.astype(complex)
         self.friendly_operator = AFDMCSpinIsospinOperator
@@ -1201,30 +1203,6 @@ class SpinOrbitCoupling:
         return out
 
 
-class ArgonnePotential:
-    def __init__(self, n_particles):
-        self.sigma = SigmaCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
-        self.sigmatau = SigmaTauCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
-        self.tau = TauCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
-        self.coulomb = CoulombCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
-        self.spinorbit = SpinOrbitCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,n_particles)))
-    
-    def read_sigma(self, filename):
-        self.sigma = self.sigma.read(filename)
-
-    def read_sigmatau(self, filename):
-        self.sigmatau = self.sigmatau.read(filename)
-
-    def read_tau(self, filename):
-        self.tau = self.tau.read(filename)
-
-    def read_coulomb(self, filename):
-        self.coulomb = self.coulomb.read(filename)
-
-    def read_spinorbit(self, filename):
-        self.spinorbit = self.spinorbit.read(filename)
-
-
 class ThreeBodyCoupling:
     """container class for couplings A(a,i,b,j,c,k)
     for i, j, k = 0 .. n_particles - 1
@@ -1263,22 +1241,44 @@ class ThreeBodyCoupling:
         return out
 
 
+
+class ArgonnePotential:
+    def __init__(self, n_particles):
+        self.sigma = SigmaCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
+        self.sigmatau = SigmaTauCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
+        self.tau = TauCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
+        self.coulomb = CoulombCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
+        self.spinorbit = SpinOrbitCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,n_particles)))
+    
+    def read_sigma(self, filename):
+        self.sigma = self.sigma.read(filename)
+
+    def read_sigmatau(self, filename):
+        self.sigmatau = self.sigmatau.read(filename)
+
+    def read_tau(self, filename):
+        self.tau = self.tau.read(filename)
+
+    def read_coulomb(self, filename):
+        self.coulomb = self.coulomb.read(filename)
+
+    def read_spinorbit(self, filename):
+        self.spinorbit = self.spinorbit.read(filename)
+
+
+
 # PROPAGATOR CLASSES
 
 class GFMCPropagatorHS():
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, dt, couplings, operator_i, operator_j) -> None:
-        self.couplings = couplings
-        self.shape = couplings.shape
+    def __init__(self, n_particles, dt) -> None:
         self.n_particles = n_particles
-        self.operator_i = operator_i
-        self.operator_j = operator_j
         self.dt = dt
         self.dt_factor = 0.5
         self.include_prefactor = True
         self.ident = GFMCSpinIsospinOperator(self.n_particles)
 
-    def sample(self, ket, coupling, x):
+    def apply_one_sample(self, ket, coupling, x, operator_i, operator_j):
         assert type(ket)==GFMCSpinIsospinState
         k = self.dt_factor * self.dt * coupling
         arg = csqrt(-k)*x
@@ -1286,6 +1286,11 @@ class GFMCPropagatorHS():
             prefactor = cexp(k)
         else:
             prefactor = 1.0
-        gi = ccosh(arg) * self.ident + csinh(arg) * self.operator_i
-        gj = ccosh(arg) * self.ident + csinh(arg) * self.operator_j
+        gi = ccosh(arg) * self.ident + csinh(arg) * operator_i
+        gj = ccosh(arg) * self.ident + csinh(arg) * operator_j
         return prefactor *gi * gj * ket
+    
+    def apply_sigma(self, ket, coupling):
+        pass
+
+    
