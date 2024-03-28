@@ -197,6 +197,7 @@ def scalar(x: np.ndarray):
     out = x.flatten()[0]
     return out
 
+
 # SHARED BASE CLASSES
 
 class State:
@@ -1064,7 +1065,7 @@ class SigmaCoupling:
         
         self.n_particles = n_particles
         self.coefficients = coefficients
-    
+        
     def copy(self):
         out = SigmaCoupling(self.n_particles, self.coefficients)
         return out
@@ -1079,6 +1080,10 @@ class SigmaCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
+
 
 class SigmaTauCoupling:
     """container class for couplings A ^ sigma tau (a,i,b,j)
@@ -1097,6 +1102,7 @@ class SigmaTauCoupling:
         self.n_particles = n_particles
         self.coefficients = coefficients
     
+    
     def copy(self):
         out = SigmaTauCoupling(self.n_particles, self.coefficients)
         return out
@@ -1111,6 +1117,10 @@ class SigmaTauCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
+
 
 class TauCoupling:
     """container class for couplings A^tau (i,j)
@@ -1140,6 +1150,10 @@ class TauCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
+    
 
 class CoulombCoupling:
     """container class for couplings V^coul (i,j)
@@ -1154,7 +1168,7 @@ class CoulombCoupling:
                     assert coefficients[i,j]==coefficients[j,i]
         self.n_particles = n_particles
         self.coefficients = coefficients
-    
+        
     def copy(self):
         out = CoulombCoupling(self.n_particles, self.coefficients)
         return out
@@ -1169,7 +1183,10 @@ class CoulombCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
-
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
+    
 
 class SpinOrbitCoupling:
     """container class for couplings g_LS (a,i,j)
@@ -1201,7 +1218,10 @@ class SpinOrbitCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
-
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
+    
 
 class ThreeBodyCoupling:
     """container class for couplings A(a,i,b,j,c,k)
@@ -1226,6 +1246,7 @@ class ThreeBodyCoupling:
         self.n_particles = n_particles
         self.coefficients = coefficients
     
+    
     def copy(self):
         out = ThreeBodyCoupling(self.n_particles, self.coefficients)
         return out
@@ -1239,7 +1260,9 @@ class ThreeBodyCoupling:
         out = self.copy()
         out.coefficients = read_from_file(filename, shape=self.shape)
         return out
-
+    
+    def __getitem__(self, key):
+        return self.coefficients[key]
 
 
 class ArgonnePotential:
@@ -1271,13 +1294,17 @@ class ArgonnePotential:
 
 class GFMCPropagatorHS():
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, dt) -> None:
+    def __init__(self, n_particles, dt, include_prefactor=True):
         self.n_particles = n_particles
         self.dt = dt
         self.dt_factor = 0.5
-        self.include_prefactor = True
-        self.ident = GFMCSpinIsospinOperator(self.n_particles)
-
+        self.include_prefactor = include_prefactor
+        
+        self._ident = GFMCSpinIsospinOperator(self.n_particles)
+        self._sig_op = [[self._ident.sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[self._ident.tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._pair_idx = interaction_indices(self.n_particles)
+        
     def apply_one_sample(self, ket, coupling, x, operator_i, operator_j):
         assert type(ket)==GFMCSpinIsospinState
         k = self.dt_factor * self.dt * coupling
@@ -1286,11 +1313,53 @@ class GFMCPropagatorHS():
             prefactor = cexp(k)
         else:
             prefactor = 1.0
-        gi = ccosh(arg) * self.ident + csinh(arg) * operator_i
-        gj = ccosh(arg) * self.ident + csinh(arg) * operator_j
+        gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
+        gj = ccosh(arg) * self._ident + csinh(arg) * operator_j
         return prefactor *gi * gj * ket
     
-    def apply_sigma(self, ket, coupling):
-        pass
+    def apply_sigma(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
+        ket_prop = ket.copy()
+        for i,j in self._pair_idx:
+            for a in range(3):
+                for b in range(3):
+                    ket_prop = self.apply_one_sample(ket_prop, potential.sigma[a,i,b,j], x, self._sig_op[i][a], self._sig_op[j][b])
+        return ket_prop
+    
+    def apply_sigmatau(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
+        ket_prop = ket.copy()
+        for i,j in self._pair_idx:
+            for a in range(3):
+                for b in range(3):
+                    for c in range(3):
+                        ket_prop = self.apply_one_sample(ket_prop, potential.sigmatau[a,i,b,j,c], x, self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c])
+        return ket_prop
+    
+    def apply_tau(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
+        ket_prop = ket.copy()
+        for i,j in self._pair_idx:
+            for c in range(3):
+                    ket_prop = self.apply_one_sample(ket_prop, potential.tau[c,i,j], x, self._tau_op[i][c], self._tau_op[j][c])
+        return ket_prop
 
+    def apply_coulomb(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
+        ket_prop = ket.copy()
+        for i,j in self._pair_idx:
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
+                ket_prop = self.apply_one_sample(ket_prop, potential.coulomb[i,j], x, self._tau_op[i][2], self._tau_op[j][2])
+        return ket_prop
+    
+    def apply_spinorbit(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
+        ket_prop = ket.copy()
+        for i in range(self.n_particles):
+            for a in range(3):
+                one_body = - 1.j * potential.spinorbit[a,i,j] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate
+        for i,j in self._pair_idx:
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
+                ket_prop = self.apply_one_sample(ket_prop, potential.coulomb[i,j], x, self._tau_op[i][2], self._tau_op[j][2])
+        return ket_prop
     
