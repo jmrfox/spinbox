@@ -13,9 +13,11 @@ from numpy.random import default_rng
 from scipy.linalg import expm
 from functools import reduce
 
-from dataclasses import dataclass
+# from dataclasses import dataclass
 
 import itertools
+from multiprocessing.pool import Pool
+from tqdm import tqdm
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
@@ -1046,223 +1048,153 @@ class AFDMCSpinIsospinOperator(Operator):
     
             
 
-# POTENTIAL CLASSES
+# COUPLINGS / POTENTIALS
 
-class SigmaCoupling:
+class Coupling:
+    shape=None
+    def __init__(self, n_particles, coefficients:np.ndarray):
+        self.n_particles = n_particles
+        self.coefficients = coefficients
+
+    def copy(self):
+        out = self.__class__(self.n_particles, self.coefficients)
+        return out
+
+    def __mult__(self, other):
+        assert np.isscalar(other)
+        out = self.copy()
+        out.coefficients = other * out.coefficients
+        return out
+
+    def read(self, filename):
+        if self.shape is None:
+            raise ValueError("Must define self.shape before reading from file.")
+        self.coefficients = read_from_file(filename, shape=self.shape)
+
+    def __getitem__(self, key):
+        return self.coefficients[key]
+
+    def __str__(self):
+        return str(self.coefficients)
+    
+        
+class SigmaCoupling(Coupling):
     """container class for couplings A^sigma (a,i,b,j)
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        self.shape = (3, n_particles, 3, n_particles)
+        super().__init__(n_particles, coefficients)
+        self.shape = (3, self.n_particles, 3, self.n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    for a in range(3):
-                        for b in range(3):
-                            assert coefficients[a,i,b,j]==coefficients[a,j,b,i]
-        
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-        
-    def copy(self):
-        out = SigmaCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
 
-    def __mult__(self, other):
-        assert np.isscalar(other)
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
-
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                for a in range(3):
+                    for b in range(3):
+                        assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
     
-    def __getitem__(self, key):
-        return self.coefficients[key]
 
-
-class SigmaTauCoupling:
+class SigmaTauCoupling(Coupling):
     """container class for couplings A ^ sigma tau (a,i,b,j)
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        super().__init__(n_particles, coefficients)
         self.shape = (3, n_particles, 3, n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    for a in range(3):
-                        for b in range(3):
-                            assert coefficients[a,i,b,j]==coefficients[a,j,b,i]
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-    
-    
-    def copy(self):
-        out = SigmaTauCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
+        
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                for a in range(3):
+                    for b in range(3):
+                        assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
+        
 
-    def __mult__(self, other):
-        assert np.isscalar(other)
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
-
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
-    
-    def __getitem__(self, key):
-        return self.coefficients[key]
-
-
-class TauCoupling:
+class TauCoupling(Coupling):
     """container class for couplings A^tau (i,j)
     for i, j = 0 .. n_particles - 1
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        super().__init__(n_particles, coefficients)
         self.shape = (n_particles, n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    assert coefficients[i,j]==coefficients[j,i]
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-    
-    def copy(self):
-        out = TauCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
 
-    def __mult__(self, other):
-        assert np.isscalar(other)
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                assert self.coefficients[i,j]==self.coefficients[j,i]
 
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
-    
-    def __getitem__(self, key):
-        return self.coefficients[key]
-    
 
-class CoulombCoupling:
+class CoulombCoupling(Coupling):
     """container class for couplings V^coul (i,j)
     for i, j = 0 .. n_particles - 1
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        super().__init__(n_particles, coefficients)
         self.shape = (n_particles, n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    assert coefficients[i,j]==coefficients[j,i]
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-        
-    def copy(self):
-        out = CoulombCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
 
-    def __mult__(self, other):
-        assert np.isscalar(other)
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                assert self.coefficients[i,j]==self.coefficients[j,i]
 
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
-    
-    def __getitem__(self, key):
-        return self.coefficients[key]
-    
 
-class SpinOrbitCoupling:
+class SpinOrbitCoupling(Coupling):
     """container class for couplings g_LS (a,i,j)
     for i, j = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        super().__init__(n_particles, coefficients)
         self.shape = (3, n_particles, n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    for a in range(3):
-                        assert coefficients[a,i,j]==coefficients[a,j,i]
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-    
-    def copy(self):
-        out = SpinOrbitCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
 
-    def __mult__(self, other):
-        assert np.isscalar(other)
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
-    
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
-    
-    def __getitem__(self, key):
-        return self.coefficients[key]
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                for a in range(3):
+                    assert self.coefficients[a,i,j]==self.coefficients[a,j,i]
     
 
-class ThreeBodyCoupling:
+class ThreeBodyCoupling(Coupling):
     """container class for couplings A(a,i,b,j,c,k)
     for i, j, k = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
+        super().__init__(n_particles, coefficients)
         self.shape = (3, n_particles, 3, n_particles, 3, n_particles)
         if validate:
-            assert coefficients.shape()==self.shape
-            for i in range(n_particles):
-                for j in range(n_particles):
-                    for k in range(n_particles):
-                        for a in range(3):
-                            for b in range(3):
-                                for c in range(3):
-                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,i,b,k,c,j]
-                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,j,b,i,c,k]
-                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,j,b,k,c,i]
-                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,k,b,i,c,j]
-                                    assert coefficients[a,i,b,j,c,k]==coefficients[a,k,b,j,c,i]
-        self.n_particles = n_particles
-        self.coefficients = coefficients
-    
-    
-    def copy(self):
-        out = ThreeBodyCoupling(self.n_particles, self.coefficients)
-        return out
+            self.validate()
 
-    def __mult__(self, other):
-        out = self.copy()
-        out.coefficients = other * out.coefficients
-        return out
-    
-    def read(self, filename):
-        out = self.copy()
-        out.coefficients = read_from_file(filename, shape=self.shape)
-        return out
-    
-    def __getitem__(self, key):
-        return self.coefficients[key]
+    def validate(self):
+        assert self.coefficients.shape==self.shape
+        for i in range(self.n_particles):
+            for j in range(self.n_particles):
+                for k in range(self.n_particles):
+                    for a in range(3):
+                        for b in range(3):
+                            for c in range(3):
+                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,i,b,k,c,j]
+                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,i,c,k]
+                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,k,c,i]
+                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,i,c,j]
+                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,j,c,i]
 
 
 class ArgonnePotential:
@@ -1274,19 +1206,19 @@ class ArgonnePotential:
         self.spinorbit = SpinOrbitCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,n_particles)))
     
     def read_sigma(self, filename):
-        self.sigma = self.sigma.read(filename)
+        self.sigma.read(filename)
 
     def read_sigmatau(self, filename):
-        self.sigmatau = self.sigmatau.read(filename)
+        self.sigmatau.read(filename)
 
     def read_tau(self, filename):
-        self.tau = self.tau.read(filename)
+        self.tau.read(filename)
 
     def read_coulomb(self, filename):
-        self.coulomb = self.coulomb.read(filename)
+        self.coulomb.read(filename)
 
     def read_spinorbit(self, filename):
-        self.spinorbit = self.spinorbit.read(filename)
+        self.spinorbit.read(filename)
 
 
 
@@ -1363,3 +1295,36 @@ class GFMCPropagatorHS():
                 ket_prop = self.apply_one_sample(ket_prop, potential.coulomb[i,j], x, self._tau_op[i][2], self._tau_op[j][2])
         return ket_prop
     
+    
+
+class Sampler:
+    def __init__(self, potential, propagator, n_samples, seed=1729):
+        self.potential = potential
+        self. propagator = propagator
+        self.n_samples = n_samples
+        self.rng = default_rng(seed=seed)
+        self.controls = {"sigma":True, "sigmatau":True, "tau":True, "coulomb":True, "spinorbit":True}
+        self.n_aux = (9 + 27 + 3 + 1 + 3 + 9) * (self.n_particles**2 + self.n_particles)//2 
+        self.aux_samples = self.rng.standard_normal(size=(self.n_samples, self.n_aux))
+        
+    def bracket(self, bra, ket, aux):
+        ket_prop = ket.copy()
+        if self.controls['sigma']:
+            ket_prop = self.propagator.apply_sigma(ket_prop, self.potential, aux)
+        if self.controls['sigmatau']:
+            ket_prop = self.propagator.apply_sigmatau(ket_prop, self.potential, aux)
+        if self.controls['tau']:
+            ket_prop = self.propagator.apply_tau(ket_prop, self.potential, aux)
+        if self.controls['coulomb']:
+            ket_prop = self.propagator.apply_coulomb(ket_prop, self.potential, aux)
+        if self.controls['spinorbit']:
+            ket_prop = self.propagator.apply_spinorbit(ket_prop, self.potential, aux)
+        return bra * ket_prop
+
+    def run(self, bra, ket, do_parallel=True, n_processes=-1):
+        if do_parallel:
+            with Pool(processes=n_processes) as pool:
+                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, x) for x in self.aux_samples], leave=True)).get()
+        else:
+            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, x) for x in self.aux_samples])))
+            
