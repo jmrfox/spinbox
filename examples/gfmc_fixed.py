@@ -217,15 +217,25 @@ def main():
 
 
 if __name__ == "__main__":
+
     n_particles=2; dt = 0.001
+
     ket = AFDMCSpinIsospinState(n_particles,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
+
     pot = ArgonnePotential(n_particles)
     pot.read_sigma("./data/h2/fort.7701")
-    # print(pot.sigma)
     pot.read_sigmatau("./data/h2/fort.7702")
     pot.read_tau("./data/h2/fort.7703")
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
     hsprop = GFMCPropagatorHS(n_particles, dt)
-    ket_prop = hsprop.apply_sigma(ket,pot,1.0)
+
+    ket_prop = ket.copy()
+    ket_prop = hsprop.apply_sigma(ket_prop,pot,1.0)
+    ket_prop = hsprop.apply_sigmatau(ket_prop,pot,1.0)
+    ket_prop = hsprop.apply_tau(ket_prop,pot,1.0)
+    ket_prop = hsprop.apply_coulomb(ket_prop,pot,1.0)
+    ket_prop = hsprop.apply_spinorbit(ket_prop,pot,1.0)
     print(ket_prop)
+
+    

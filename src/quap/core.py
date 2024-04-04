@@ -2,7 +2,7 @@
 # a quantum mechanics playground
 # jordan fox 2023
 
-__version__ = '0.5'
+__version__ = '0.1.0'
 
 # imports
 import numpy as np
@@ -1051,13 +1051,15 @@ class AFDMCSpinIsospinOperator(Operator):
 # COUPLINGS / POTENTIALS
 
 class Coupling:
-    shape=None
-    def __init__(self, n_particles, coefficients:np.ndarray):
+    def __init__(self, n_particles, shape, file=None):
         self.n_particles = n_particles
-        self.coefficients = coefficients
+        self.shape = shape
+        self.coefficients = np.zeros(shape=self.shape)
+        if file is not None:
+            self.read(file)
 
     def copy(self):
-        out = self.__class__(self.n_particles, self.coefficients)
+        out = self.__class__(self.n_particles, self.shape)
         return out
 
     def __mult__(self, other):
@@ -1083,9 +1085,9 @@ class SigmaCoupling(Coupling):
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (3, self.n_particles, 3, self.n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (3, n_particles, 3, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
 
@@ -1103,9 +1105,9 @@ class SigmaTauCoupling(Coupling):
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (3, n_particles, 3, n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (3, n_particles, 3, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
         
@@ -1122,9 +1124,9 @@ class TauCoupling(Coupling):
     """container class for couplings A^tau (i,j)
     for i, j = 0 .. n_particles - 1
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (n_particles, n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (n_particles, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
 
@@ -1139,9 +1141,9 @@ class CoulombCoupling(Coupling):
     """container class for couplings V^coul (i,j)
     for i, j = 0 .. n_particles - 1
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (n_particles, n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (n_particles, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
 
@@ -1153,32 +1155,29 @@ class CoulombCoupling(Coupling):
 
 
 class SpinOrbitCoupling(Coupling):
-    """container class for couplings g_LS (a,i,j)
-    for i, j = 0 .. n_particles - 1
+    """container class for couplings g_LS (a,i)
+    for i = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (3, n_particles, n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (3, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
 
     def validate(self):
         assert self.coefficients.shape==self.shape
-        for i in range(self.n_particles):
-            for j in range(self.n_particles):
-                for a in range(3):
-                    assert self.coefficients[a,i,j]==self.coefficients[a,j,i]
-    
+        # gLS is a vector. no symmetry to validate.   
+
 
 class ThreeBodyCoupling(Coupling):
     """container class for couplings A(a,i,b,j,c,k)
     for i, j, k = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, coefficients:np.ndarray, validate=True):
-        super().__init__(n_particles, coefficients)
-        self.shape = (3, n_particles, 3, n_particles, 3, n_particles)
+    def __init__(self, n_particles, file=None, validate=True):
+        shape = (3, n_particles, 3, n_particles, 3, n_particles)
+        super().__init__(n_particles, shape, file)
         if validate:
             self.validate()
 
@@ -1199,11 +1198,11 @@ class ThreeBodyCoupling(Coupling):
 
 class ArgonnePotential:
     def __init__(self, n_particles):
-        self.sigma = SigmaCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
-        self.sigmatau = SigmaTauCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,3,n_particles)))
-        self.tau = TauCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
-        self.coulomb = CoulombCoupling(n_particles, coefficients=np.zeros(shape=(n_particles,n_particles)))
-        self.spinorbit = SpinOrbitCoupling(n_particles, coefficients=np.zeros(shape=(3,n_particles,n_particles)))
+        self.sigma = SigmaCoupling(n_particles)
+        self.sigmatau = SigmaTauCoupling(n_particles)
+        self.tau = TauCoupling(n_particles)
+        self.coulomb = CoulombCoupling(n_particles)
+        self.spinorbit = SpinOrbitCoupling(n_particles)
     
     def read_sigma(self, filename):
         self.sigma.read(filename)
@@ -1263,14 +1262,14 @@ class GFMCPropagatorHS():
             for a in range(3):
                 for b in range(3):
                     for c in range(3):
-                        ket_prop = self.apply_one_sample(ket_prop, potential.sigmatau[a,i,b,j,c], x, self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c])
+                        ket_prop = self.apply_one_sample(ket_prop, potential.sigmatau[a,i,b,j], x, self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c])
         return ket_prop
     
     def apply_tau(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
         ket_prop = ket.copy()
         for i,j in self._pair_idx:
             for c in range(3):
-                    ket_prop = self.apply_one_sample(ket_prop, potential.tau[c,i,j], x, self._tau_op[i][c], self._tau_op[j][c])
+                    ket_prop = self.apply_one_sample(ket_prop, potential.tau[i,j], x, self._tau_op[i][c], self._tau_op[j][c])
         return ket_prop
 
     def apply_coulomb(self, ket: GFMCSpinIsospinState, potential: ArgonnePotential, x: float):
@@ -1286,26 +1285,42 @@ class GFMCPropagatorHS():
         ket_prop = ket.copy()
         for i in range(self.n_particles):
             for a in range(3):
-                one_body = - 1.j * potential.spinorbit[a,i,j] * self._sig_op[i][a]
-                ket_prop = one_body.exponentiate
+                one_body = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate() * ket_prop
         for i,j in self._pair_idx:
-                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
-                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
-                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
-                ket_prop = self.apply_one_sample(ket_prop, potential.coulomb[i,j], x, self._tau_op[i][2], self._tau_op[j][2])
+            for a in range(3):
+                for b in range(3):
+                    ket_prop = self.apply_one_sample(ket_prop, -potential.spinorbit[a, i]*potential.spinorbit[b, j], x, self._sig_op[i][a], self._sig_op[j][b])
+        ket_prop = np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * ket_prop
         return ket_prop
     
     
 
 class Sampler:
-    def __init__(self, potential, propagator, n_samples, seed=1729):
+    def __init__(self, potential, propagator, ):
         self.potential = potential
         self. propagator = propagator
+        self.controls = {"sigma":True, "sigmatau":True, "tau":True, "coulomb":True, "spinorbit":True}
+        self.ready_to_run = False
+
+    def setup(self, n_samples, seed=1729):
         self.n_samples = n_samples
         self.rng = default_rng(seed=seed)
-        self.controls = {"sigma":True, "sigmatau":True, "tau":True, "coulomb":True, "spinorbit":True}
-        self.n_aux = (9 + 27 + 3 + 1 + 3 + 9) * (self.n_particles**2 + self.n_particles)//2 
+        print("Setup: ",self.controls)
+        self.n_aux = 0
+        if self.controls['sigma']:
+            self.n_aux += 9
+        if self.controls['sigmatau']:
+            self.n_aux += 27
+        if self.controls['tau']:
+            self.n_aux += 3
+        if self.controls['coulomb']:
+            self.n_aux += 1
+        if self.controls['spinorbit']:
+            self.n_aux += 9
+        self.n_aux *= (self.n_particles**2 + self.n_particles)//2
         self.aux_samples = self.rng.standard_normal(size=(self.n_samples, self.n_aux))
+        self.ready_to_run = True
         
     def bracket(self, bra, ket, aux):
         ket_prop = ket.copy()
@@ -1322,6 +1337,8 @@ class Sampler:
         return bra * ket_prop
 
     def run(self, bra, ket, do_parallel=True, n_processes=-1):
+        if not self.ready_to_run:
+            raise ValueError("The sampler is not ready to run. Did you do .setup()?")
         if do_parallel:
             with Pool(processes=n_processes) as pool:
                 b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, x) for x in self.aux_samples], leave=True)).get()
