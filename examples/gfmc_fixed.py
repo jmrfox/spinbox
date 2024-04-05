@@ -199,28 +199,18 @@ def main():
     pots['asigtau'] = 1*pots['asigtau']
     pots['atau'] = 1*pots['atau']
     pots['vcoul'] = 1*pots['vcoul']
-    pots['gls'] = 0*pots['gls']
+    pots['gls'] = 1*pots['gls']
     bra = ket.dagger()
     
-    # bra, ket = nt.make_test_states(manybody=True)
-    # pots = nt.make_all_potentials(scale=1.0, mode='normal')
-
-    # print("INITIAL KET\n", ket.coefficients)
-    # ket = prop_gauss_fixed(ket, pots, x=1.0)
-    ket = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
-    # print("FINAL KET\n", ket.coefficients)
-    print("norm = ", ket.dagger() * ket)
-    print("bracket = ", bra * ket)
-
-    # print("REFERENCE\n", ket_ref.coefficients)
+    ket_prop = prop_gauss_fixed(ket, pots, x=1.0)
+    # ket_prop = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
+    print("bracket = ", bra * ket_prop)
     
-
-
-if __name__ == "__main__":
-
+def main_new():
     n_particles=2; dt = 0.001
 
     ket = AFDMCSpinIsospinState(n_particles,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
+    bra = ket.copy().dagger()
 
     pot = ArgonnePotential(n_particles)
     pot.read_sigma("./data/h2/fort.7701")
@@ -228,7 +218,7 @@ if __name__ == "__main__":
     pot.read_tau("./data/h2/fort.7703")
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
-    hsprop = GFMCPropagatorHS(n_particles, dt)
+    hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
 
     ket_prop = ket.copy()
     ket_prop = hsprop.apply_sigma(ket_prop,pot,1.0)
@@ -236,6 +226,13 @@ if __name__ == "__main__":
     ket_prop = hsprop.apply_tau(ket_prop,pot,1.0)
     ket_prop = hsprop.apply_coulomb(ket_prop,pot,1.0)
     ket_prop = hsprop.apply_spinorbit(ket_prop,pot,1.0)
-    print(ket_prop)
+    # print(ket_prop)
+    print("bracket = ", bra * ket_prop)
+
+if __name__ == "__main__":
+    print("OLD")
+    main()
+    print("NEW")
+    main_new()
 
     

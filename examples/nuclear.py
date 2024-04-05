@@ -21,12 +21,12 @@ pairs_ij = interaction_indices(n_particles)
 
 def make_test_states(manybody=False):
     """returns one body basis spin-isospin states for testing"""
-    bra = OneBodyBasisSpinIsospinState(n_particles, 'bra', np.zeros(shape=(n_particles, 1, 4))).randomize(100)
-    ket = OneBodyBasisSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
+    bra = AFDMCSpinIsospinState(n_particles, 'bra', np.zeros(shape=(n_particles, 1, 4))).randomize(100)
+    ket = AFDMCSpinIsospinState(n_particles, 'ket', np.zeros(shape=(n_particles, 4, 1))).randomize(101)
     # ket = bra.copy().dagger()
     if manybody:
-        bra = bra.to_many_body_state()
-        ket = ket.to_many_body_state()
+        bra = bra.to_manybody_basis()
+        ket = ket.to_manybody_basis()
     return bra, ket
 
 def make_potential(shape, scale=1.0, rng=None):
@@ -87,32 +87,17 @@ def make_all_potentials(scale=1.0, rng=None, mode='normal'):
     return out
 
 
-def histogram(X, filename, title, bins='auto', range=None):
-    plt.figure(figsize=(7, 5))
-    n = len(X)
-    Xre = np.real(X)
-    Xim = np.imag(X)
-    mre, sre = np.mean(Xre), np.std(Xre)
-    mim, sim = np.mean(Xim), np.std(Xim)
-    plt.hist(Xre, label='Re', alpha=0.5, bins=bins, range=range, color='red')
-    plt.hist(Xim, label='Im', alpha=0.5, bins=bins, range=range, color='blue')
-    title += "\n" + rf"Re : $\mu$ = {mre:.6f}, $\sigma$ = {sre:.6f}, $\epsilon$ = {sre/np.sqrt(n):.6f}"
-    title += "\n" + rf"Im : $\mu$ = {mim:.6f}, $\sigma$ = {sim:.6f}, $\epsilon$ = {sim/np.sqrt(n):.6f}"
-    plt.title(title)
-    plt.legend()
-    plt.tight_layout()
-    plt.savefig(filename)
 
 
 def load_h2(manybody=False, data_dir = './data/h2/'):
     # data_dir = './data/h2/'
     c_i = read_from_file(data_dir+'fort.770', complex=True, shape=(2,4,1))
     c_f = read_from_file(data_dir+'fort.775', complex=True, shape=(2,4,1))
-    ket = OneBodyBasisSpinIsospinState(2, 'ket', c_i) 
-    ket_f = OneBodyBasisSpinIsospinState(2, 'ket', c_f) 
+    ket = AFDMCSpinIsospinState(2, 'ket', c_i) 
+    ket_f = AFDMCSpinIsospinState(2, 'ket', c_f) 
     if manybody:
-        ket = ket.to_many_body_state()
-        ket_f = ket_f.to_many_body_state()
+        ket = ket.to_manybody_basis()
+        ket_f = ket_f.to_manybody_basis()
     asig = read_from_file(data_dir+'fort.7701', shape=(3,2,3,2))
     asigtau = read_from_file(data_dir+'fort.7702', shape=(3,2,3,2))
     atau = read_from_file(data_dir+'fort.7703', shape=(2,2))
