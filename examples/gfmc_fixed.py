@@ -196,10 +196,10 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
 def main():
     ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
-    pots['asigtau'] = 1*pots['asigtau']
-    pots['atau'] = 1*pots['atau']
-    pots['vcoul'] = 1*pots['vcoul']
-    pots['gls'] = 1*pots['gls']
+    pots['asigtau'] = 0*pots['asigtau']
+    pots['atau'] = 0*pots['atau']
+    pots['vcoul'] = 0*pots['vcoul']
+    pots['gls'] = 0*pots['gls']
     bra = ket.dagger()
     
     ket_prop = prop_gauss_fixed(ket, pots, x=1.0)
@@ -218,14 +218,15 @@ def main_new():
     pot.read_tau("./data/h2/fort.7703")
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
+    
     hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
 
     ket_prop = ket.copy()
     ket_prop = hsprop.apply_sigma(ket_prop,pot,1.0)
-    ket_prop = hsprop.apply_sigmatau(ket_prop,pot,1.0)
-    ket_prop = hsprop.apply_tau(ket_prop,pot,1.0)
-    ket_prop = hsprop.apply_coulomb(ket_prop,pot,1.0)
-    ket_prop = hsprop.apply_spinorbit(ket_prop,pot,1.0)
+    # ket_prop = hsprop.apply_sigmatau(ket_prop,pot,1.0)
+    # ket_prop = hsprop.apply_tau(ket_prop,pot,1.0)
+    # ket_prop = hsprop.apply_coulomb(ket_prop,pot,1.0)
+    # ket_prop = hsprop.apply_spinorbit(ket_prop,pot,1.0)
     # print(ket_prop)
     print("bracket = ", bra * ket_prop)
 

@@ -219,26 +219,30 @@ def main_new():
 
     pot = ArgonnePotential(n_particles)
     pot.read_sigma("./data/h2/fort.7701")
-    pot.read_sigmatau("./data/h2/fort.7702")
-    pot.read_tau("./data/h2/fort.7703")
-    pot.read_coulomb("./data/h2/fort.7704")
-    pot.read_spinorbit("./data/h2/fort.7705")
+    # pot.read_sigmatau("./data/h2/fort.7702")
+    # pot.read_tau("./data/h2/fort.7703")
+    # pot.read_coulomb("./data/h2/fort.7704")
+    # pot.read_spinorbit("./data/h2/fort.7705")
+    
     prop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
-
-    g_exact = make_g_exact(n_particles, dt, pot)
-    b_exact = bra * g_exact * ket
-    print('exact = ',b_exact)
-
-    prop = GFMCPropagatorHS(n_particles, dt)
+    # prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True)
+    
     n_samples = 10000
     sam = Sampler(pot, prop)
-    sam.controls = {'sigma': True, 'sigmatau': True, 'tau': True, 'coulomb': True, 'spinorbit': True}
-    b_array = sam.run(bra, ket, n_samples, parallel=True) 
+    sam.controls = {'sigma': True, 'sigmatau': False, 'tau': False, 'coulomb': False, 'spinorbit': False}
+    b_array = sam.run(bra, ket, n_samples, parallel=True)
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
     print(f'new bracket = {b_m} +/- {b_s}')
     # chistogram(b_array, filename='hs_test.pdf', title='HS test')
 
+    g_exact = make_g_exact(n_particles, dt, pot)
+    b_exact = bra * g_exact * ket
+    print('exact = ',b_exact)
+
+    print("ratio = ", np.abs(b_m)/np.abs(b_exact) )
+    print("abs error = ", abs(1-np.abs(b_m)/np.abs(b_exact)) )
+    
 
 if __name__ == "__main__":
    # main()
