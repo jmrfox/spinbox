@@ -8,6 +8,11 @@ tau = [[GFMCSpinIsospinOperator(nt.n_particles).tau(i,a) for a in [0, 1, 2]] for
 # sig[particle][xyz]
 
 
+
+# this script is to check HS vs RBM for a single fixed value of ALL auxiliary fields
+# mainly just for testing the new classes
+
+
 def g_coulomb_pair(dt, v, i, j):
     out = - 0.125 * v * dt * (ident + tau[i][2] + tau[j][2]) 
     return out.exponentiate()
@@ -196,18 +201,20 @@ def prop_rbm_fixed_unnorm(ket, pots, h):
 def main():
     ket, pots, ket_ref = nt.load_h2(manybody=True, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
-    pots['asigtau'] = 0*pots['asigtau']
-    pots['atau'] = 0*pots['atau']
-    pots['vcoul'] = 0*pots['vcoul']
-    pots['gls'] = 0*pots['gls']
+    pots['asigtau'] = 1*pots['asigtau']
+    pots['atau'] = 1*pots['atau']
+    pots['vcoul'] = 1*pots['vcoul']
+    pots['gls'] = 1*pots['gls']
     bra = ket.dagger()
     
-    ket_prop = prop_gauss_fixed(ket, pots, x=1.0)
+    # ket_prop = prop_gauss_fixed(ket, pots, x=1.0)
+    ket_prop = prop_rbm_fixed(ket, pots, h=1.0)
     # ket_prop = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
-    print("bracket = ", bra * ket_prop)
+    # print("bracket = ", bra * ket_prop)
+    return bra * ket_prop
     
 def main_new():
-    n_particles=2; dt = 0.001
+    n_particles=2; dt = nt.dt
 
     ket = AFDMCSpinIsospinState(n_particles,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
     bra = ket.copy().dagger()
@@ -219,21 +226,21 @@ def main_new():
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
     
-    hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
+    # hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
+    hsprop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True)
 
     ket_prop = ket.copy()
-    ket_prop = hsprop.apply_sigma(ket_prop,pot,1.0)
-    # ket_prop = hsprop.apply_sigmatau(ket_prop,pot,1.0)
-    # ket_prop = hsprop.apply_tau(ket_prop,pot,1.0)
-    # ket_prop = hsprop.apply_coulomb(ket_prop,pot,1.0)
-    # ket_prop = hsprop.apply_spinorbit(ket_prop,pot,1.0)
+    ket_prop = hsprop.apply_sigma(ket_prop,pot,[1.0]*9)
+    ket_prop = hsprop.apply_sigmatau(ket_prop,pot,[1.0]*27)
+    ket_prop = hsprop.apply_tau(ket_prop,pot,[1.0]*3)
+    ket_prop = hsprop.apply_coulomb(ket_prop,pot,[1.0])
+    ket_prop = hsprop.apply_spinorbit(ket_prop,pot,[1.0]*9)
     # print(ket_prop)
-    print("bracket = ", bra * ket_prop)
+    # print("bracket = ", bra * ket_prop)
+    return bra * ket_prop
 
 if __name__ == "__main__":
-    print("OLD")
-    main()
-    print("NEW")
-    main_new()
-
+    bold = main()
+    bnew = main_new()
+    print('ratio =', bnew/bold)
     
