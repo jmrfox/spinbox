@@ -1429,24 +1429,271 @@ class GFMCPropagatorRBM():
         return ket_prop
 
 
+class AFDMCPropagatorHS():
+    """ exp( - k op_i op_j )"""
+    def __init__(self, n_particles, dt, include_prefactor=True, mix=True, seed=0):
+        self.n_particles = n_particles
+        self.dt = dt
+        self.include_prefactor = include_prefactor
+        self.mix = mix
+        
+        self._ident = AFDMCSpinIsospinOperator(self.n_particles)
+        self._sig_op = [[self._ident.sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[self._ident.tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._onebody_idx = np.arange(self.n_particles)
+        self._pair_idx = np.array(interaction_indices(self.n_particles))
+        self._aa = np.arange(3)
+        self._bb = np.arange(3)
+        self._cc = np.arange(3)
+        self._rng = np.random.default_rng(seed=seed)
+
+    def _shuf(self, x: np.ndarray):
+        self._rng.shuffle(x)
+        
+    def apply_one_sample(self, ket, k, x, operator_i, operator_j):
+        assert type(ket)==AFDMCSpinIsospinState
+        assert np.isscalar(k)
+        assert np.isscalar(x)
+        arg = csqrt(-k)*x
+        if self.include_prefactor:
+            prefactor = cexp(k)
+        else:
+            prefactor = 1.0
+        gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
+        gj = ccosh(arg) * self._ident + csinh(arg) * operator_j
+        return prefactor * gi * gj * ket
+    
+    def apply_sigma(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list):
+        ket_prop = ket.copy()
+        assert len(aux) >= 9*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._bb)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    k = 0.5 * self.dt * potential.sigma[a,i,b,j]
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a], self._sig_op[j][b])
+                    idx += 1
+        return ket_prop
+    
+    def apply_sigmatau(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential,  aux: list):
+        ket_prop = ket.copy()
+        assert len(aux) >= 27*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._bb)
+            self._shuf(self._cc)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    for c in self._cc:
+                        k = 0.5 * self.dt * potential.sigmatau[a,i,b,j]
+                        ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c])
+                        idx += 1
+        return ket_prop
+    
+    def apply_tau(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list):
+        ket_prop = ket.copy()
+        assert len(aux) >= 3*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                    k = 0.5 * self.dt * potential.tau[i,j]
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._tau_op[i][a], self._tau_op[j][a])
+        return ket_prop
+
+    def apply_coulomb(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list, mix=True):
+        ket_prop = ket.copy()
+        assert len(aux) >= len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
+                k = 0.125 * self.dt * potential.coulomb[i,j]
+                ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._tau_op[i][2], self._tau_op[j][2])
+                idx += 1
+        return ket_prop
+    
+    def apply_spinorbit(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list, mix=True):
+        ket_prop = ket.copy()
+        assert len(aux) >= 9*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._onebody_idx)
+        for i in self._onebody_idx:
+            for a in self._aa:
+                one_body = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate() * ket_prop
+        if self.mix:
+            self._shuf(self._aa); self._shuf(self._bb)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    k = - 0.5 * potential.spinorbit[a, i] * potential.spinorbit[b, j] 
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a], self._sig_op[j][b])
+                    idx += 1
+        ket_prop = np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * ket_prop
+        return ket_prop
+    
+
+class AFDMCPropagatorRBM():
+    """ exp( - k op_i op_j )
+    seed determines mixing
+    """
+    def __init__(self, n_particles, dt, include_prefactor=True, mix=True, seed=0):
+        self.n_particles = n_particles
+        self.dt = dt
+        self.include_prefactor = include_prefactor
+        self.mix = mix
+
+        self._ident = AFDMCSpinIsospinOperator(self.n_particles)
+        self._sig_op = [[self._ident.sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[self._ident.tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._onebody_idx = np.arange(self.n_particles)
+        self._pair_idx = np.array(interaction_indices(self.n_particles))
+        self._aa = np.arange(3)
+        self._bb = np.arange(3)
+        self._cc = np.arange(3)
+        self._rng = np.random.default_rng(seed=seed)
+        
+    def _shuf(self, x: np.ndarray):
+        self._rng.shuffle(x)
+
+    def apply_one_sample(self, ket, k, h, operator_i, operator_j):
+        assert type(ket)==AFDMCSpinIsospinState
+        assert np.isscalar(k)
+        assert np.isscalar(h)
+        if self.include_prefactor:
+            prefactor = cexp(-abs(k))
+        else:
+            prefactor = 1.0
+        W = carctanh(csqrt(ctanh(abs(k))))
+        arg = W*(2*h-1)
+        sgn = k/abs(k)
+        gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
+        gj = ccosh(arg) * self._ident - sgn*csinh(arg) * operator_j
+        return prefactor * gi * gj * ket
+
+
+    def apply_sigma(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list):
+        ket_prop = ket.copy()
+        assert len(aux) >= 9*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._bb)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    k = 0.5 * self.dt * potential.sigma[a,i,b,j]
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a], self._sig_op[j][b])
+                    idx += 1
+        return ket_prop
+    
+    def apply_sigmatau(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: np.ndarray):
+        ket_prop = ket.copy()
+        assert len(aux) >= 27*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._bb)
+            self._shuf(self._cc)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    for c in self._cc:
+                        k = 0.5 * self.dt * potential.sigmatau[a,i,b,j]
+                        ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c])
+                        idx += 1
+        return ket_prop
+    
+    def apply_tau(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: np.ndarray):
+        ket_prop = ket.copy()
+        assert len(aux) >= 3*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                    k = 0.5 * self.dt * potential.tau[i,j]
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._tau_op[i][a], self._tau_op[j][a])
+                    idx += 1
+        return ket_prop
+
+    def apply_coulomb(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: np.ndarray):
+        ket_prop = ket.copy()
+        assert len(aux) >= len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
+                k = 0.125 * self.dt * potential.coulomb[i,j]
+                ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._tau_op[i][2], self._tau_op[j][2])
+                idx += 1
+        return ket_prop
+    
+    def apply_spinorbit(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: np.ndarray):
+        ket_prop = ket.copy()
+        assert len(aux) >= 9*len(self._pair_idx)
+        idx = 0
+        if self.mix:
+            self._shuf(self._aa)
+            self._shuf(self._onebody_idx)
+        for i in self._onebody_idx:
+            for a in self._aa:
+                one_body = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate() * ket_prop
+        if self.mix:
+            self._shuf(self._aa); self._shuf(self._bb)
+            self._shuf(self._pair_idx)
+        for i,j in self._pair_idx:
+            for a in self._aa:
+                for b in self._bb:
+                    k = - 0.5 * potential.spinorbit[a, i] * potential.spinorbit[b, j] 
+                    ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._sig_op[i][a], self._sig_op[j][b])
+                    idx += 1
+        ket_prop = np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * ket_prop
+        return ket_prop
+    
+
+
+
 ########### 
 
 class Integrator():
     def __init__(self, potential: ArgonnePotential, propagator, mix=True):
-        if type(propagator)==GFMCPropagatorHS:
+        if type(propagator) in [GFMCPropagatorHS, AFDMCPropagatorHS]:
             self.method = 'HS'
-        elif type(propagator)==GFMCPropagatorRBM:
+        elif type(propagator) in [GFMCPropagatorRBM, AFDMCPropagatorRBM]:
             self.method = 'RBM'
         self.n_particles = potential.n_particles
         self.potential = potential
         self.propagator = propagator
         self.mix = mix
-        self.controls = {"sigma":False, "sigmatau":False, "tau":False, "coulomb":False, "spinorbit":False}
+        self.controls = {"sigma":False, "sigmatau":False, "tau":False, "coulomb":False, "spinorbit":False, "balanced": True}
         self.is_ready = False
 
-    def setup(self, n_samples: int, balanced=True, seed=1729):
+    def setup(self, n_samples: int, seed=1729):
         self.n_samples = n_samples
-        self.balanced = balanced
         n_aux = 0
         if self.controls['sigma']:
             n_aux += 9
@@ -1463,11 +1710,11 @@ class Integrator():
         rng = np.random.default_rng(seed=seed)
         if self.method=='HS':
             self.aux_fields = rng.standard_normal(size=(n_samples,n_aux))
-            if balanced:
+            if self.controls["balanced"]:
                 self.aux_fields = np.concatenate([self.aux_fields, -self.aux_fields], axis=0)
         elif self.method=='RBM':
             self.aux_fields = rng.integers(0,2,size=(n_samples,n_aux))
-            if balanced:
+            if self.controls["balanced"]:
                 self.aux_fields = np.concatenate([self.aux_fields, np.ones_like(self.aux_fields) - self.aux_fields], axis=0)
         self.is_ready = True
 
@@ -1491,12 +1738,10 @@ class Integrator():
             i+=9
         return bra * ket_prop
 
-    def run(self, bra: GFMCSpinIsospinState, ket: GFMCSpinIsospinState, parallel=True, n_processes=None):
+    def run(self, bra: State, ket: State, parallel=True, n_processes=None):
         if not self.is_ready:
             raise ValueError("Integrator is not ready. Did you run .setup() ?")
         assert (bra.orientation=='bra') and (ket.orientation=='ket')
-        # print(f"Method: {self.method}")
-        # print(f"Balanced: {self.balanced}")    
         if parallel:
             with Pool(processes=n_processes) as pool:
                 b_array = pool.starmap_async(self.bracket, tqdm([(bra.copy(), ket.copy(), aux) for aux in self.aux_fields], leave=True)).get()
