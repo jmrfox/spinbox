@@ -196,8 +196,8 @@ def gauss_brackets_parallel(bra, ket, pot_dict, n_samples=100):
 
 def main():
     n_particles=2
-    dt = 0.001
-    n_samples = 10000
+    dt = 0.01
+    n_samples = 1000
 
     ket = AFDMCSpinIsospinState(n_particles,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
     bra = ket.copy().dagger()
@@ -209,15 +209,15 @@ def main():
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
 
-    # prop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True)
-    prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True)
+    prop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True, mix=False)
+    # prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=True)
     controls = {'sigma': True, 'sigmatau': False, 'tau': False, 'coulomb': False, 'spinorbit': False}
     
     integ = Integrator(pot, prop)
     integ.controls = controls 
     integ.setup(n_samples=n_samples, balanced=True)
     
-    b_array = integ.run(bra, ket, parallel=True)
+    b_array = integ.run(bra, ket, parallel=False)
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
     print(f'bracket = {b_m} +/- {b_s}')
