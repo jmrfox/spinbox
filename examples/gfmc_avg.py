@@ -1,7 +1,10 @@
 from quap import *
-import nuclear as nt
-from quap.extras import chistogram
-from itertools import starmap
+
+n_particles = 2
+dt = 0.001
+n_samples = 1000000
+seed = 2
+
 
 #  this script does the same as mbbprop_averaging except for several values of B_LS and plots
 
@@ -100,10 +103,6 @@ def make_g_exact(n_particles, dt, pot, controls):
 
 
 def main():
-    n_particles=2
-    dt = 0.001
-    n_samples = 10000
-    seed = 1
 
     ket = AFDMCSpinIsospinState(n_particles,'ket', read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
     bra = ket.copy().dagger()
@@ -115,8 +114,8 @@ def main():
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
 
-    prop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True, mix=False, seed=seed)
-    # prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=True)
+    # prop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True, mix=True, seed=seed)
+    prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=True)
     
     integ = Integrator(pot, prop)
     integ.controls["sigma"] = True
@@ -127,7 +126,7 @@ def main():
     integ.controls["balanced"] = True 
     integ.setup(n_samples=n_samples, seed=seed)
     
-    b_array = integ.run(bra, ket, parallel=False)
+    b_array = integ.run(bra, ket, parallel=True)
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
     print(f'bracket = {b_m} +/- {b_s}')

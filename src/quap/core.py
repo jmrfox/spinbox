@@ -1437,9 +1437,9 @@ class AFDMCPropagatorHS():
         self.include_prefactor = include_prefactor
         self.mix = mix
         
-        self._ident = AFDMCSpinIsospinOperator(self.n_particles)
-        self._sig_op = [[self._ident.sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self._tau_op = [[self._ident.tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._ident = np.identity(4)
+        self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+        self._tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
         self._onebody_idx = np.arange(self.n_particles)
         self._pair_idx = np.array(interaction_indices(self.n_particles))
         self._aa = np.arange(3)
@@ -1450,7 +1450,14 @@ class AFDMCPropagatorHS():
     def _shuf(self, x: np.ndarray):
         self._rng.shuffle(x)
         
-    def apply_one_sample(self, ket, k, x, operator_i, operator_j):
+    def apply_onebody(k, i, opi):
+        """exp (- k opi)"""
+        out = AFDMCSpinIsospinOperator(nt.n_particles)
+        out.op_stack[i] = ccosh(k) * ident - csinh(k) * opi
+        return out
+
+    def apply_twobody_sample(self, ket, k, x, operator_i, operator_j):
+        """exp ( sqrt( -kx ) opi opj)"""
         assert type(ket)==AFDMCSpinIsospinState
         assert np.isscalar(k)
         assert np.isscalar(x)
@@ -1459,9 +1466,12 @@ class AFDMCPropagatorHS():
             prefactor = cexp(k)
         else:
             prefactor = 1.0
-        gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
-        gj = ccosh(arg) * self._ident + csinh(arg) * operator_j
-        return prefactor * gi * gj * ket
+        out = AFDMCSpinIsospinOperator(self.n_particles)
+        out.op_stack[i] = ccosh(arg) * self._ident + csinh(arg) * operator_i
+        out.op_stack[j] = ccosh(arg) * self._ident + csinh(arg) * operator_j
+        out.op_stack[i] *= csqrt(prefactor)
+        out.op_stack[j] *= csqrt(prefactor)
+        return out
     
     def apply_sigma(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list):
         ket_prop = ket.copy()
@@ -1519,7 +1529,7 @@ class AFDMCPropagatorHS():
         for i,j in self._pair_idx:
                 one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
                 one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
-                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
+                ket_prop = one_body_i * one_body_j.exponentiate() * ket_prop
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 ket_prop = self.apply_one_sample(ket_prop, k, aux[idx], self._tau_op[i][2], self._tau_op[j][2])
                 idx += 1
@@ -1585,7 +1595,9 @@ class AFDMCPropagatorRBM():
         sgn = k/abs(k)
         gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
         gj = ccosh(arg) * self._ident - sgn*csinh(arg) * operator_j
-        return prefactor * gi * gj * ket
+        gi = gi.scalar_mult(i, csqrt(prefactor))
+        gj = gj.scalar_mult(j, csqrt(prefactor))
+        return gi * gj * ket
 
 
     def apply_sigma(self, ket: AFDMCSpinIsospinState, potential: ArgonnePotential, aux: list):
