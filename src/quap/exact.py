@@ -1,5 +1,10 @@
 from quap import *
 
+# the "exact" propagator calculation must be done in the complete many-body basis
+# we use Pade approximants to do the matrix exponentials
+# the LS term can be represented using a linear approximation or the factorization procedure described in Stefano's thesis
+# here we just use the linear approximation.
+# 
 
 
 class ExactGFMC:
@@ -55,16 +60,19 @@ class ExactGFMC:
         for a in range(3):
             out = (self.ident - 1.j * gls[a, i] * self.sig[i][a]) * out 
         return out
+    
 
     def g_ls_onebody(self, gls_ai, i, a):
         # one-body part of the LS propagator factorization
         out = - 1.j * gls_ai * self.sig[i][a]
         return out.exponentiate()
 
+
     def g_ls_twobody(self, gls_ai, gls_bj, i, j, a, b):
         # two-body part of the LS propagator factorization
         out = 0.5 * gls_ai * gls_bj * self.sig[i][a] * self.sig[j][b]
         return out.exponentiate()
+
 
     def make_g_exact(self, dt, pot, controls):
         # compute exact bracket

@@ -1046,10 +1046,10 @@ class SigmaCoupling(Coupling):
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
 
     def validate(self):
@@ -1060,35 +1060,54 @@ class SigmaCoupling(Coupling):
                     for b in range(3):
                         assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
     
-
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        for i in range(self.n_particles):
+            self.coefficients[:,i,:,i] = 0.0
+            for j in range(i):
+                for a in range(3):
+                    for b in range(3):
+                        self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
+    
 class SigmaTauCoupling(Coupling):
     """container class for couplings A ^ sigma tau (a,i,b,j)
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
         
     def validate(self):
         assert self.coefficients.shape==self.shape
         for i in range(self.n_particles):
+            self.coefficients[:,i,:,i] = 0.0
             for j in range(self.n_particles):
                 for a in range(3):
                     for b in range(3):
                         assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
         
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        for i in range(self.n_particles):
+            for j in range(i):
+                for a in range(3):
+                    for b in range(3):
+                        self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
+    
 
 class TauCoupling(Coupling):
     """container class for couplings A^tau (i,j)
     for i, j = 0 .. n_particles - 1
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (n_particles, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
 
     def validate(self):
@@ -1096,16 +1115,24 @@ class TauCoupling(Coupling):
         for i in range(self.n_particles):
             for j in range(self.n_particles):
                 assert self.coefficients[i,j]==self.coefficients[j,i]
+
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        for i in range(self.n_particles):
+            self.coefficients[i,i] = 0.0
+            for j in range(i):
+                self.coefficients[i,j]=self.coefficients[j,i]    
 
 
 class CoulombCoupling(Coupling):
     """container class for couplings V^coul (i,j)
     for i, j = 0 .. n_particles - 1
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (n_particles, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
 
     def validate(self):
@@ -1113,6 +1140,15 @@ class CoulombCoupling(Coupling):
         for i in range(self.n_particles):
             for j in range(self.n_particles):
                 assert self.coefficients[i,j]==self.coefficients[j,i]
+
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        for i in range(self.n_particles):
+            self.coefficients[i,i] = 0.0
+            for j in range(i):
+                self.coefficients[i,j]=self.coefficients[j,i]    
+
 
 
 class SpinOrbitCoupling(Coupling):
@@ -1120,15 +1156,19 @@ class SpinOrbitCoupling(Coupling):
     for i = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (3, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
 
     def validate(self):
         assert self.coefficients.shape==self.shape
         # gLS is a vector. no symmetry to validate.   
+
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
 
 
 class ThreeBodyCoupling(Coupling):
@@ -1136,10 +1176,10 @@ class ThreeBodyCoupling(Coupling):
     for i, j, k = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
-    def __init__(self, n_particles, file=None, validate=True):
+    def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if validate:
+        if file is not None:
             self.validate()
 
     def validate(self):
@@ -1150,11 +1190,25 @@ class ThreeBodyCoupling(Coupling):
                     for a in range(3):
                         for b in range(3):
                             for c in range(3):
+                                assert self.coefficients[a,i,b,i,c,i]==0.0
+                                assert self.coefficients[a,i,b,i,c,k]==0.0
+                                assert self.coefficients[a,i,b,j,c,i]==0.0
+                                assert self.coefficients[a,i,b,j,c,j]==0.0
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,i,b,k,c,j]
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,i,c,k]
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,k,c,i]
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,i,c,j]
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,j,c,i]
+
+    def generate(self, scale, seed=0):
+        rng = np.random.default_rng(seed=seed)
+        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        for i in range(self.n_particles):
+            self.coefficients[:,i,:,i,:,i] = 0.0
+            for j in range(i):
+                self.coefficients[:,i,:,i,:,j] = 0.0
+                self.coefficients[:,i,:,i,:,j] = 0.0    
+
 
 
 class ArgonnePotential:

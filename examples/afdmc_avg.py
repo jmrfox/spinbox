@@ -3,8 +3,8 @@ from quap.exact import ExactGFMC
 
 n_particles = 2
 dt = 0.001
-n_samples = int(10**6)
-seed = 2
+n_samples = 10000
+seed = 0
 
 
 def main():
