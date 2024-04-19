@@ -13,7 +13,7 @@ from numpy.random import default_rng
 from scipy.linalg import expm
 from functools import reduce
 
-# from dataclasses import dataclass
+from dataclasses import dataclass
 
 import itertools
 from multiprocessing.pool import Pool
@@ -1754,8 +1754,31 @@ class AFDMCPropagatorRBM():
 
 ########### 
 
+# @dataclass
+# class Controls:
+#     n_samples: int
+#     balanced = True
+#     mix = True
+#     sigma = False
+#     sigmatau = False
+#     tau = False
+#     coulomb = False
+#     spinorbit = False
+
+#     def __str__(self):
+#         out = "CONTROLS:\n"
+#         out += f"Balanced: {self.balanced}\n"
+#         out += f"Mix: {self.mix}\n"
+#         out += f"Sigma: {self.sigma}\n"
+#         out += f"SigmaTau: {self.sigmatau}\n"
+#         out += f"Tau: {self.tau}\n"
+#         out += f"Coulomb: {self.coulomb}\n"
+#         out += f"Spin-orbit: {self.spinorbit}\n"
+#         return out
+        
+
 class Integrator():
-    def __init__(self, potential: ArgonnePotential, propagator, mix=True):
+    def __init__(self, potential: ArgonnePotential, propagator):
         if type(propagator) in [GFMCPropagatorHS, AFDMCPropagatorHS]:
             self.method = 'HS'
         elif type(propagator) in [GFMCPropagatorRBM, AFDMCPropagatorRBM]:
@@ -1763,12 +1786,12 @@ class Integrator():
         self.n_particles = potential.n_particles
         self.potential = potential
         self.propagator = propagator
-        self.mix = mix
-        self.controls = {"sigma":False, "sigmatau":False, "tau":False, "coulomb":False, "spinorbit":False, "balanced": True}
         self.is_ready = False
 
-    def setup(self, n_samples: int, seed=1729):
-        self.n_samples = n_samples
+    def setup(self, n_samples, balance=True, mix=True, seed=1729,
+              sigma=False, sigmatau=False, tau=False, coulomb=False, spinorbit=False):
+        self.controls={"balance":balance, "mix":mix, "seed":seed, "sigma":sigma, "sigmatau":sigmatau, 
+                       "tau":tau, "coulomb":coulomb, "spinorbit":spinorbit}
         n_aux = 0
         if self.controls['sigma']:
             n_aux += 9
@@ -1782,7 +1805,7 @@ class Integrator():
             n_aux += 9
         n_aux = n_aux * len(self.propagator._pair_idx)
         
-        rng = np.random.default_rng(seed=seed)
+        rng = np.random.default_rng(seed=self.controls["seed"])
         if self.method=='HS':
             self.aux_fields = rng.standard_normal(size=(n_samples,n_aux))
             if self.controls["balanced"]:
@@ -1792,6 +1815,7 @@ class Integrator():
             if self.controls["balanced"]:
                 self.aux_fields = np.concatenate([self.aux_fields, np.ones_like(self.aux_fields) - self.aux_fields], axis=0)
         self.is_ready = True
+        return self.controls
 
     def bracket(self, bra, ket, aux_fields):
         ket_prop = ket.copy()
