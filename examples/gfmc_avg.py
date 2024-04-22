@@ -41,6 +41,8 @@ def main():
     print('exact = ',b_exact)
     print("ratio = ", np.abs(b_m)/np.abs(b_exact) )
     print("abs error = ", abs(1-np.abs(b_m)/np.abs(b_exact)) )
+    print("dt^2 = ", dt**2)
+    print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
    # chistogram(b_array, filename='hs_test.pdf', title='HS test')
 
