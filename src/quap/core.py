@@ -1492,7 +1492,7 @@ class AFDMCPropagatorHS():
                 k = 0.5 * self.dt * potential.coulomb[i,j]
                 ket_prop = self.apply_onebody(ket_prop, k, i, self._tau[2])
                 ket_prop = self.apply_onebody(ket_prop, k, j, self._tau[2])
-                ket_prop = self.apply_twobody_sample(0.25*ket_prop, k, aux[idx], self._tau[2], self._tau[2])
+                ket_prop = self.apply_twobody_sample(ket_prop, 0.25*k, aux[idx], self._tau[2], self._tau[2])
                 idx += 1
         return ket_prop
     
@@ -1628,7 +1628,7 @@ class AFDMCPropagatorRBM():
                 k = 0.5 * self.dt * potential.coulomb[i,j]
                 ket_prop = self.apply_onebody(ket_prop, k, i, self._tau[2])
                 ket_prop = self.apply_onebody(ket_prop, k, j, self._tau[2])
-                ket_prop = self.apply_twobody_sample(0.25*ket_prop, k, aux[idx], self._tau[2], self._tau[2])
+                ket_prop = self.apply_twobody_sample(ket_prop, 0.25*k, aux[idx], self._tau[2], self._tau[2])
                 idx += 1
         return ket_prop
     
@@ -1663,8 +1663,7 @@ class AFDMCPropagatorRBM():
 
 # @dataclass
 # class Controls:
-#     n_samples: int
-#     balanced = True
+#     balance = True
 #     mix = True
 #     sigma = False
 #     sigmatau = False
@@ -1674,7 +1673,7 @@ class AFDMCPropagatorRBM():
 
 #     def __str__(self):
 #         out = "CONTROLS:\n"
-#         out += f"Balanced: {self.balanced}\n"
+#         out += f"Balance: {self.balance}\n"
 #         out += f"Mix: {self.mix}\n"
 #         out += f"Sigma: {self.sigma}\n"
 #         out += f"SigmaTau: {self.sigmatau}\n"
@@ -1682,7 +1681,110 @@ class AFDMCPropagatorRBM():
 #         out += f"Coulomb: {self.coulomb}\n"
 #         out += f"Spin-orbit: {self.spinorbit}\n"
 #         return out
+
+
+
+class ExactGFMC:
+    """the "exact" propagator calculation must be done in the complete many-body basis
+    we use Pade approximants for matrix exponentials
+    the LS term can be represented using a linear approximation or the factorization procedure described in Stefano's thesis
+    """
+    def __init__(self,n_particles):
+        self.n_particles = n_particles
+        self.ident = GFMCSpinIsospinOperator(n_particles)
+        self.sig = [[GFMCSpinIsospinOperator(n_particles).sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        self.tau = [[GFMCSpinIsospinOperator(n_particles).tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+
+    def g_pade_sig(self, dt, asig, i, j):
+        out = GFMCSpinIsospinOperator(self.n_particles).zeros()
+        for a in range(3):
+            for b in range(3):
+                out += asig[a, i, b, j] * self.sig[i][a] * self.sig[j][b]
+        out = -0.5 * dt * out
+        return out.exponentiate()
+
+
+    def g_pade_sigtau(self, dt, asigtau, i, j):
+        out = GFMCSpinIsospinOperator(self.n_particles).zeros()
+        for a in range(3):
+            for b in range(3):
+                for c in range(3):
+                    out += asigtau[a, i, b, j] * self.sig[i][a] * self.sig[j][b] * self.tau[i][c] * self.tau[j][c]
+        out = -0.5 * dt * out
+        return out.exponentiate()
+
+
+    def g_pade_tau(self, dt, atau, i, j):
+        out = GFMCSpinIsospinOperator(self.n_particles).zeros()
+        for c in range(3):
+            out += atau[i, j] * self.tau[i][c] * self.tau[j][c]
+        out = -0.5 * dt * out
+        return out.exponentiate()
+
+
+    def g_pade_coul(self, dt, v, i, j):
+        out = self.ident + self.tau[i][2] + self.tau[j][2] + self.tau[i][2] * self.tau[j][2]
+        out = -0.125 * v[i, j] * dt * out
+        return out.exponentiate()
+
+
+    def g_coulomb_onebody(self, dt, v, i):
+        """just the one-body part of the expanded coulomb propagator
+        for use along with auxiliary field propagators"""
+        out = - 0.125 * v * dt * self.tau[i][2]
+        return out.exponentiate()
+
+
+    def g_ls_linear(self, gls, i):
+        # linear approx to LS
+        out = GFMCSpinIsospinOperator(self.n_particles)
+        for a in range(3):
+            out = (self.ident - 1.j * gls[a, i] * self.sig[i][a]) * out 
+        return out
+    
+
+    def g_ls_onebody(self, gls, i, a):
+        # one-body part of the LS propagator factorization
+        out = - 1.j * gls[a,i] * self.sig[i][a]
+        return out.exponentiate()
+
+
+    def g_ls_twobody(self, gls, i, j, a, b):
+        # two-body part of the LS propagator factorization
+        out = 0.5 * gls[a,i] * gls[b,j] * self.sig[i][a] * self.sig[j][b]
+        return out.exponentiate()
+
+
+    def make_g_exact(self, dt, potential, controls, ls_factored=False):
+        # compute exact bracket
+        g_exact = self.ident.copy()
+        pairs_ij = interaction_indices(self.n_particles)
+        for i,j in pairs_ij:
+            if controls['sigma']:
+                g_exact = self.g_pade_sig(dt, potential.sigma, i, j) * g_exact
+            if controls['sigmatau']:
+                g_exact = self.g_pade_sigtau(dt, potential.sigmatau, i, j) * g_exact 
+            if controls['tau']:
+                g_exact = self.g_pade_tau(dt, potential.tau, i, j) * g_exact
+            if controls['coulomb']:
+                g_exact = self.g_pade_coul(dt, potential.coulomb, i, j) * g_exact
         
+        if controls['spinorbit']:
+            if not ls_factored: # do linear approximation
+                for i in range(self.n_particles):
+                    g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+            else: #do LS factorized into one- and two-body
+                for i in range(self.n_particles):
+                    for a in range(3):
+                        g_exact = self.g_ls_onebody(potential.spinorbit, i, a) * g_exact
+                for i in range(self.n_particles):
+                    for j in range(self.n_particles):
+                        for a in range(3):
+                            for b in range(3):
+                                g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b) * g_exact
+        return g_exact
+    
+
 
 class Integrator():
     def __init__(self, potential: ArgonnePotential, propagator):
@@ -1715,11 +1817,11 @@ class Integrator():
         rng = np.random.default_rng(seed=self.controls["seed"])
         if self.method=='HS':
             self.aux_fields = rng.standard_normal(size=(n_samples,n_aux))
-            if self.controls["balanced"]:
+            if self.controls["balance"]:
                 self.aux_fields = np.concatenate([self.aux_fields, -self.aux_fields], axis=0)
         elif self.method=='RBM':
             self.aux_fields = rng.integers(0,2,size=(n_samples,n_aux))
-            if self.controls["balanced"]:
+            if self.controls["balance"]:
                 self.aux_fields = np.concatenate([self.aux_fields, np.ones_like(self.aux_fields) - self.aux_fields], axis=0)
         self.is_ready = True
         return self.controls
@@ -1756,3 +1858,9 @@ class Integrator():
         b_array = np.array(b_array).flatten()
         return b_array
             
+
+    def exact(self, bra: State, ket: State):
+        ex = ExactGFMC(self.n_particles)
+        g_exact = ex.make_g_exact(self.propagator.dt, self.potential, self.controls)
+        b_exact = bra * g_exact * ket
+        return b_exact

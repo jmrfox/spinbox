@@ -1,10 +1,9 @@
 from quap import *
-from quap.exact import ExactGFMC
 
 n_particles = 2
 dt = 0.001
 n_samples = 10000
-seed = 2
+seed = 11
 
 def main():
 
@@ -22,27 +21,30 @@ def main():
     prop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=True)
     
     integ = Integrator(pot, prop)
-    integ.controls["sigma"] = True
-    integ.controls["sigmatau"] = False
-    integ.controls["tau"] = False
-    integ.controls["coulomb"] = False
-    integ.controls["spinorbit"] = False
-    integ.controls["balanced"] = True 
-    integ.setup(n_samples=n_samples, seed=seed)
+    integ.setup(n_samples=n_samples, 
+                balance=True,
+                mix=True,
+                seed=seed,
+                sigma=True,
+                sigmatau=True,
+                tau=True,
+                coulomb=False,
+                spinorbit=False)
     
     b_array = integ.run(bra, ket, parallel=True)
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
-    print(f'bracket = {b_m} +/- {b_s}')
-    # chistogram(b_array, filename='hs_test.pdf', title='HS test')
+    b_exact = integ.exact(bra, ket)
 
-    ex = ExactGFMC(n_particles)
-    g_exact = ex.make_g_exact(n_particles, dt, pot, integ.controls)
-    b_exact = bra * g_exact * ket
+    print("<bra|ket> = ", bra * ket)
+    print(f'<bra|G|ket> = {b_m} +/- {b_s}')
     print('exact = ',b_exact)
-
     print("ratio = ", np.abs(b_m)/np.abs(b_exact) )
     print("abs error = ", abs(1-np.abs(b_m)/np.abs(b_exact)) )
+    print("dt^2 = ", dt**2)
+    print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
+
+   # chistogram(b_array, filename='hs_test.pdf', title='HS test')
 
 if __name__ == "__main__":
     main()
