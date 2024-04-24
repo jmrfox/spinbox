@@ -4,23 +4,6 @@
 
 __version__ = '0.1.0'
 
-# 4/23/2024 changelog
-#
-# replace orientation attribute (a string, 'bra' or 'ket') with new attribute "ketwise"
-# if ketwise=True, it's a ket, else, it's a bra
-#
-# cut down on unnecessary asserts. replace with try/except if necessary.
-#
-# classes have a .copy() method to be used for __add__, __mult__, etc 
-# but otherwise allow for in-place operations.
-# e.g., c = a + b , when valid, uses a .copy() method
-# but methods like .scalar_mult() and .apply_onebody_operator() need not use .copy()
-# e.g., o = Operator(); o.apply_sigma(i,a); 
-# this should result in sigma(i,a) * o
-# the apply methods should also return the new modified object
-#
-# ideally every method should return something. if in-place, return self
-
 # imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,8 +21,8 @@ from tqdm import tqdm
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
-# numpy.sqrt will raise warning (NOT an error) if you give it a negative number, so i'm not taking any chances
-# these use numpy instead of math to be safe with ndarrays
+# numpy.sqrt will raise warning (NOT error) if you give it a negative number, so i'm not taking any chances
+# these nuse numpy instead of math to be safe with ndarrays
 
 def csqrt(x):
     """Complex square root
@@ -81,7 +64,7 @@ def carctanh(x):
     """Complex incerse hyp. tangent
     """
     return np.arctanh(x, dtype=complex)
-    
+
 
 def interaction_indices(n, m = 2):
     """ returns a list of all possible m-plets of n objects (labelled 0 to n-1)
@@ -169,6 +152,15 @@ def pmat(x, heatmap=False, lims=None, print_zeros=False):
         plt.show()
 
 
+def scalar(x: np.ndarray):
+    """turns a 1-element array  x into an actual scalar
+    """
+    # assert type(x) in [list, np.ndarray]
+    assert list(x.shape) == [1 for _ in range(len(x.shape))]
+    out = x.flatten()[0]
+    return out
+
+
 # SHARED BASE CLASSES
 
 class State:
@@ -177,9 +169,11 @@ class State:
     should not be instantiated
     """
 
-    def __init__(self, n_particles: int, ketwise=True):
+    def __init__(self, n_particles: int, orientation: str):
+        assert isinstance(n_particles, int)
         self.n_particles = n_particles
-        self.ketwise = ketwise
+        assert orientation in ['bra', 'ket']
+        self.orientation = orientation
 
 class Operator:
     """
@@ -188,16 +182,18 @@ class Operator:
     """
 
     def __init__(self, n_particles: int):
+        assert isinstance(n_particles, int)
         self.n_particles = n_particles
 
 # MANY-BODY BASIS CLASSES
 
 class GFMCSpinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
-        super().__init__(n_particles, ketwise)
+    def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
+        super().__init__(n_particles, orientation)
         self.dim = 2 ** self.n_particles
-        ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
-        bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
+        assert type(coefficients) == np.ndarray
+        ket_condition = (coefficients.shape == (self.dim, 1)) and (orientation == 'ket')
+        bra_condition = (coefficients.shape == (1, self.dim)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
             raise ValueError("Inconsistent initialization of state vector. \n\
                              Did you get the shape right?")
@@ -206,7 +202,7 @@ class GFMCSpinState(State):
         self.friendly_operator = GFMCSpinOperator
 
     def copy(self):
-        return GFMCSpinState(self.n_particles, self.coefficients.copy(), self.ketwise)
+        return GFMCSpinState(self.n_particles, self.orientation, self.coefficients.copy())
     
     def __add__(self, other):
         out = self.copy()
@@ -219,22 +215,22 @@ class GFMCSpinState(State):
         return out
 
     def __mul__(self, other):
-        if self.ketwise:  # |self><other|
-            assert not other.ketwise
-            out = GFMCSpinOperator(self.n_particles)
-            out.matrix = np.matmul(self.coefficients, other.coefficients)
-            return out
-        else:  # <self|other> or <self|operator
+        if self.orientation == 'bra':  # inner product
             if isinstance(other, GFMCSpinState):
-                assert other.ketwise
-                out = float(np.dot(self.coefficients, other.coefficients))
+                assert other.orientation == 'ket'
+                out = np.dot(self.coefficients, other.coefficients)
             elif isinstance(other, GFMCSpinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients, other.matrix)
             else:
                 raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out
-    
+        elif self.orientation == 'ket':  # outer product
+            assert other.orientation == 'bra'
+            out = GFMCSpinOperator(self.n_particles)
+            out.matrix = np.matmul(self.coefficients, other.coefficients)
+            return out
+
     def __rmul__(self, other):
         if np.isscalar(other):
             out = self.copy()
@@ -244,34 +240,34 @@ class GFMCSpinState(State):
         return out
 
     def dagger(self):
-        """ copy-based conjugate transpose """
         out = self.copy()
-        out.coefficients = self.coefficients.conj().T
-        out.ketwise = not self.ketwise
+        if self.orientation == 'bra':
+            new_orientation = 'ket'
+        elif self.orientation == 'ket':
+            new_orientation = 'bra'
+        out = GFMCSpinState(self.n_particles, new_orientation, self.coefficients.conj().T)
         return out
         
     def __str__(self):
-        orient = 'ket'
-        if not self.ketwise:
-            orient = 'bra'
-        out = [f'{self.__class__.__name__} {orient} of {self.n_particles} particles:']
+        out = [f'{self.__class__.__name__} {self.orientation} of {self.n_particles} particles:']
         out += [str(self.coefficients)]
         return "\n".join(out)
 
     def randomize(self, seed):
-        """ in-place randomize """
+        out = self.copy()
         rng = np.random.default_rng(seed=seed)
-        self.coefficients = rng.standard_normal(size=self.coefficients.shape)
-        self.coefficients /= np.linalg.norm(self.coefficients)
-        return self
+        out.coefficients = rng.standard_normal(size=self.coefficients.shape)
+        out.coefficients /= np.linalg.norm(out.coefficients)
+        return out
     
 
 class GFMCSpinIsospinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
-        super().__init__(n_particles, ketwise)
+    def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
+        super().__init__(n_particles, orientation)
         self.dim = 4 ** self.n_particles
-        ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
-        bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
+        assert type(coefficients) == np.ndarray
+        ket_condition = (coefficients.shape == (self.dim, 1)) and (orientation == 'ket')
+        bra_condition = (coefficients.shape == (1, self.dim)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
             raise ValueError('Inconsistent initialization of state vector')
         else:
@@ -279,7 +275,7 @@ class GFMCSpinIsospinState(State):
         self.friendly_operator = GFMCSpinIsospinOperator
     
     def copy(self):
-        return GFMCSpinIsospinState(self.n_particles, self.coefficients.copy(), self.ketwise)
+        return GFMCSpinIsospinState(self.n_particles, self.orientation, self.coefficients.copy())
     
     def __add__(self, other):
         out = self.copy()
@@ -292,21 +288,21 @@ class GFMCSpinIsospinState(State):
         return out
 
     def __mul__(self, other):
-        if self.ketwise: # |self><other|
-            assert not other.ketwise
-            out = GFMCSpinIsospinOperator(self.n_particles)
-            out.matrix = np.matmul(self.coefficients, other.coefficients)
-            return out
-        else: # <self|other> or <self|*operator
+        if self.orientation == 'bra':  # inner product
             if isinstance(other, GFMCSpinIsospinState):
-                assert other.ketwise
-                out = float(np.dot(self.coefficients, other.coefficients))
+                assert other.orientation == 'ket'
+                out = np.dot(self.coefficients, other.coefficients)
             elif isinstance(other, GFMCSpinIsospinOperator):
                 out = self.copy()
                 out.coefficients = np.matmul(self.coefficients, other.matrix)
             else:
                 raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out 
+            return out
+        elif self.orientation == 'ket':  # outer product
+            assert other.orientation == 'bra'
+            out = GFMCSpinIsospinOperator(self.n_particles)
+            out.matrix = np.matmul(self.coefficients, other.coefficients)
+            return out
 
     def __rmul__(self, other):
         if np.isscalar(other):
@@ -317,25 +313,26 @@ class GFMCSpinIsospinState(State):
         return out
 
     def dagger(self):
-        """ copy-based conjugate transpose """
         out = self.copy()
-        out.coefficients = self.coefficients.conj().T
-        out.ketwise = not self.ketwise
+        if self.orientation == 'bra':
+            new_orientation = 'ket'
+        elif self.orientation == 'ket':
+            new_orientation = 'bra'
+        out = GFMCSpinIsospinState(self.n_particles, new_orientation, self.coefficients.conj().T)
         return out
         
     def __str__(self):
-        orient = 'ket'
-        if not self.ketwise:
-            orient = 'bra'
-        out = [f'{self.__class__.__name__} {orient} of {self.n_particles} particles:']
+        out = [f'{self.__class__.__name__} {self.orientation} of {self.n_particles} particles:']
         out += [str(self.coefficients)]
         return "\n".join(out)
     
     def randomize(self, seed):
+        out = self.copy()
         rng = np.random.default_rng(seed=seed)
-        self.coefficients = rng.standard_normal(size=self.coefficients.shape)
-        self.coefficients /= np.linalg.norm(self.coefficients)
-        return self
+        out.coefficients = rng.standard_normal(size=self.coefficients.shape)
+        out.coefficients /= np.linalg.norm(out.coefficients)
+        return out
+
 
 class GFMCSpinOperator(Operator):
     def __init__(self, n_particles: int):
@@ -349,22 +346,24 @@ class GFMCSpinOperator(Operator):
         return out
     
     def __add__(self, other):
+        assert isinstance(other, GFMCSpinOperator)
         out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
+        assert isinstance(other, GFMCSpinOperator)
         out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
     def __mul__(self, other):
-        if isinstance(other, GFMCSpinState): # operator * |ket>
-            assert other.ketwise
+        if isinstance(other, GFMCSpinState):
+            assert other.orientation == 'ket'
             out = other.copy()
             out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
             return out
-        elif isinstance(other, GFMCSpinOperator): # op * op
+        elif isinstance(other, GFMCSpinOperator):
             out = other.copy()
             out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
             return out
@@ -387,36 +386,53 @@ class GFMCSpinOperator(Operator):
         out += "Re=\n" + re + "\nIm:\n" + im
         return out
 
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
+    def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
+        assert type(matrix) == np.ndarray and matrix.shape == (2,2)
         obo = [np.identity(2, dtype=complex) for _ in range(self.n_particles)]
         obo[particle_index] = matrix
         obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
-        return self
-        
-    def apply_sigma(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
-    
+        out = self.copy()
+        out.matrix = np.matmul(obo, out.matrix, dtype=complex)
+        return out
+
+    def sigma(self, particle_index: int, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
+
+    def scalar_mult(self, particle_index: int, b):
+        """
+        multiply one particle by a scalar.
+        To multiply the whole state by a scalar, just do b * ManyBodySpinState.
+        :param particle_index:
+        :param b:
+        :return:
+        """
+        assert np.isscalar(b)
+        out = b * self.copy()
+        return out
+
     def exchange(self, particle_a: int, particle_b: int):
-        """ in-place exchange using the sigma dot sigma rule"""
         P_1 = GFMCSpinOperator(n_particles=self.n_particles)
-        P_x = P_1.copy(); P_y = P_1.copy(); P_z = P_1.copy()
-        P_x.apply_sigma(particle_a, 0).apply_sigma(particle_b, 0)
-        P_y.apply_sigma(particle_a, 1).apply_sigma(particle_b, 1)
-        P_z.apply_sigma(particle_a, 2).apply_sigma(particle_b, 2)
-        self = 0.5 * (P_x + P_y + P_z + P_1) * self
-        return self
+        P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
+        P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
+        P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
+        P = (P_x + P_y + P_z + P_1)
+        out = 0.5 * P * self.copy()
+        return out
 
-    def exp(self):
-        self.matrix = expm(self.matrix)
-        return self
+    def exponentiate(self):
+        out = self.copy()
+        out.matrix = expm(out.matrix)
+        return out
 
-    def zero(self):
-        self.matrix = np.zeros_like(self.matrix)
-        return self
-        
+    def zeros(self):
+        out = self.copy()
+        out.matrix = np.zeros_like(out.matrix)
+        return out
+
     def dagger(self):
-        """ copy-based conj transpose"""
         out = self.copy()
         out.matrix = self.matrix.conj().T
         return out
@@ -434,18 +450,20 @@ class GFMCSpinIsospinOperator(Operator):
         return out
     
     def __add__(self, other):
+        assert isinstance(other, GFMCSpinIsospinOperator)
         out = self.copy()
         out.matrix = self.matrix + other.matrix
         return out
 
     def __sub__(self, other):
+        assert isinstance(other, GFMCSpinIsospinOperator)
         out = self.copy()
         out.matrix = self.matrix - other.matrix
         return out
 
     def __mul__(self, other):
         if isinstance(other, GFMCSpinIsospinState):
-            assert other.ketwise
+            assert other.orientation == 'ket'
             out = other.copy()
             out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
             return out
@@ -472,45 +490,59 @@ class GFMCSpinIsospinOperator(Operator):
         out += "Re=\n" + re + "\nIm:\n" + im
         return out
 
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+    def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+        assert type(isospin_matrix) == np.ndarray and isospin_matrix.shape == (2, 2)
+        assert type(spin_matrix) == np.ndarray and spin_matrix.shape == (2, 2)
         obo = [np.identity(4, dtype=complex) for _ in range(self.n_particles)]
         obo[particle_index] = repeated_kronecker_product([isospin_matrix, spin_matrix])
         obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
-        return self
-        
-    def apply_sigma(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex),
+        out = self.copy()
+        out.matrix = np.matmul(obo, self.matrix, dtype=complex)
+        return out
+
+    def sigma(self, particle_index: int, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex),
                                           spin_matrix=pauli(dimension))
+        return out
 
-    def apply_tau(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),
+    def tau(self, particle_index: int, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
-        
-    
+        return out
+
+    def scalar_mult(self, particle_index: int, b):
+        assert np.isscalar(b)
+        out = b * self.copy()
+        return out
+
     def exchange(self, particle_a: int, particle_b: int):
-        """ in-place exchange using the sigma dot sigma rule"""
         P_1 = GFMCSpinIsospinOperator(n_particles=self.n_particles)
-        P_x = P_1.copy(); P_y = P_1.copy(); P_z = P_1.copy()
-        P_x.apply_sigma(particle_a, 0).apply_sigma(particle_b, 0)
-        P_y.apply_sigma(particle_a, 1).apply_sigma(particle_b, 1)
-        P_z.apply_sigma(particle_a, 2).apply_sigma(particle_b, 2)
-        self = 0.5 * (P_x + P_y + P_z + P_1) * self
-        return self
+        P_x = P_1.copy().sigma(particle_a, 'x').sigma(particle_b, 'x')
+        P_y = P_1.copy().sigma(particle_a, 'y').sigma(particle_b, 'y')
+        P_z = P_1.copy().sigma(particle_a, 'z').sigma(particle_b, 'z')
+        P = (P_x + P_y + P_z + P_1)
+        out = 0.5 * P * self.copy()
+        return out
 
-    def exp(self):
-        self.matrix = expm(self.matrix)
-        return self
+    def exponentiate(self):
+        out = self.copy()
+        out.matrix = expm(out.matrix)
+        return out
 
-    def zero(self):
-        self.matrix = np.zeros_like(self.matrix)
-        return self
-        
+    def zeros(self):
+        out = self.copy()
+        out.matrix = np.zeros_like(out.matrix)
+        return out
+
     def dagger(self):
-        """ copy-based conj transpose"""
         out = self.copy()
         out.matrix = self.matrix.conj().T
         return out
+
 
 
 
@@ -518,7 +550,7 @@ class GFMCSpinIsospinOperator(Operator):
         
 
 class AFDMCSpinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
+    def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         """an array of single particle spinors
 
         Orientation must be consistent with array shape!
@@ -527,15 +559,16 @@ class AFDMCSpinState(State):
 
         Args:
             n_particles (int): number of single particle states
+            orientation (str): 'bra' or 'ket'
             coefficients (np.ndarray): array of complex numbers
-            ketwise (bool): True for ket, False for bra
 
         Raises:
             ValueError: _description_
         """
-        super().__init__(n_particles, ketwise)
-        ket_condition = (coefficients.shape == (n_particles, 2, 1)) and ketwise
-        bra_condition = (coefficients.shape == (n_particles, 1, 2)) and not ketwise
+        super().__init__(n_particles, orientation)
+        assert type(coefficients) == np.ndarray
+        ket_condition = (coefficients.shape == (n_particles, 2, 1)) and (orientation == 'ket')
+        bra_condition = (coefficients.shape == (n_particles, 1, 2)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
             ValueError("Inconsistent initialization of state vector. \n\
                              Did you get the shape right?")
@@ -545,13 +578,13 @@ class AFDMCSpinState(State):
         
 
     def __add__(self, other):
-        raise SyntaxError('AFDMC states do not add')
+        raise SyntaxError('You should probably not be adding a AFDMC states')
     
     def __sub__(self, other):
-        raise SyntaxError('AFDMC states do not subtract')
+        raise SyntaxError('You should probably not be subtracting a AFDMC states')
 
     def copy(self):
-        return AFDMCSpinState(self.n_particles, self.sp_stack.copy(), self.ketwise)
+        return AFDMCSpinState(self.n_particles, self.orientation, self.sp_stack.copy())
 
     def to_list(self):
         return [self.sp_stack[i] for i in range(self.n_particles)]
@@ -560,16 +593,10 @@ class AFDMCSpinState(State):
         """
         bra can multiply a ket or an operator, ket can only multiply a bra
         """
-        if self.ketwise:  # |self><other|
-            assert isinstance(other, AFDMCSpinState) and not other.ketwise
-            out = AFDMCSpinOperator(n_particles=self.n_particles)
-            for i in range(self.n_particles):
-                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
-            return out
-        else:   # <self|other> or <self|*operator
+        if self.orientation == 'bra':  # inner product
             if isinstance(other, AFDMCSpinState):
-                assert other.ketwise
-                out = float(np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)]))
+                assert other.orientation == 'ket'
+                out = np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)])
             elif isinstance(other, AFDMCSpinOperator):
                 out = self.copy()
                 for i in range(self.n_particles):
@@ -577,64 +604,80 @@ class AFDMCSpinState(State):
             else:
                 raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out
+        elif self.orientation == 'ket':  # outer product
+            assert isinstance(other, AFDMCSpinState) and other.orientation == 'bra'
+            out = AFDMCSpinOperator(n_particles=self.n_particles)
+            for i in range(self.n_particles):
+                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
+            return out
 
     def dagger(self):
-        """ copy_based conj transpose"""
         out = self.copy()
+        if self.orientation=='ket':
+            out.orientation = 'bra'
+        elif self.orientation=='bra':
+            out.orientation = 'ket'
         out.sp_stack = np.transpose(self.sp_stack, axes=(0,2,1)).conj()
-        out.ketwise = not self.ketwise
         return out
 
     def __str__(self):
-        orient = "ket"
-        if not self.ketwise:
-            orient = "bra"
-        out = f"{self.__class__.__name__} {orient} of {self.n_particles} particles: \n"
+        out = f"{self.__class__.__name__} {self.orientation} of {self.n_particles} particles: \n"
         for i, ci in enumerate(self.to_list()):
-            out += f"{orient} #{i}:\n"
+            out += f"{self.orientation} #{i}:\n"
             out += str(ci) + "\n"
         return out
 
     def to_manybody_basis(self):
         """project the NxA TP state into the full N^A MB basis"""
         sp_mb = repeated_kronecker_product(self.to_list())
-        if self.ketwise:
+        if self.orientation == 'ket':
             sp_mb = sp_mb.reshape(2 ** self.n_particles, 1)
-        else:
+        elif self.orientation == 'bra':
             sp_mb = sp_mb.reshape(1, 2 ** self.n_particles)
-        return GFMCSpinState(self.n_particles, sp_mb, self.ketwise)
+        return GFMCSpinState(self.n_particles, self.orientation, sp_mb)
 
     def normalize(self):
+        out = self.copy()
         for i in range(self.n_particles):
             n = np.linalg.norm(self.sp_stack[i])
-            self.sp_stack[i] /= n
-        return self
+            out.sp_stack[i] /= n
+        return out
 
     def scalar_mult(self, particle_index, b):
-        self.sp_stack[particle_index] *= b
-        return self
-        
-    def spread_scalar_mult(self, b):
-        self.sp_stack *= b ** (1 / self.n_particles)
-        return self
-        
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
-        self.sp_stack[particle_index] = np.matmul(matrix, self.sp_stack[particle_index], dtype=complex)
-        return self
+        assert np.isscalar(b)
+        out = self.copy()
+        out.sp_stack[particle_index] *= b
+        return out
 
-    def apply_sigma(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
+    def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        out = self.copy()
+        out.sp_stack *= b ** (1 / self.n_particles)
+        return out
+
+    def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
+        assert matrix.shape == (2, 2)
+        out = self.copy()
+        out.sp_stack[particle_index] = np.matmul(matrix, out.sp_stack[particle_index], dtype=complex)
+        return out
+
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
     
     def randomize(self, seed):
+        out = self.copy()
         rng = np.random.default_rng(seed=seed)
-        self.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
+        out.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
         for i in range(self.n_particles):
-            self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
-        return self
+            out.sp_stack[i] /= np.linalg.norm(out.sp_stack[i])
+        return out
     
 
 class AFDMCSpinIsospinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
+    def __init__(self, n_particles: int, orientation: str, coefficients: np.ndarray):
         """an array of single particle spinors
 
         Orientation must be consistent with array shape!
@@ -643,15 +686,16 @@ class AFDMCSpinIsospinState(State):
 
         Args:
             n_particles (int): number of single particle states
+            orientation (str): 'bra' or 'ket'
             coefficients (np.ndarray): array of complex numbers
-            ketwise (bool)
 
         Raises:
             ValueError: _description_
         """
-        super().__init__(n_particles, ketwise)
-        ket_condition = (coefficients.shape == (n_particles, 4, 1)) and ketwise
-        bra_condition = (coefficients.shape == (n_particles, 1, 4)) and not ketwise
+        super().__init__(n_particles, orientation)
+        assert type(coefficients) == np.ndarray
+        ket_condition = (coefficients.shape == (n_particles, 4, 1)) and (orientation == 'ket')
+        bra_condition = (coefficients.shape == (n_particles, 1, 4)) and (orientation == 'bra')
         if not ket_condition and not bra_condition:
             raise ValueError("Inconsistent initialization of state vector. \n\
                              Did you get the shape right?")
@@ -661,32 +705,25 @@ class AFDMCSpinIsospinState(State):
         
 
     def __add__(self, other):
-        raise SyntaxError('AFDMC states do not add')
+        raise SyntaxError('You should probably not be adding a AFDMC states')
     
     def __sub__(self, other):
-        raise SyntaxError('AFDMC states do not subtract')
+        raise SyntaxError('You should probably not be subtracting a AFDMC states')
 
     def copy(self):
-        return AFDMCSpinIsospinState(self.n_particles, self.sp_stack.copy(), self.ketwise)
+        return AFDMCSpinIsospinState(self.n_particles, self.orientation, self.sp_stack.copy())
 
     def to_list(self):
         return [self.sp_stack[i] for i in range(self.n_particles)]
-
 
     def __mul__(self, other):
         """
         bra can multiply a ket or an operator, ket can only multiply a bra
         """
-        if self.ketwise:  # |self><other|
-            assert isinstance(other, AFDMCSpinIsospinState) and not other.ketwise
-            out = AFDMCSpinOperator(n_particles=self.n_particles)
-            for i in range(self.n_particles):
-                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
-            return out
-        else:   # <self|other> or <self|*operator
+        if self.orientation == 'bra':  # inner product
             if isinstance(other, AFDMCSpinIsospinState):
-                assert other.ketwise
-                out = float(np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)]))
+                assert other.orientation == 'ket'
+                out = np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)])
             elif isinstance(other, AFDMCSpinIsospinOperator):
                 out = self.copy()
                 for i in range(self.n_particles):
@@ -694,22 +731,26 @@ class AFDMCSpinIsospinState(State):
             else:
                 raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
             return out
-            
+        elif self.orientation == 'ket':  # outer product
+            assert isinstance(other, AFDMCSpinIsospinState) and other.orientation == 'bra'
+            out = AFDMCSpinIsospinOperator(n_particles=self.n_particles)
+            for i in range(self.n_particles):
+                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
+            return out
 
     def dagger(self):
-        """ copy_based conj transpose"""
         out = self.copy()
+        if self.orientation=='ket':
+            out.orientation = 'bra'
+        elif self.orientation=='bra':
+            out.orientation = 'ket'
         out.sp_stack = np.transpose(self.sp_stack, axes=(0,2,1)).conj()
-        out.ketwise = not self.ketwise
         return out
 
     def __str__(self):
-        orient = "ket"
-        if not self.ketwise:
-            orient = "bra"
-        out = f"{self.__class__.__name__} {orient} of {self.n_particles} particles: \n"
+        out = f"{self.__class__.__name__} {self.orientation} of {self.n_particles} particles: \n"
         for i, ci in enumerate(self.to_list()):
-            out += f"{orient} #{i}:\n"
+            out += f"{self.orientation} #{i}:\n"
             out += str(ci) + "\n"
         return out
 
@@ -720,43 +761,70 @@ class AFDMCSpinIsospinState(State):
             sp_mb = sp_mb.reshape(4 ** self.n_particles, 1)
         elif self.orientation == 'bra':
             sp_mb = sp_mb.reshape(1, 4 ** self.n_particles)
-        return GFMCSpinIsospinState(self.n_particles, sp_mb, self.ketwise)
+        return GFMCSpinIsospinState(self.n_particles, self.orientation, sp_mb)
 
     def normalize(self):
+        out = self.copy()
         for i in range(self.n_particles):
             n = np.linalg.norm(self.sp_stack[i])
-            self.sp_stack[i] /= n
-        return self
+            out.sp_stack[i] /= n
+        return out
 
     def scalar_mult(self, particle_index, b):
-        self.sp_stack[particle_index] *= b
-        return self
+        assert np.isscalar(b)
+        out = self.copy()
+        out.sp_stack[particle_index] *= b
+        return out
 
     def spread_scalar_mult(self, b):
-        self.sp_stack *= b ** (1 / self.n_particles)
-        return self
+        assert np.isscalar(b)
+        out = self.copy()
+        out.sp_stack *= b ** (1 / self.n_particles)
+        return out
 
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+    def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
+        assert matrix.shape == (4, 4)
+        out = self.copy()
+        out.sp_stack[particle_index] = np.matmul(matrix, out.sp_stack[particle_index], dtype=complex)
+        return out
+
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
+
+    def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+        assert isospin_matrix.shape == (2, 2)
+        assert spin_matrix.shape == (2, 2)
         onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
-        self.sp_stack[particle_index] = np.matmul(onebody_matrix, self.sp_stack[particle_index], dtype=complex)
-        return self
+        out = self.copy()
+        out.sp_stack[particle_index] = np.matmul(onebody_matrix, out.sp_stack[particle_index], dtype=complex)
+        return out
 
-    def apply_sigma(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
                                           isospin_matrix=np.identity(2, dtype=complex),
                                           spin_matrix=pauli(dimension))
+        return out
 
-    def apply_tau(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
+    def tau(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
                                           isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
+        return out
 
     def randomize(self, seed):
+        out = self.copy()
         rng = np.random.default_rng(seed=seed)
-        self.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
+        out.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
         for i in range(self.n_particles):
-            self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
-        return self
+            out.sp_stack[i] /= np.linalg.norm(out.sp_stack[i])
+        return out
 
 
 class AFDMCSpinOperator(Operator):
@@ -766,10 +834,10 @@ class AFDMCSpinOperator(Operator):
         self.friendly_state = AFDMCSpinState
 
     def __add__(self, other):
-        raise SyntaxError('AFDMC operators do not add')
+        raise SyntaxError('You should probably not be adding AFDMC operators')
     
     def __sub__(self, other):
-        raise SyntaxError('AFDMC operators do not subtract')
+        raise SyntaxError('You should probably not be subtracting AFDMC operators')
 
     def copy(self):
         out = AFDMCSpinOperator(self.n_particles)
@@ -781,13 +849,13 @@ class AFDMCSpinOperator(Operator):
         return [self.op_stack[i] for i in range(self.n_particles)]
     
     def __mul__(self, other):
-        if isinstance(other, AFDMCSpinState): # op * |ket>
-            assert other.ketwise
+        if isinstance(other, AFDMCSpinState):
+            assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
             return out
-        elif isinstance(other, AFDMCSpinOperator): # op * op
+        elif isinstance(other, AFDMCSpinOperator):
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
@@ -795,6 +863,7 @@ class AFDMCSpinOperator(Operator):
         else:
             raise ValueError(
                 f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or a {self.__class__.__name__}')
+
 
     def __str__(self):
         out = f"{self.__class__.__name__}\n"
@@ -804,27 +873,38 @@ class AFDMCSpinOperator(Operator):
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
-        self.op_stack[particle_index] = np.matmul(matrix, self.op_stack[particle_index], dtype=complex)
-        return self
+    def apply_one_body_operator(self, particle_index: int, matrix: np.ndarray):
+        assert matrix.shape == (2, 2)
+        out = self.copy()
+        out.op_stack[particle_index] = np.matmul(matrix, out.op_stack[particle_index], dtype=complex)
+        return out
 
-    def apply_sigma(self, particle_index, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=pauli(dimension))
+        return out
 
     def scalar_mult(self, particle_index, b):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=b * np.identity(2))
+        assert np.isscalar(b)
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index, matrix=b * np.identity(2))
+        return out
 
     def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        c = b ** (1 / self.n_particles)
+        out = self.copy()
         for i in range(self.n_particles):
-            self.scalar_mult(i, b ** (1 / self.n_particles))
-        return self
+            out = out.scalar_mult(i, c)
+        return out
 
-    def zero(self):
-        self.op_stack = np.zeros_like(self.op_stack)
-        return self
+    def zeros(self):
+        out = self.copy()
+        out.op_stack *= 0.0
+        return out
 
     def dagger(self):
-        """ copy-based conj transpose"""
         out = self.copy()
         out.op_stack = np.transpose(self.op_stack, axes=(0,2,1)).conj()
         return out
@@ -837,10 +917,10 @@ class AFDMCSpinIsospinOperator(Operator):
         self.friendly_state = AFDMCSpinIsospinState
 
     def __add__(self, other):
-        raise SyntaxError('AFDMC operators do not add')
+        raise SyntaxError('You should probably not be adding AFDMC operators')
     
     def __sub__(self, other):
-        raise SyntaxError('AFDMC operators do not subtract')
+        raise SyntaxError('You should probably not be subtracting AFDMC operators')
 
     def copy(self):
         out = AFDMCSpinIsospinOperator(self.n_particles)
@@ -853,7 +933,7 @@ class AFDMCSpinIsospinOperator(Operator):
     
     def __mul__(self, other):
         if isinstance(other, AFDMCSpinIsospinState):
-            assert other.ketwise
+            assert other.orientation == 'ket'
             out = other.copy()
             for i in range(self.n_particles):
                 out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
@@ -876,37 +956,52 @@ class AFDMCSpinIsospinOperator(Operator):
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+    def apply_one_body_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
+        assert isospin_matrix.shape == (2, 2)
+        assert spin_matrix.shape == (2, 2)
         onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
-        self.op_stack[particle_index] = np.matmul(onebody_matrix, self.op_stack[particle_index], dtype=complex)
-        return self
+        out = self.copy()
+        out.op_stack[particle_index] = np.matmul(onebody_matrix, out.op_stack[particle_index], dtype=complex)
+        return out
 
-    def apply_sigma(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
+    def sigma(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
                                           isospin_matrix=np.identity(2, dtype=complex),
                                           spin_matrix=pauli(dimension))
+        return out
 
-    def apply_tau(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
+    def tau(self, particle_index, dimension):
+        assert (dimension in ['x', 'y', 'z']) or (dimension in [0, 1, 2])
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
                                           isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
+        return out
 
     def scalar_mult(self, particle_index, b):
-        return self.apply_onebody_operator(particle_index=particle_index,
+        assert np.isscalar(b)
+        out = self.copy()
+        out = out.apply_one_body_operator(particle_index=particle_index,
                                           isospin_matrix = b * np.identity(2),
                                           spin_matrix = np.identity(2))
-        
-    def spread_scalar_mult(self, b):
-        for i in range(self.n_particles):
-            self.scalar_mult(i, b ** (1 / self.n_particles))
-        return self
+        return out
 
-    def zero(self):
-        self.op_stack = np.zeros_like(self.op_stack)
-        return self
+    def spread_scalar_mult(self, b):
+        assert np.isscalar(b)
+        c = b ** (1 / self.n_particles)
+        out = self.copy()
+        for i in range(self.n_particles):
+            out = out.scalar_mult(i, c)
+        return out
+
+    def zeros(self):
+        out = self.copy()
+        out.op_stack *= 0.0
+        return out
 
     def dagger(self):
-        """ copy-based conj transpose"""
         out = self.copy()
         out.op_stack = np.transpose(self.op_stack, axes=(0,2,1)).conj()
         return out        
@@ -929,6 +1024,7 @@ class Coupling:
         return out
 
     def __mult__(self, other):
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
@@ -972,8 +1068,7 @@ class SigmaCoupling(Coupling):
             for j in range(i):
                 for a in range(3):
                     for b in range(3):
-                        self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]     
-        return self
+                        self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
     
 class SigmaTauCoupling(Coupling):
     """container class for couplings A ^ sigma tau (a,i,b,j)
@@ -1003,7 +1098,6 @@ class SigmaTauCoupling(Coupling):
                 for a in range(3):
                     for b in range(3):
                         self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
-        return self
     
 
 class TauCoupling(Coupling):
@@ -1029,7 +1123,6 @@ class TauCoupling(Coupling):
             self.coefficients[i,i] = 0.0
             for j in range(i):
                 self.coefficients[i,j]=self.coefficients[j,i]    
-        return self
 
 
 class CoulombCoupling(Coupling):
@@ -1055,7 +1148,6 @@ class CoulombCoupling(Coupling):
             self.coefficients[i,i] = 0.0
             for j in range(i):
                 self.coefficients[i,j]=self.coefficients[j,i]    
-        return self
 
 
 
@@ -1077,7 +1169,6 @@ class SpinOrbitCoupling(Coupling):
     def generate(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
-        return self
 
 
 class ThreeBodyCoupling(Coupling):
@@ -1113,12 +1204,11 @@ class ThreeBodyCoupling(Coupling):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
-            for j in range(self.n_particles):
-                self.coefficients[:,i,:,i,:,i] = 0.0
+            self.coefficients[:,i,:,i,:,i] = 0.0
+            for j in range(i):
                 self.coefficients[:,i,:,i,:,j] = 0.0
-                self.coefficients[:,i,:,j,:,i] = 0.0    
-                self.coefficients[:,i,:,j,:,j] = 0.0    
-        return self
+                self.coefficients[:,i,:,i,:,j] = 0.0    
+
 
 
 class ArgonnePotential:
@@ -1158,8 +1248,8 @@ class GFMCPropagatorHS():
         self.mix = mix
         
         self._ident = GFMCSpinIsospinOperator(self.n_particles)
-        self._sig_op = [[self._ident.apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self._tau_op = [[self._ident.apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._sig_op = [[self._ident.sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[self._ident.tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self._onebody_idx = np.arange(self.n_particles)
         self._pair_idx = np.array(interaction_indices(self.n_particles))
         self._aa = np.arange(3)
@@ -1170,8 +1260,11 @@ class GFMCPropagatorHS():
     def _shuf(self, x: np.ndarray):
         self._rng.shuffle(x)
         
-    def apply_twobody_sample(self, ket: State, k: float, x: float, operator_i: Operator, operator_j: Operator):
-        """ exp( x sqrt( -k ) opi ) * exp( x sqrt( -k ) opj ) """
+    def apply_twobody_sample(self, ket, k, x, operator_i, operator_j):
+        """ exp( sqrt( -kx ) opi opj )"""
+        assert type(ket)==GFMCSpinIsospinState
+        assert np.isscalar(k)
+        assert np.isscalar(x)
         arg = csqrt(-k)*x
         if self.include_prefactor:
             prefactor = cexp(k)
@@ -1235,9 +1328,9 @@ class GFMCPropagatorHS():
         if self.mix:
             self._shuf(self._pair_idx)
         for i,j in self._pair_idx:
-                onebody_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
-                onebody_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
-                ket_prop = onebody_i.exponentiate() * onebody_j.exponentiate() * ket_prop
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 ket_prop = self.apply_twobody_sample(ket_prop, k, aux[idx], self._tau_op[i][2], self._tau_op[j][2])
                 idx += 1
@@ -1252,8 +1345,8 @@ class GFMCPropagatorHS():
             self._shuf(self._onebody_idx)
         for i in self._onebody_idx:
             for a in self._aa:
-                onebody = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
-                ket_prop = onebody.exponentiate() * ket_prop
+                one_body = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate() * ket_prop
         if self.mix:
             self._shuf(self._aa); self._shuf(self._bb)
             self._shuf(self._pair_idx)
@@ -1359,9 +1452,9 @@ class GFMCPropagatorRBM():
         if self.mix:
             self._shuf(self._pair_idx)
         for i,j in self._pair_idx:
-                onebody_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
-                onebody_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
-                ket_prop = onebody_i.exponentiate() * onebody_j.exponentiate() * ket_prop
+                one_body_i = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[i][2]
+                one_body_j = - 0.125 * potential.coulomb[i,j] * self.dt * self._tau_op[j][2]
+                ket_prop = one_body_i.exponentiate() * one_body_j.exponentiate() * ket_prop
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 ket_prop = self.apply_twobody_sample(ket_prop, k, aux[idx], self._tau_op[i][2], self._tau_op[j][2])
                 idx += 1
@@ -1376,8 +1469,8 @@ class GFMCPropagatorRBM():
             self._shuf(self._onebody_idx)
         for i in self._onebody_idx:
             for a in self._aa:
-                onebody = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
-                ket_prop = onebody.exponentiate() * ket_prop
+                one_body = - 1.j * potential.spinorbit[a,i] * self._sig_op[i][a]
+                ket_prop = one_body.exponentiate() * ket_prop
         if self.mix:
             self._shuf(self._aa); self._shuf(self._bb)
             self._shuf(self._pair_idx)
@@ -1724,7 +1817,7 @@ class Integrator():
         self.is_ready = True
         return self.controls
 
-    def bracket(self, bra: State, ket: State, aux_fields):
+    def bracket(self, bra, ket, aux_fields):
         ket_prop = ket.copy()
         i=0
         if self.controls['sigma']:
