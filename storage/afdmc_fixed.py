@@ -46,7 +46,7 @@ def g_rbm_sample(k, h, i: int, j: int, opi, opj, normalize=True):
     out.op_stack[j] *= csqrt(prefactor)
     return out
 
-def prop_gauss_fixed(ket, pots, x):
+def prop_gauss_fixed(ket, pots, x, normalize=True):
     print('GAUSS')
     asig = pots['asig'] 
     asigtau = pots['asigtau']
@@ -58,7 +58,7 @@ def prop_gauss_fixed(ket, pots, x):
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
-                ket = g_gauss_sample(0.5 * dt * asig[a, i, b, j], x, i, j, sig[a], sig[b]) * ket
+                ket = g_gauss_sample(0.5 * dt * asig[a, i, b, j], x, i, j, sig[a], sig[b], normalize=normalize) * ket
     # SIGMA TAU
     for i,j in pairs_ij:    
         for a in range(3):
@@ -66,27 +66,31 @@ def prop_gauss_fixed(ket, pots, x):
                 for c in range(3):
                     opi = sig[a] @ tau[c]
                     opj = sig[b] @ tau[c]
-                    ket = g_gauss_sample(0.5 * dt * asigtau[a, i, b, j], x, i, j, opi, opj) * ket
+                    ket = g_gauss_sample(0.5 * dt * asigtau[a, i, b, j], x, i, j, opi, opj, normalize=normalize) * ket
     # TAU
     for i,j in pairs_ij:
         for c in range(3):
-            ket = g_gauss_sample(0.5 * dt * atau[i, j], x, i, j, tau[c], tau[c]) * ket
+            ket = g_gauss_sample(0.5 * dt * atau[i, j], x, i, j, tau[c], tau[c], normalize=normalize) * ket
     # COULOMB
     for i,j in pairs_ij:
-        ket = g_onebody(0.5 * dt * vcoul[i, j], i, tau[2]) * ket
-        ket = g_onebody(0.5 * dt * vcoul[i, j], j, tau[2]) * ket
-        ket = g_gauss_sample(0.125 * dt * vcoul[i, j], x, i, j, tau[2], tau[2]) * ket
+        k = 0.125 * dt * vcoul[i, j]
+        if normalize:
+            ket = ket.spread_scalar_mult(cexp(-k))
+        ket = g_onebody(k, i, tau[2]) * ket
+        ket = g_onebody(k, j, tau[2]) * ket
+        ket = g_gauss_sample(k, x, i, j, tau[2], tau[2], normalize=normalize) * ket
     # LS
     for i in range(n_particles):
         for a in range(3):
-            ket = g_onebody(0.5 * dt * gls[a, i], i, sig[a]) * ket
+            ket = g_onebody( 1.j * gls[a, i], i, sig[a]) * ket
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
                 asigls = gls[a, i] * gls[b, j]
-                ket = g_gauss_sample(- 0.5 * asigls, x, i, j, sig[a], sig[b]) * ket
-    trace = cexp(0.5 * np.sum(gls**2))
-    ket = ket.spread_scalar_mult(trace)
+                ket = g_gauss_sample(- 0.5 * asigls, x, i, j, sig[a], sig[b], normalize=normalize) * ket
+    if normalize:
+        trace = cexp(0.5 * np.sum(gls**2))
+        ket = ket.spread_scalar_mult(trace)
 
     return ket
     
@@ -120,12 +124,16 @@ def prop_rbm_fixed(ket, pots, h, normalize=True):
             ket = g_rbm_sample(0.5 * dt * atau[i, j], h, i, j, tau[c], tau[c], normalize=normalize) * ket
     # COULOMB
     for i,j in pairs_ij:
+        k = dt * 0.125 * vcoul[i,j]
         if normalize:
-            ket = ket.spread_scalar_mult(cexp(-dt * 0.125 * vcoul[i,j]))
-        ket = g_onebody(0.125 * dt * vcoul[i, j], i, tau[2]) * ket
-        ket = g_onebody(0.125 * dt * vcoul[i, j], j, tau[2]) * ket
-        ket = g_rbm_sample(0.125 * dt * vcoul[i, j], h, i, j, tau[2], tau[2], normalize=normalize) * ket
+            ket = ket.spread_scalar_mult(cexp(-k))
+        ket = g_onebody(k, i, tau[2]) * ket
+        ket = g_onebody(k, j, tau[2]) * ket
+        ket = g_rbm_sample(k, h, i, j, tau[2], tau[2], normalize=normalize) * ket
     # LS
+    for i in range(n_particles):
+        for a in range(3):
+            ket = g_onebody( 1.j * gls[a, i], i, sig[a]) * ket
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):  
@@ -165,7 +173,7 @@ def load_h2(manybody=False, data_dir = './data/h2/'):
     return ket, pot_dict, ket_f
 
 
-def main():
+def main(method):
     ket, pots, _ = load_h2(manybody=False, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
     pots['asigtau'] = 1*pots['asigtau']
@@ -174,11 +182,14 @@ def main():
     pots['gls'] = 1*pots['gls']
     bra = ket.copy().dagger()
 
-    ket_prop = prop_gauss_fixed(ket.copy(), pots, x=1.0)
-    # ket_prop = prop_rbm_fixed(ket.copy(), pots, h=1.0, normalize=True)
+    if method=='hs':
+        ket_prop = prop_gauss_fixed(ket.copy(), pots, x=1.0)
+    elif method=='rbm':
+        ket_prop = prop_rbm_fixed(ket, pots, h=1.0)
+        
     return bra * ket_prop
 
-def main_new():
+def main_new(method):
     ket = AFDMCSpinIsospinState(n_particles, read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1)))
     bra = ket.copy().dagger()
 
@@ -189,8 +200,10 @@ def main_new():
     pot.read_coulomb("./data/h2/fort.7704")
     pot.read_spinorbit("./data/h2/fort.7705")
 
-    hsprop = AFDMCPropagatorHS(n_particles, dt, include_prefactor=True, mix=False)
-    # hsprop = AFDMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=False)
+    if method=='hs':
+        hsprop = AFDMCPropagatorHS(n_particles, dt, include_prefactors=True, mix=False)
+    elif method=='rbm':
+        hsprop = AFDMCPropagatorRBM(n_particles, dt, include_prefactors=True, mix=False)
 
     ket_prop = ket.copy()
     ket_prop = hsprop.apply_sigma(ket_prop,pot,[1.0]*9)
@@ -205,6 +218,7 @@ def main_new():
 
 
 if __name__ == "__main__":
-    bold = main()
-    bnew = main_new()
-    print('ratio =', bnew/bold)
+    method = 'rbm'
+    b_old = main(method)
+    b_new = main_new(method)
+    print('ratio =', b_new/b_old)

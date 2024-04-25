@@ -69,7 +69,6 @@ def prop_gauss_fixed(ket, pots, x):
     for i,j in pairs_ij:
         for a in range(3):
             for b in range(3):
-                print('old',a,b, np.sum(ket.coefficients) )
                 ket = g_gauss_sample(dt, asig[a, i, b, j], x, sig[i][a], sig[j][b]) * ket
     # SIGMA TAU
     for i,j in pairs_ij:
@@ -83,7 +82,8 @@ def prop_gauss_fixed(ket, pots, x):
             ket = g_gauss_sample(dt, atau[i, j], x, tau[i][c], tau[j][c]) * ket
     # COULOMB
     for i,j in pairs_ij:
-        ket = g_coulomb_onebody(dt, vcoul[i, j], i) * g_coulomb_onebody(dt, vcoul[i, j], j) * ket
+        # ket = g_coulomb_onebody(dt, vcoul[i, j], i) * g_coulomb_onebody(dt, vcoul[i, j], j) * ket
+        ket = g_coulomb_pair(dt, vcoul[i,j], i, j) * ket
         ket = g_gauss_sample(dt, 0.25 * vcoul[i, j], x, tau[i][2], tau[j][2]) * ket
     # LS
     for i in range(n_particles):
@@ -127,7 +127,7 @@ def prop_rbm_fixed(ket, pots, h):
             ket = g_rbm_sample(dt, atau[i, j], h, tau[i][c], tau[j][c]) * ket
     # COULOMB
     for i,j in pairs_ij:
-        ket = g_coulomb_onebody(dt, vcoul[i, j], i) * g_coulomb_onebody(dt, vcoul[i, j], j) * ket
+        ket = ket = g_coulomb_pair(dt, vcoul[i,j], i, j) * ket
         ket = g_rbm_sample(dt, 0.25 * vcoul[i, j], h, tau[i][2], tau[j][2]) * ket
     # LS
     for i in range(n_particles):
@@ -217,7 +217,7 @@ def load_h2(manybody=False, data_dir = './data/h2/'):
     # return ket, asig, asigtau, atau, vcoul, gls, asigls
     return ket, pot_dict, ket_f
 
-def main():
+def main(method):
     ket, pots, _ = load_h2(manybody=True, data_dir = './data/h2/')
     pots['asig'] = 1*pots['asig']
     pots['asigtau'] = 1*pots['asigtau']
@@ -228,13 +228,14 @@ def main():
 
     # print(pots["asig"].flatten())
     
-    # ket_prop = prop_gauss_fixed(ket.copy(), pots, x=1.0)
-    ket_prop = prop_rbm_fixed(ket, pots, h=1.0)
+    if method=='hs':
+        ket_prop = prop_gauss_fixed(ket.copy(), pots, x=1.0)
+    elif method=='rbm':
+        ket_prop = prop_rbm_fixed(ket, pots, h=1.0)
     # ket_prop = prop_rbm_fixed_unnorm(ket, pots, h=1.0)
-    # print("bracket = ", bra * ket_prop)
     return bra * ket_prop
     
-def main_new():
+def main_new(method):
     ket = AFDMCSpinIsospinState(n_particles, read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1))).to_manybody_basis()
     bra = ket.copy().dagger()
 
@@ -247,8 +248,10 @@ def main_new():
     
     # print(pot.sigma.coefficients.flatten())
 
-    # hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactor=True, mix=False)
-    hsprop = GFMCPropagatorRBM(n_particles, dt, include_prefactor=True, mix=False)
+    if method=='hs':
+        hsprop = GFMCPropagatorHS(n_particles, dt, include_prefactors=True, mix=False)
+    elif method=='rbm':
+        hsprop = GFMCPropagatorRBM(n_particles, dt, include_prefactors=True, mix=False)
 
     ket_prop = ket.copy()
     ket_prop = hsprop.apply_sigma(ket_prop,pot,[1.0]*9)
@@ -261,7 +264,8 @@ def main_new():
     return bra * ket_prop
 
 if __name__ == "__main__":
-    bold = main()
-    bnew = main_new()
-    print('ratio =', bnew/bold)
-    
+    method = 'rbm'
+    b_old = main(method)
+    b_new = main_new(method)
+    print('ratio =', b_new/b_old)
+
