@@ -19,10 +19,9 @@ def chistogram(X, filename, title, bins='auto', range=None):
     plt.savefig(filename)
 
 
-def spinor2(state, orientation, seed=None):
+def spinor2(state='up', ketwise=True, seed=None):
     """returns spin coefficients, numpy array"""
     assert state in ['up', 'down', 'random', 'max']
-    assert orientation in ['bra', 'ket']
     if state == 'up':
         sp = np.array([1, 0], dtype=complex)
     elif state == 'down':
@@ -30,19 +29,17 @@ def spinor2(state, orientation, seed=None):
     elif state == 'random':
         rng = default_rng(seed=seed)
         sp = rng.uniform(-1, 1, 2) + 1j * rng.uniform(-1, 1, 2)
-        sp = sp / np.linalg.norm(sp)
     elif state == 'max':
-        sp = np.array([1 / np.sqrt(2), 1 / np.sqrt(2)], dtype=complex)
-    if orientation == 'ket':
-        return sp.reshape((2, 1))
-    elif orientation == 'bra':
-        return sp.reshape((1, 2))
+        sp = np.array([1, 1], dtype=complex)
+    sp = sp / np.linalg.norm(sp)
+    sp = sp.reshape((2,1))
+    if not ketwise:
+        sp = sp.T
+    return sp
 
-
-def spinor4(state, orientation, seed=None):
+def spinor4(state='up', ketwise=True, seed=None):
     """returns spin-isospin coefficients, numpy array"""
     assert state in ['up', 'down', 'random', 'max']
-    assert orientation in ['bra', 'ket']
     if state == 'up':
         sp = np.array([1, 0, 1, 0], dtype=complex)
     elif state == 'down':
@@ -50,11 +47,11 @@ def spinor4(state, orientation, seed=None):
     elif state == 'random':
         rng = default_rng(seed=seed)
         sp = rng.uniform(-1, 1, 4) + 1j * rng.uniform(-1, 1, 4)
-        sp = sp / np.linalg.norm(sp)
     elif state == 'max':
         sp = np.array([1, 1, 1, 1], dtype=complex)
-    if orientation == 'ket':
-        return sp.reshape((4, 1)) / np.linalg.norm(sp)
-    elif orientation == 'bra':
-        return sp.reshape((1, 4)) / np.linalg.norm(sp)
+    sp = sp / np.linalg.norm(sp)
+    sp = sp.reshape((4,1))
+    if not ketwise:
+        sp = sp.T
+    return sp
 
