@@ -1,5 +1,6 @@
 from quap import *
 from quap.extras import chistogram
+import pickle as plk
 
 def gfmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)
@@ -42,7 +43,8 @@ def gfmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=Fa
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
     if plot:
-        chistogram(b_array, filename='./outputs/gfmc_avg_test.pdf', title='GFMC')
+        filename = f"examples/outputs/gfmc_A{n_particles}_N{n_samples}_{method}.pdf"
+        chistogram(b_array, filename=filename, title='GFMC')
 
 
 
@@ -88,26 +90,89 @@ def afdmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=F
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
     if plot:
-        chistogram(b_array, filename='./outputs/afdmc_avg_test.pdf', title='AFDMC')
+        filename = f"examples/outputs/afdmc_A{n_particles}_N{n_samples}_{method}.pdf"
+        chistogram(b_array, filename=filename, title='AFDMC')
+
+    out = {"n_particles": n_particles,
+           "dt": dt,
+           "n_samples": n_samples,
+           "method": method,
+           "balance": balance,
+           "b_m": b_m,
+           "b_s": b_s,
+           "b_exact": b_exact
+           }
+    out.update(controls)
+    return out
 
 
 
-if __name__ == "__main__":
-
+def main():
     n_particles = 2
     dt = 0.001
-    n_samples = 10000
+    n_samples = 1000000
 
     method = 'rbm'
-    controls = {"mix": True,
-                "seed": 0,
+    controls = {"mix": False,
+                "seed": 1,
                 "sigma": True,
                 "sigmatau": True,
                 "tau": True,
-                "coulomb": True,
-                "spinorbit": True,
+                "coulomb": False,
+                "spinorbit": False,
                 }
+    plot = True
+
+    # gfmc_avg(n_particles, dt, n_samples, method, controls, plot=plot)
+    afdmc_avg(n_particles, dt, n_samples, method, controls, plot=plot)
     
-    # gfmc_avg(n_particles, dt, n_samples, method, controls)
-    afdmc_avg(n_particles, dt, n_samples, method, controls)
+
+
+def list_from_dict(input_dict):
+    """ produces a list of dicts from a dict of lists """
+    return [dict(zip(input_dict,t)) for t in zip(*input_dict.values())]
+
+
+def experiment():
+    n_particles_list = [2]
+    n_samples_list = [1000]
+    # dt_list = [0.01, 0.005, 0.0025, 0.001, 0.0005, 0.00025, 0.0001]
+    dt_list = [0.001]
+    method_list = ["rbm"]
+    seed_list = [0]
+    balance_list = [True, False]
+    mix_list = [True, False]
+    sigma_list = [True, False]
+    sigmatau_list = [True, False]
+    tau_list = [True, False]
+    coulomb_list = [True, False]
+    spinorbit_list = [True, False]
     
+    input_dict = {
+    "n_particles": n_particles_list,
+    "n_samples": n_samples_list,
+    "dt": dt_list,
+    "seed": seed_list,
+    "method": method_list,
+    "balance": balance_list,
+    "mix": mix_list,
+    "sigma": sigma_list,
+    "sigmatau": sigmatau_list,
+    "tau": tau_list,
+    "coulomb": coulomb_list,
+    "spinorbit": spinorbit_list,
+    }
+
+    print(input_dict)
+    # arg_grid = list_from_dict(input_dict)
+    # print(arg_grid)
+
+
+def test():
+    DL = {'a': [0, 1], 'b': [2, 3]}
+    v = [dict(zip(DL,t)) for t in zip(*DL.values())]
+    print(v)
+
+if __name__ == "__main__":
+    experiment()
+    # test()

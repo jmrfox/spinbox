@@ -1773,7 +1773,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def make_g_exact(self, dt, potential, controls, ls_factored=False):
+    def make_g_exact(self, dt, potential, controls):
         # compute exact bracket
         g_exact = self.ident.copy()
         pairs_ij = interaction_indices(self.n_particles)
@@ -1787,19 +1787,20 @@ class ExactGFMC:
             if controls['coulomb']:
                 g_exact = self.g_pade_coul(dt, potential.coulomb, i, j) * g_exact
         
+
         if controls['spinorbit']:
-            if not ls_factored: # do linear approximation
-                for i in range(self.n_particles):
-                    g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
-            else: #do LS factorized into one- and two-body
-                for i in range(self.n_particles):
+            # linear approximation
+            # for i in range(self.n_particles):
+            #     g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+            # factorized into one- and two-body
+            for i in range(self.n_particles):
+                for a in range(3):
+                    g_exact = self.g_ls_onebody(potential.spinorbit, i, a) * g_exact
+            for i in range(self.n_particles):
+                for j in range(self.n_particles):
                     for a in range(3):
-                        g_exact = self.g_ls_onebody(potential.spinorbit, i, a) * g_exact
-                for i in range(self.n_particles):
-                    for j in range(self.n_particles):
-                        for a in range(3):
-                            for b in range(3):
-                                g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b) * g_exact
+                        for b in range(3):
+                            g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b) * g_exact
         return g_exact
     
 
