@@ -133,11 +133,49 @@ def test_gfmc(n_particles):
     print('GFMC TEST COMPLETE')
 
 
-
+def test_gfmc_prop(n_particles, dt):
+    seeder = itertools.count(0, 1)
+    
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
+    bra = ket.copy().dagger()
+    
+    pot = ArgonnePotential(n_particles)
+    pot.sigma.generate(1.0, seed=next(seeder))
+    pot.sigmatau.generate(1.0, seed=next(seeder))
+    pot.tau.generate(1.0, seed=next(seeder))
+    pot.coulomb.generate(0.1, seed=next(seeder))
+    pot.spinorbit.generate(dt, seed=next(seeder))
+    
+    prop = GFMCPropagatorRBM(n_particles, dt)
+    aux = np.ones(prop.n_aux_sigma).flatten()
+    factors = prop.factors_sigma(pot, aux)
+    print( bra * np.prod(factors) * ket)
+    
+    
+def test_afdmc_prop(n_particles, dt):
+    seeder = itertools.count(0, 1)
+    
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder))
+    bra = ket.copy().dagger()
+    
+    pot = ArgonnePotential(n_particles)
+    pot.sigma.generate(1.0, seed=next(seeder))
+    pot.sigmatau.generate(1.0, seed=next(seeder))
+    pot.tau.generate(1.0, seed=next(seeder))
+    pot.coulomb.generate(0.1, seed=next(seeder))
+    pot.spinorbit.generate(dt, seed=next(seeder))
+    
+    prop = AFDMCPropagatorRBM(n_particles, dt)
+    aux = np.ones(prop.n_aux_sigma).flatten()
+    factors = prop.factors_sigma(pot, aux)
+    print( bra * np.prod(factors) * ket)
+    
 if __name__=="__main__":
     n_particles = 2
-
-    test_gfmc(n_particles)
-    test_afdmc(n_particles)
+    dt = 0.01
+    # test_gfmc(n_particles)
+    # test_afdmc(n_particles)
+    test_gfmc_prop(n_particles, dt)
+    test_afdmc_prop(n_particles, dt)
 
     

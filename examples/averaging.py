@@ -15,9 +15,9 @@ def gfmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=Fa
     pot.spinorbit.generate(dt, seed=next(seeder))
 
     if method=='hs':
-        prop = GFMCPropagatorHS(n_particles, dt, mix=True, seed=next(seeder))
+        prop = GFMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = GFMCPropagatorRBM(n_particles, dt, mix=True, seed=next(seeder))
+        prop = GFMCPropagatorRBM(n_particles, dt)
     
     integ = Integrator(pot, prop)
 
@@ -61,9 +61,9 @@ def afdmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=F
     pot.spinorbit.generate(dt, seed=next(seeder))
 
     if method=='hs':
-        prop = AFDMCPropagatorHS(n_particles, dt, mix=True, seed=next(seeder))
+        prop = AFDMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = AFDMCPropagatorRBM(n_particles, dt, mix=True, seed=next(seeder))
+        prop = AFDMCPropagatorRBM(n_particles, dt)
     
     integ = Integrator(pot, prop)
 
@@ -110,15 +110,15 @@ def afdmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=F
 def main():
     n_particles = 2
     dt = 0.001
-    n_samples = 1000000
+    n_samples = 100000
 
     method = 'rbm'
-    controls = {"mix": False,
+    controls = {"mix": True,
                 "seed": 1,
                 "sigma": True,
                 "sigmatau": True,
                 "tau": True,
-                "coulomb": False,
+                "coulomb": True,
                 "spinorbit": False,
                 }
     plot = True
@@ -174,5 +174,4 @@ def test():
     print(v)
 
 if __name__ == "__main__":
-    experiment()
-    # test()
+    main()

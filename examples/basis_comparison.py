@@ -1,6 +1,6 @@
 from quap import *
 
-n_particles = 4
+n_particles = 3
 dt = 0.001
 
 def gfmc_bracket(method, controls):
@@ -16,29 +16,34 @@ def gfmc_bracket(method, controls):
     pot.spinorbit.generate(dt, seed=next(seed))
     
     if method=='hs':
-        prop = GFMCPropagatorHS(n_particles, dt, mix=False)
+        prop = GFMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = GFMCPropagatorRBM(n_particles, dt, mix=False)
+        prop = GFMCPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
-    ket_prop = ket.copy()
+    prop_list = []
     if controls["sigma"]:
         aux = np.ones(prop.n_aux_sigma).flatten()
-        ket_prop = prop.apply_sigma(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_sigma(pot, aux) )
     if controls["sigmatau"]:
         aux = np.ones(prop.n_aux_sigmatau).flatten()
-        ket_prop = prop.apply_sigmatau(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_sigmatau(pot, aux) )
     if controls["tau"]:
         aux = np.ones(prop.n_aux_tau).flatten()
-        ket_prop = prop.apply_tau(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_tau(pot, aux) )
     if controls["coulomb"]:
         aux = np.ones(prop.n_aux_coulomb).flatten()
-        ket_prop = prop.apply_coulomb(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_coulomb(pot, aux) )
     if controls["spinorbit"]: 
         aux = np.ones(prop.n_aux_spinorbit).flatten()  # use sigma shape for spinorbit
-        ket_prop = prop.apply_spinorbit(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_spinorbit(pot, aux) )
     
+    rng = np.random.default_rng(seed=next(seed))
+    rng.shuffle(prop_list)
+    ket_prop = ket.copy()
+    for p in prop_list:
+        ket_prop = p * ket_prop
     return bra * ket_prop
 
 
@@ -55,34 +60,39 @@ def afdmc_bracket(method, controls):
     pot.spinorbit.generate(dt, seed=next(seed))
     
     if method=='hs':
-        prop = AFDMCPropagatorHS(n_particles, dt, mix=False)
+        prop = AFDMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = AFDMCPropagatorRBM(n_particles, dt, mix=False)
+        prop = AFDMCPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
-    ket_prop = ket.copy()
+    prop_list = []
     if controls["sigma"]:
         aux = np.ones(prop.n_aux_sigma).flatten()
-        ket_prop = prop.apply_sigma(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_sigma(pot, aux) )
     if controls["sigmatau"]:
         aux = np.ones(prop.n_aux_sigmatau).flatten()
-        ket_prop = prop.apply_sigmatau(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_sigmatau(pot, aux) )
     if controls["tau"]:
         aux = np.ones(prop.n_aux_tau).flatten()
-        ket_prop = prop.apply_tau(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_tau(pot, aux) )
     if controls["coulomb"]:
         aux = np.ones(prop.n_aux_coulomb).flatten()
-        ket_prop = prop.apply_coulomb(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_coulomb(pot, aux) )
     if controls["spinorbit"]: 
         aux = np.ones(prop.n_aux_spinorbit).flatten()  # use sigma shape for spinorbit
-        ket_prop = prop.apply_spinorbit(ket_prop, pot, aux)
+        prop_list.extend( prop.factors_spinorbit(pot, aux) )
     
+    rng = np.random.default_rng(seed=next(seed))
+    rng.shuffle(prop_list)
+    ket_prop = ket.copy()
+    for p in prop_list:
+        ket_prop = p * ket_prop
     return bra * ket_prop
 
 
 if __name__ == "__main__":
-    method = 'hs'
+    method = 'rbm'
     controls = {"sigma": True,
                 "sigmatau": True,
                 "tau": True,
