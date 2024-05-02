@@ -1,8 +1,7 @@
 from quap import *
 from quap.extras import chistogram
-import pickle as plk
 
-def gfmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=False):
+def gfmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)
 
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
@@ -48,7 +47,7 @@ def gfmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=Fa
 
 
 
-def afdmc_avg(n_particles, dt, n_samples, method, controls, balance=True, plot=False):
+def afdmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)
 
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder))
@@ -118,7 +117,7 @@ def main():
                 "sigma": True,
                 "sigmatau": True,
                 "tau": True,
-                "coulomb": True,
+                "coulomb": False,
                 "spinorbit": False,
                 }
     plot = True

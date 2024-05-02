@@ -128,7 +128,6 @@ def pauli(arg):
     return out
 
 
-
 def repeated_kronecker_product(matrices: list):
     """
     returns the tensor/kronecker product of a list of arrays

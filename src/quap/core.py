@@ -1164,11 +1164,11 @@ class Propagator:
         self._n2 = len(self._2b_idx)
         self._n3 = len(self._3b_idx)
 
+
 class GFMCPropagatorHS(Propagator):
     """ exp( - k op_i op_j )"""
     def __init__(self, n_particles, dt, include_prefactors=True):
-        super().__init__(n_particles, dt, include_prefactors)
-        
+        super().__init__(n_particles, dt, include_prefactors)        
         self._ident = GFMCSpinIsospinOperator(self.n_particles)
         self._sig_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self._tau_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
@@ -1624,6 +1624,17 @@ class ExactGFMC:
         return out.exp()
 
 
+    def g_pade_sig_3b(self, dt, asig3b, i, j, k):
+        # 3-body sigma
+        out = GFMCSpinIsospinOperator(self.n_particles).zero()
+        for a in range(3):
+            for b in range(3):
+                for c in range(3):
+                    out += asig3b[a, i, b, j, c, k] * self.sig[i][a] * self.sig[j][b] * self.sig[k][c]
+        out = -0.5 * dt * out
+        return out.exp()
+
+
     def make_g_exact(self, dt, potential, controls):
         # compute exact bracket
         g_exact = self.ident.copy()
@@ -1637,8 +1648,6 @@ class ExactGFMC:
                 g_exact = self.g_pade_tau(dt, potential.tau, i, j) * g_exact
             if controls['coulomb']:
                 g_exact = self.g_pade_coul(dt, potential.coulomb, i, j) * g_exact
-        
-
         if controls['spinorbit']:
             # linear approximation
             # for i in range(self.n_particles):
@@ -1672,9 +1681,6 @@ class Integrator():
         self.controls={"seed":seed, "mix":mix, "sigma":sigma, "sigmatau":sigmatau, 
                        "tau":tau, "coulomb":coulomb, "spinorbit":spinorbit}
         
-        # self.n_forces = sum([self.controls[key] for key in ["sigma", "sigmatau", "tau", "coulomb", "spinorbit"]])
-        # self._force_idx = np.arange(self.n_forces)
-
         n_aux = 0
         if self.controls['sigma']:
             n_aux += self.propagator.n_aux_sigma
