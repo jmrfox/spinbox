@@ -264,6 +264,10 @@ class GFMCSpinState(State):
         self.coefficients /= np.linalg.norm(self.coefficients)
         return self
     
+    def zero(self):
+        self.coefficients = np.zeros_like(self.coefficients)
+        return self
+
 
 class GFMCSpinIsospinState(State):
     def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
@@ -335,6 +339,11 @@ class GFMCSpinIsospinState(State):
         self.coefficients = rng.standard_normal(size=self.coefficients.shape)
         self.coefficients /= np.linalg.norm(self.coefficients)
         return self
+
+    def zero(self):
+        self.coefficients = np.zeros_like(self.coefficients)
+        return self
+
 
 class GFMCSpinOperator(Operator):
     def __init__(self, n_particles: int):
@@ -633,7 +642,11 @@ class AFDMCSpinState(State):
         for i in range(self.n_particles):
             self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
         return self
-    
+
+    def zero(self):
+        self.coefficients = np.zeros_like(self.coefficients)
+        return self
+
 
 class AFDMCSpinIsospinState(State):
     def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
@@ -758,6 +771,10 @@ class AFDMCSpinIsospinState(State):
         self.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
         for i in range(self.n_particles):
             self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
+        return self
+
+    def zero(self):
+        self.coefficients = np.zeros_like(self.coefficients)
         return self
 
 

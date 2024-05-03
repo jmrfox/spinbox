@@ -15,7 +15,7 @@ def correction(sig, a2, a1):
                   a1*sig[0] + a1*sig[1] + a1*sig[2])
     return out
 
-###
+### repulsive: a3>0
 
 def soln_c_repulsive(a3):
     x = sqrt(exp(8*a3) - 1)
@@ -43,7 +43,7 @@ def soln_n_repulsive(a3):
     bottom = 2**(3/8) * sqrt(exp(2*c) + 1) * (exp(4*c) + 1)**0.125
     return top/bottom
 
-###
+###  attractive a3<0
 
 def soln_c_attractive(a3):
     x = sqrt(1 - exp(8*a3))
@@ -94,7 +94,7 @@ def test(sig, a3):
 
 def main():
     sig = [-1,1,1]
-    a3 = -3.14
+    a3 = 3.14
     test(sig, a3)
 
 if __name__=="__main__":
