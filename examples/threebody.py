@@ -27,39 +27,74 @@ def a3b_factors(a3):
         bottom = 2**(3/8) * csqrt(cexp(-2*c) + 1) * (cexp(4*c) + 1)**0.125
         n = top/bottom
     return n, c, w, a1, a2
+    
 
+def a2b_factors(k):
+    n = cexp(-abs(k))/2.
+    w = carctanh(csqrt(ctanh(abs(k))))
+    s = k/abs(k)
+    return n, w, s
 
 def gfmc_3b_1d(n_particles, dt):
-    # exp( - dt/2 sig_1x sig_2y sig_3z)
+    # exp( - dt/2 sig_1x sig_2x sig_3x)
     sig = [[GFMCSpinIsospinOperator(n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    # tau = [[GFMCSpinIsospinOperator(n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     ident = GFMCSpinIsospinOperator(n_particles)
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(0).to_manybody_basis()
     bra = ket.copy().dagger()
 
-    a3 = -10
+    a3 = -3
 
     # exact
     ket_prop = ket.copy()
-    ket_prop = (- 0.5 * dt * a3 * sig[0][0] * sig[1][1] * sig[2][2]).exp() * ket_prop
+    ket_prop = (- 0.5 * dt * a3 * sig[0][0] * sig[1][0] * sig[2][0]).exp() * ket_prop
     b_exact = bra * ket_prop
 
+    ##### rbm take 1: use 3b rbm and exact 2b
+    # ket_prop = ket.copy() # outside loops
+    # # 3b
+    # N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
+    # ket_temp = ket_prop.copy().zero()  #right before h loop
+    # for h in [0.,1.]:
+    #     ket_temp += (-h*C*ident + (A1 - h*W)*(sig[0][0] + sig[1][0] + sig[2][0])).exp() * ket_prop
+    # ket_prop = N * ket_temp.copy()
+    # # 2b
+    # ket_prop = (A2*(sig[0][0]*sig[1][0] + sig[0][0]*sig[2][0] + sig[1][0]*sig[2][0])).exp() * ket_prop
+    # b_rbm = bra * ket_prop
+
+    ##### rbm take 2: use 3b rbm and 2b rbm (x3)
     ket_prop = ket.copy() # outside loops
+    ## 3b
     ket_temp = ket_prop.copy().zero()  #right before h loop
+    N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
     for h in [0.,1.]:
-        N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-        ket_temp += (-h*C*ident + (A1 - h*W)*(sig[0][0] + sig[1][1] + sig[2][2])).exp() * ket_prop
-    ket_prop = ket_temp.copy()
-    ket_prop = N * (A2*(sig[0][0]*sig[1][1] + sig[0][0]*sig[2][2] + sig[1][1]*sig[2][2])).exp() * ket_prop
+        ket_temp += (-h*C*ident + (A1 - h*W)*(sig[0][0] + sig[1][0] + sig[2][0])).exp() * ket_prop
+    ket_prop = N * ket_temp.copy()
+    ## 2b
+    N, W, S = a2b_factors(-A2)
+    ## i,j
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (W*(2*h-1)*(sig[0][0] - S*sig[1][0])).exp() * ket_prop
+    ket_prop = N * ket_temp.copy()
+    ## i,k
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (W*(2*h-1)*(sig[0][0] - S*sig[2][0])).exp() * ket_prop
+    ket_prop = N * ket_temp.copy()
+    ## j,k
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (W*(2*h-1)*(sig[1][0] - S*sig[2][0])).exp() * ket_prop
+    ket_prop = N * ket_temp.copy()
     b_rbm = bra * ket_prop
 
-    return b_rbm, b_exact
+    return b_exact, b_rbm
 
 
 def gfmc_3bprop(n_particles, dt, seed):
     seeder = itertools.count(seed, 1)
     sig = [[GFMCSpinIsospinOperator(n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    tau = [[GFMCSpinIsospinOperator(n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+    # tau = [[GFMCSpinIsospinOperator(n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     ident = GFMCSpinIsospinOperator(n_particles)
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
     bra = ket.copy().dagger()
@@ -74,11 +109,8 @@ def gfmc_3bprop(n_particles, dt, seed):
 
     b_exact = bra * ket_prop 
 
-    # nnn rbm, take 1
-    # use rbm for 3x1-body part and Pade for the three 2-bodys
     ket_prop = ket.copy()
     for i,j,k in idx_3b:
-        # first, apply the one-body parts
         for a in range(3):
             for b in range(3):
                 for c in range(3):
@@ -86,10 +118,27 @@ def gfmc_3bprop(n_particles, dt, seed):
                     for h in [0.,1.]:
                         N, C, W, A1, A2 = a3b_factors(0.5 * dt * asig3b[a,i,b,j,c,k])
                         ket_temp += (-h*C*ident + (A1 - h*W)*(sig[i][a] + sig[j][b] + sig[k][c])).exp() * ket_prop
-                    ket_prop = ket_temp.copy()
-                    ket_prop = N * (A2*(sig[i][a]*sig[j][b] + sig[i][a]*sig[k][c] + sig[j][b]*sig[k][c])).exp() * ket_prop
+                    ket_prop = N * ket_temp.copy()
+                    # ket_prop = (A2*(sig[i][a]*sig[j][b] + sig[i][a]*sig[k][c] + sig[j][b]*sig[k][c])).exp() * ket_prop
+                    N, W, S = a2b_factors(-A2)
+                    ## iajb
+                    ket_temp = ket_prop.copy().zero()
+                    for h in [0.,1.]:
+                        ket_temp += (W*(2*h-1)*(sig[i][a] - S*sig[j][b])).exp() * ket_prop
+                    ket_prop = N * ket_temp.copy()
+                    ## iakc
+                    ket_temp = ket_prop.copy().zero()
+                    for h in [0.,1.]:
+                        ket_temp += (W*(2*h-1)*(sig[i][a] - S*sig[k][c])).exp() * ket_prop
+                    ket_prop = N * ket_temp.copy()
+                    ## jbkc
+                    ket_temp = ket_prop.copy().zero()
+                    for h in [0.,1.]:
+                        ket_temp += (W*(2*h-1)*(sig[j][b] - S*sig[k][c])).exp() * ket_prop
+                    ket_prop = N * ket_temp.copy()
+
     b_rbm = bra * ket_prop
-    return b_rbm, b_exact    
+    return b_exact, b_rbm    
 
 
 def three_body_comms():
@@ -101,16 +150,21 @@ def three_body_comms():
     print(np.linalg.norm((o_0*o_1 - o_1*o_0).matrix) )
 
 
-if __name__=="__main__":
+def compare():
     n_particles = 3
     dt = 0.001
-    seed = 1
+    seed = 2
 
-    b_rbm, b_exact = gfmc_3b_1d(n_particles, dt)
-    # b_rbm, b_exact = gfmc_3bprop(n_particles, dt, seed)
+    # b_exact, b_rbm = gfmc_3b_1d(n_particles, dt)
+    b_exact, b_rbm = gfmc_3bprop(n_particles, dt, seed)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_rbm - b_exact)
     print("error = ", (b_rbm - b_exact)/b_exact)  
     print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
     
+
+
+if __name__=="__main__":
+    compare()
+
