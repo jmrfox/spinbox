@@ -11,7 +11,7 @@ __version__ = '0.1.0'
 #
 # cut down on unnecessary asserts. replace with try/except if necessary.
 #
-# classes have a .copy() method to be used for __add__, __mult__, etc 
+# classes have a .copy() method to be used for __add__, __mul__, etc 
 # but otherwise allow for in-place operations.
 # e.g., c = a + b , when valid, uses a .copy() method
 # but methods like .scalar_mult() and .apply_onebody_operator() need not use .copy()
@@ -32,7 +32,9 @@ import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
-from typing import Self
+###
+
+SAFE = True
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
@@ -189,7 +191,7 @@ class HilbertState:
             else:
                 self.coefficients = np.zeros(shape=(1, self.dim))
         else: 
-            assert type(coefficients)==np.ndarray
+            # assert type(coefficients)==np.ndarray
             ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
             bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
             if not ket_condition and not bra_condition:
@@ -201,32 +203,39 @@ class HilbertState:
     def copy(self):
         return HilbertState(self.n_particles, self.coefficients.copy(), self.ketwise, isospin=self.isospin)
     
-    def __add__(self, other: Self):
+    def __add__(self, other):
+        if SAFE: assert type(other) == type(self)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other: Self):
+    def __sub__(self, other):
+        if SAFE: assert type(other) == type(self)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
-    def inner(self, other: Self):
-        assert not self.ketwise and other.ketwise
+    def inner(self, other):
+        if SAFE:
+            assert type(other) == type(self)
+            assert not self.ketwise and other.ketwise
         return np.dot(self.coefficients, other.coefficients) 
         
     def __mul__(self, other):
         return self.inner(other)
     
     def scalar_multiply(self, other):
+        if SAFE: assert np.isscalar(other)
         self.coefficients *= other
         return self    
     
     def __rmul__(self, other):
         return self.scalar_multiply(other)
     
-    def outer(self, other: Self):
-        assert self.ketwise and not other.ketwise
+    def outer(self, other):
+        if SAFE:
+            assert type(other) == type(self)
+            assert self.ketwise and not other.ketwise
         return np.matmul(self.coefficients, other.coefficients, dtype='complex') 
     
     def dagger(self):
@@ -272,31 +281,37 @@ class HilbertOperator:
         out.coefficients = self.coefficients.copy()
         return out
     
-    def __add__(self, other: Self):
+    def __add__(self, other):
+        if SAFE: assert type(other) == type(self)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other: Self):
+    def __sub__(self, other):
+        if SAFE: assert type(other) == type(self)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
     def __mul__(self, other: HilbertState):
         """ operator * |ket> """
-        assert other.ketwise
+        if SAFE: 
+            assert type(other) == self.friendly_state
+            assert other.ketwise
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
         
-    def __matmul__(self, other: Self):
+    def __matmul__(self, other):
         """ operator_A @ operator_B"""
+        if SAFE: assert type(other) == type(self)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
 
     def scalar_multiply(self, other):
         """ c * operator """
+        if SAFE: assert np.isscalar(other)
         self.coefficients *= other
         return self    
     
@@ -312,14 +327,22 @@ class HilbertOperator:
         return out
 
     def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix=None):
+        if SAFE:
+            assert type(spin_matrix) == np.ndarray
+            assert spin_matrix.shape == (2,2)
         obo = [np.identity(self.n_basis, dtype=complex) for _ in range(self.n_particles)]
         if self.isospin:
             if isospin_matrix is None:
                 isospin_matrix = np.identity(2, dtype=complex)
+            else:
+                if SAFE:
+                    assert type(spin_matrix) == np.ndarray
+                    assert spin_matrix.shape == (2,2)        
             op = repeated_kronecker_product([isospin_matrix, spin_matrix])
         else:
             op = spin_matrix
-        assert op.shape == obo[particle_index].shape
+        if SAFE:
+            assert op.shape == obo[particle_index].shape
         obo[particle_index] = op
         obo = repeated_kronecker_product(obo)
         self.coefficients = np.matmul(obo, self.coefficients, dtype=complex)
@@ -377,8 +400,9 @@ class ProductState:
                 self.coefficients = np.zeros(shape=(self.n_particles, self.n_basis, 1))
             else:
                 self.coefficients = np.zeros(shape=(self.n_particles, 1, self.n_basis))
-        else: 
-            assert type(coefficients)==np.ndarray
+        else:
+            if SAFE:
+                assert type(coefficients)==np.ndarray
             ket_condition = (coefficients.shape == (n_particles, self.n_basis, 1)) and ketwise
             bra_condition = (coefficients.shape == (n_particles, 1, self.n_basis)) and not ketwise
             if not ket_condition and not bra_condition:
@@ -399,13 +423,19 @@ class ProductState:
     def to_list(self):
         return [self.coefficients[i] for i in range(self.n_particles)]
 
-    def inner(self, other: Self):
+    def inner(self, other):
+        if SAFE:
+            assert type(other) == type(self)
+            assert (not self.ketwise) and other.ketwise
         return complex(np.prod([np.dot(self.coefficients[i], other.coefficients[i]) for i in range(self.n_particles)]))
         
     def __mul__(self, other):
         return self.inner(other)
         
-    def outer(self, other: Self):
+    def outer(self, other):
+        if SAFE:
+            assert type(other) == type(self)
+            assert (self.ketwise) and (not other.ketwise)
         out = ProductOperator(n_particles=self.n_particles, isospin=self.isospin)
         for i in range(self.n_particles):
             out.coefficients[i] = np.matmul(self.coefficients[i], other.coefficients[i], dtype=complex)
@@ -430,12 +460,12 @@ class ProductState:
 
     def to_manybody_basis(self):
         """project the NxA TP state into the full N^A MB basis"""
-        sp_mb = repeated_kronecker_product(self.to_list())
+        new_coeffs = repeated_kronecker_product(self.to_list())
         if self.ketwise:
-            sp_mb = sp_mb.reshape(self.n_basis ** self.n_particles, 1)
+            new_coeffs = new_coeffs.reshape(self.n_basis ** self.n_particles, 1)
         else:
-            sp_mb = sp_mb.reshape(1, self.n_basis ** self.n_particles)
-        return HilbertState(self.n_particles, sp_mb, self.ketwise, self.isospin)
+            new_coeffs = new_coeffs.reshape(1, self.n_basis ** self.n_particles)
+        return HilbertState(self.n_particles, new_coeffs, self.ketwise, self.isospin)
 
     def normalize(self):
         for i in range(self.n_particles):
@@ -443,11 +473,13 @@ class ProductState:
             self.coefficients[i] /= n
         return self
 
-    def scalar_mult(self, particle_index, b):
+    def scalar_mult(self, particle_index: int, b):
+        if SAFE: assert np.isscalar(b)
         self.coefficients[particle_index] *= b
         return self
 
     def spread_scalar_mult(self, b):
+        if SAFE: assert np.isscalar(b)
         self.coefficients *= b ** (1 / self.n_particles)
         return self
 
@@ -488,15 +520,19 @@ class ProductOperator:
     def to_list(self):
         return [self.coefficients[i] for i in range(self.n_particles)]
     
-    def __mul__(self, other: HilbertState):
+    def __mul__(self, other: ProductState):
         """ operator * |ket> """
+        if SAFE:
+            assert type(other) == self.friendly_state
+            assert other.ketwise
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
         return out
         
-    def __matmul__(self, other: Self):
+    def __matmul__(self, other):
         """ operator_A @ operator_B"""
+        if SAFE: assert type(other) == type(self)
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
@@ -531,14 +567,13 @@ class ProductOperator:
                                           isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
 
-    def scalar_mult(self, particle_index, b):
-        # return self.apply_onebody_operator(particle_index=particle_index,
-        #                                   isospin_matrix = b * np.identity(2),
-        #                                   spin_matrix = np.identity(2))
+    def scalar_mult(self, particle_index: int, b):
+        if SAFE: assert np.isscalar(b)
         self.coefficients[particle_index] *= b
         return self
         
     def scale_all(self, b):
+        if SAFE: assert np.isscalar(b)
         self.coefficients *= b ** (1 / self.n_particles)
         return self
 
@@ -566,13 +601,19 @@ class Coupling:
             self.read(file)
 
     def copy(self):
-        out = self.__class__(self.n_particles, self.shape)
+        if SAFE: assert isinstance(self.coefficients, np.ndarray)
+        out = Coupling(self.n_particles, self.shape)
+        out.coefficients = self.coefficients.copy()
         return out
 
-    def __mult__(self, other):
+    def __mul__(self, other):
+        if SAFE: assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
+    
+    def __rmul__(self,other):
+        return self.__mul__(other)
 
     def read(self, filename):
         if self.shape is None:
@@ -581,6 +622,9 @@ class Coupling:
 
     def __getitem__(self, key):
         return self.coefficients[key]
+
+    def __setitem__(self, key, value):
+        self.coefficients[key] = value
 
     def __str__(self):
         return str(self.coefficients)
@@ -594,7 +638,7 @@ class SigmaCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
 
     def validate(self):
@@ -624,7 +668,7 @@ class SigmaTauCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
         
     def validate(self):
@@ -654,7 +698,7 @@ class TauCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (n_particles, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
 
     def validate(self):
@@ -680,7 +724,7 @@ class CoulombCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (n_particles, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
 
     def validate(self):
@@ -708,7 +752,7 @@ class SpinOrbitCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
 
     def validate(self):
@@ -729,7 +773,7 @@ class ThreeBodyCoupling(Coupling):
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if file is not None:
+        if SAFE and (file is not None):
             self.validate()
 
     def validate(self):
@@ -830,7 +874,7 @@ class HilbertPropagatorHS(Propagator):
             prefactor = 1.0
         gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
         gj = ccosh(arg) * self._ident + csinh(arg) * operator_j
-        return prefactor * gi * gj
+        return prefactor * gi @ gj
                 
     def factors_sigma(self, potential: ArgonnePotential, aux: list):
         out = []
@@ -944,7 +988,7 @@ class HilbertPropagatorRBM(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         k = 0.5 * self.dt * potential.sigmatau[a,i,b,j]
-                        out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c]) )
+                        out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a]@self._tau_op[i][c], self._sig_op[j][b]@self._tau_op[j][c]) )
                         idx += 1
         return out
     
@@ -1004,7 +1048,7 @@ class ProductPropagatorHS(Propagator):
     def onebody(self, k, i, matrix):
         """exp (- k opi) * |ket> """
         out = ProductOperator(self.n_particles, self.isospin)
-        out.coefficient[i] = ccosh(k) * out.coefficient[i] - csinh(k) * matrix @ out.coefficient[i]
+        out.coefficients[i] = ccosh(k) * out.coefficients[i] - csinh(k) * matrix @ out.coefficients[i]
         return out
     
     def twobody_sample(self, k, x, i, j, operator_i, operator_j):
@@ -1015,10 +1059,10 @@ class ProductPropagatorHS(Propagator):
         else:
             prefactor = 1.0
         out = ProductOperator(self.n_particles, self.isospin)
-        out.coefficient[i] = ccosh(arg) * out.coefficient[i] + csinh(arg) * operator_i @ out.coefficient[i]
-        out.coefficient[j] = ccosh(arg) * out.coefficient[j] + csinh(arg) * operator_j @ out.coefficient[j]
-        out.coefficient[i] *= csqrt(prefactor)
-        out.coefficient[j] *= csqrt(prefactor)
+        out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * operator_i @ out.coefficients[i]
+        out.coefficients[j] = ccosh(arg) * out.coefficients[j] + csinh(arg) * operator_j @ out.coefficients[j]
+        out.coefficients[i] *= csqrt(prefactor)
+        out.coefficients[j] *= csqrt(prefactor)
         return out
 
     def factors_sigma(self, potential: ArgonnePotential, aux: list):
@@ -1304,7 +1348,7 @@ class ExactGFMC:
     
 
 
-class Integrator():
+class Integrator:
     def __init__(self, potential: ArgonnePotential, propagator):
         if type(propagator) in [HilbertPropagatorHS, ProductPropagatorHS]:
             self.method = 'HS'

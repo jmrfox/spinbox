@@ -1,24 +1,26 @@
 from quap import *
 
-n_particles = 3
+n_particles = 2
 dt = 0.001
 
-def gfmc_bracket(method, controls):
-    seed = itertools.count(0,1)
-    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seed)).to_manybody_basis()
-    bra = ket.copy().dagger()
+seed = itertools.count(0,1)
+pot = ArgonnePotential(n_particles)
+pot.sigma.generate(1.0, seed=next(seed))
+pot.sigmatau.generate(1.0, seed=next(seed))
+pot.tau.generate(1.0, seed=next(seed))
+pot.coulomb.generate(0.1, seed=next(seed))
+pot.spinorbit.generate(dt, seed=next(seed))
 
-    pot = ArgonnePotential(n_particles)
-    pot.sigma.generate(1.0, seed=next(seed))
-    pot.sigmatau.generate(1.0, seed=next(seed))
-    pot.tau.generate(1.0, seed=next(seed))
-    pot.coulomb.generate(0.1, seed=next(seed))
-    pot.spinorbit.generate(dt, seed=next(seed))
+
+def hilbert_bracket(method, controls):
+    seed = itertools.count(0,1)
+    ket = ProductState(n_particles).randomize(seed=next(seed)).to_manybody_basis()
+    bra = ket.copy().dagger()
     
     if method=='hs':
-        prop = GFMCPropagatorHS(n_particles, dt)
+        prop = HilbertPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = GFMCPropagatorRBM(n_particles, dt)
+        prop = HilbertPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
@@ -47,22 +49,15 @@ def gfmc_bracket(method, controls):
     return bra * ket_prop
 
 
-def afdmc_bracket(method, controls):
+def product_bracket(method, controls):
     seed = itertools.count(0,1)
-    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seed))
+    ket = ProductState(n_particles).randomize(seed=next(seed))
     bra = ket.copy().dagger()
-
-    pot = ArgonnePotential(n_particles)
-    pot.sigma.generate(1.0, seed=next(seed))
-    pot.sigmatau.generate(1.0, seed=next(seed))
-    pot.tau.generate(1.0, seed=next(seed))
-    pot.coulomb.generate(0.1, seed=next(seed))
-    pot.spinorbit.generate(dt, seed=next(seed))
     
     if method=='hs':
-        prop = AFDMCPropagatorHS(n_particles, dt)
+        prop = ProductPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = AFDMCPropagatorRBM(n_particles, dt)
+        prop = ProductPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
@@ -92,15 +87,16 @@ def afdmc_bracket(method, controls):
 
 
 if __name__ == "__main__":
-    method = 'rbm'
+    method = 'hs'
+
     controls = {"sigma": True,
-                "sigmatau": True,
-                "tau": True,
-                "coulomb": True,
-                "spinorbit": True,
+                "sigmatau": False,
+                "tau": False,
+                "coulomb": False,
+                "spinorbit": False,
                 }
-    b_gfmc = gfmc_bracket(method, controls)
-    b_afdmc = afdmc_bracket(method, controls)
-    print('ratio =', np.abs(b_gfmc/b_afdmc) )
-    print('abs error =', np.abs(1-np.abs(b_gfmc/b_afdmc)) )
+    b_hilbert = hilbert_bracket(method, controls)
+    b_product = product_bracket(method, controls)
+    print('ratio =', np.abs(b_hilbert/b_product) )
+    print('abs error =', np.abs(1-np.abs(b_hilbert/b_product)) )
     

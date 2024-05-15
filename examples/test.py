@@ -1,47 +1,87 @@
 from quap import *
 
 
-def test_hilbert_spin(n_particles):
-    print('GFMC RANDOM STATES')
-    s0 = HilbertState(n_particles, isospin=False).randomize(100)
-    s1 = HilbertState(n_particles, isospin=False).randomize(101)
+def test_overlaps_spin():
+
+    def exam(s0, s1):
+        out = []
+        out.append(s0.coefficients)
+        out.append(s1.coefficients)
+        out.append( s0.dagger().inner(s0)  )
+        out.append( s1.dagger().inner(s1)  )
+        out.append( s0.dagger().inner(s1)  )
+        out.append( s0.outer(s0.dagger()) )
+        out.append( s1.outer(s1.dagger()) )
+        out.append( s0.outer(s1.dagger()) )
+        return out
+
+
+    s0 = ProductState(n_particles, isospin=False).randomize(100).to_manybody_basis()
+    s1 = ProductState(n_particles, isospin=False).randomize(101).to_manybody_basis()
+    hilbert_list = exam(s0, s1)
+    s0 = ProductState(n_particles, isospin=False).randomize(100)
+    s1 = ProductState(n_particles, isospin=False).randomize(101)
+    
     print("|0> = \n", s0)
     print("|1> = \n", s1)
-    print('GFMC INNER PRODUCTS')
+    print('PRODUCT INNER PRODUCTS')
     print("<0|0> = \n", s0.dagger().inner(s0)  )
     print("<1|1> = \n", s1.dagger().inner(s1)  )
     print("<0|1> = \n", s0.dagger().inner(s1) )
-    print('GFMC OUTER PRODUCTS')
+    print('PRODUCT OUTER PRODUCTS')
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('DONE TESTING GFMC STATES')
 
-    print('TESTING GFMC OPERATORS')
+
+
+def test_hilbert_spin_basics(n_particles):
+    print('HILBERT RANDOM STATES')
+    s0 = ProductState(n_particles, isospin=False).randomize(100).to_manybody_basis()
+    s1 = ProductState(n_particles, isospin=False).randomize(101).to_manybody_basis()
+    print("|0> = \n", s0)
+    print("|1> = \n", s1)
+    print('HILBERT INNER PRODUCTS')
+    print("<0|0> = \n", s0.dagger().inner(s0)  )
+    print("<1|1> = \n", s1.dagger().inner(s1)  )
+    print("<0|1> = \n", s0.dagger().inner(s1) )
+    print('HILBERT OUTER PRODUCTS')
+    print("|0><0| = \n", s0.outer(s0.dagger()) )
+    print("|1><1| = \n", s1.outer(s1.dagger()) )
+    print("|0><1| = \n", s0.outer(s1.dagger()) )
+    print('DONE TESTING HILBERT STATES')
+
+def test_hilbert_spin_operators(n_particles):
+    s0 = ProductState(n_particles, isospin=False).randomize(100).to_manybody_basis()
+    s1 = ProductState(n_particles, isospin=False).randomize(101).to_manybody_basis()
     sig = [[HilbertOperator(n_particles, isospin=False).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     for i in range(n_particles):
         for a in range(3):
             print('sigma', i, a)
             print(sig[i][a])
+            
+    print("<0|sig(0,0)|0> = \n", s0.dagger().inner(sig[0][0]*s0))
+    print("<1|sig(0,0)|1> = \n", s1.dagger().inner(sig[0][0]*s1))
+    print("<0|sig(0,0)|1> = \n", s0.dagger().inner(sig[0][0]*s1))
     
-    print('GFMC TEST COMPLETE')
+    print('DONE TESTING HILBERT OPERATORS')
 
 
-def test_product_spin(n_particles):
-    print('AFDMC RANDOM STATES')
+def test_product_spin_basics(n_particles):
+    print('PRODUCT RANDOM STATES')
     s0 = ProductState(n_particles, isospin=False).randomize(100)
     s1 = ProductState(n_particles, isospin=False).randomize(101)
     print("|0> = \n", s0)
     print("|1> = \n", s1)
-    print('AFDMC INNER PRODUCTS')
+    print('PRODUCT INNER PRODUCTS')
     print("<0|0> = \n", s0.dagger().inner(s0)  )
     print("<1|1> = \n", s1.dagger().inner(s1)  )
     print("<0|1> = \n", s0.dagger().inner(s1) )
-    print('AFDMC OUTER PRODUCTS')
+    print('PRODUCT OUTER PRODUCTS')
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('AFDMC TO MBB')
+    print('PRODUCT TO MBB')
     s0 = s0.to_manybody_basis()
     s1 = s1.to_manybody_basis()
     print("<MBB|0> = \n", s0)
@@ -54,21 +94,28 @@ def test_product_spin(n_particles):
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('DONE TESTING AFDMC STATES')
+    print('DONE TESTING PRODUCT STATES')
 
-    print('TESTING AFDMC OPERATORS')
+
+def test_product_spin_operators(n_particles):
+    s0 = ProductState(n_particles, isospin=False).randomize(100)
+    s1 = ProductState(n_particles, isospin=False).randomize(101)
     sig = [[ProductOperator(n_particles, isospin=False).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     for i in range(n_particles):
         for a in range(3):
             print('sigma', i, a)
             print(sig[i][a])
     
-    print('AFDMC TEST COMPLETE')
+    print("<0|sig(0,0)|0> = \n", s0.dagger().inner(sig[0][0]*s0))
+    print("<1|sig(0,0)|1> = \n", s1.dagger().inner(sig[0][0]*s1))
+    print("<0|sig(0,0)|1> = \n", s0.dagger().inner(sig[0][0]*s1))
+
+    print('DONE TESTING PRODUCT OPERATORS')
 
 
 
 def test_hilbert_isospin(n_particles):
-    print('GFMC RANDOM STATES')
+    print('HILBERT RANDOM STATES')
     s0 = HilbertState(n_particles).randomize(100)
     s1 = HilbertState(n_particles).randomize(101)
     print("|0> = \n", s0)
@@ -81,20 +128,20 @@ def test_hilbert_isospin(n_particles):
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('DONE TESTING GFMC STATES')
+    print('DONE TESTING HILBERT STATES')
 
-    print('TESTING GFMC OPERATORS')
+    print('TESTING HILBERT OPERATORS')
     sig = [[HilbertOperator(n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     for i in range(n_particles):
         for a in range(3):
             print('sigma', i, a)
             print(sig[i][a])
     
-    print('GFMC TEST COMPLETE')
+    print('HILBERT TEST COMPLETE')
 
 
 def test_product_isospin(n_particles):
-    print('AFDMC RANDOM STATES')
+    print('PRODUCT RANDOM STATES')
     s0 = ProductState(n_particles).randomize(100)
     s1 = ProductState(n_particles).randomize(101)
     print("|0> = \n", s0)
@@ -107,7 +154,7 @@ def test_product_isospin(n_particles):
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('AFDMC TO MBB')
+    print('PRODUCT TO MBB')
     s0 = s0.to_manybody_basis()
     s1 = s1.to_manybody_basis()
     print("<MBB|0> = \n", s0)
@@ -120,16 +167,16 @@ def test_product_isospin(n_particles):
     print("|0><0| = \n", s0.outer(s0.dagger()) )
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
-    print('DONE TESTING AFDMC STATES')
+    print('DONE TESTING PRODUCT STATES')
 
-    print('TESTING AFDMC OPERATORS')
+    print('TESTING PRODUCT OPERATORS')
     sig = [[ProductOperator(n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     for i in range(n_particles):
         for a in range(3):
             print('sigma', i, a)
             print(sig[i][a])
     
-    print('AFDMC TEST COMPLETE')
+    print('PRODUCT TEST COMPLETE')
 
 
 def test_hilbert_prop(n_particles, dt):
@@ -183,11 +230,15 @@ def test_product_prop(n_particles, dt):
 if __name__=="__main__":
     n_particles = 2
     dt = 0.01
-    test_hilbert_spin(n_particles)
-    test_product_spin(n_particles)
-    test_hilbert_isospin(n_particles)
-    test_product_isospin(n_particles)
+    
+    # test_hilbert_spin_basics(n_particles)
+    # test_product_spin_basics(n_particles)
+    
+    test_hilbert_spin_operators(n_particles)
+    test_product_spin_operators(n_particles)
 
-    b1 = test_hilbert_prop(n_particles, dt)
-    b2 = test_product_prop(n_particles, dt)
-    print("ratio = ", b1/b2)
+    # test_hilbert_isospin(n_particles)
+    # test_product_isospin(n_particles)
+
+    # test_hilbert_prop(n_particles, dt)
+    # test_product_prop(n_particles, dt)
