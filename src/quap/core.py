@@ -32,6 +32,8 @@ import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
+from typing import Self
+
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
 # numpy.sqrt will raise warning (NOT an error) if you give it a negative number, so i'm not taking any chances
@@ -82,6 +84,7 @@ def carctanh(x):
 def interaction_indices(n, m = 2):
     """ returns a list of all possible m-plets of n objects (labelled 0 to n-1)
     default: m=2, giving all possible pairs
+    for m=1, returns a range(0, n-1)
     """
     if m==1:
         return np.arange(n)
@@ -168,80 +171,64 @@ def pmat(x, heatmap=False, lims=None, print_zeros=False):
         plt.show()
 
 
-# SHARED BASE CLASSES
+# Hilbert BASIS CLASSES
 
-class State:
-    """
-    base class for quantum many-body states
-    should not be instantiated
-    """
-
-    def __init__(self, n_particles: int, ketwise=True):
+class HilbertState:
+    def __init__(self, n_particles: int, coefficients=None, ketwise=True, isospin=True):
         self.n_particles = n_particles
+        self.isospin = isospin
+        self.n_basis = 2 + 2*isospin
+        self.dimension = self.n_basis ** self.n_particles
+        self.dim = self.dimension
         self.ketwise = ketwise
-
-class Operator:
-    """
-    base class for spin operators
-    do not instantiate
-    """
-
-    def __init__(self, n_particles: int):
-        self.n_particles = n_particles
-
-# MANY-BODY BASIS CLASSES
-
-class GFMCSpinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
-        super().__init__(n_particles, ketwise)
-        self.dim = 2 ** self.n_particles
-        ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
-        bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
-        if not ket_condition and not bra_condition:
-            raise ValueError("Inconsistent initialization of state vector. \n\
-                             Did you get the shape right?")
-        else:
-            self.coefficients = coefficients.astype('complex')
-        self.friendly_operator = GFMCSpinOperator
+        self.friendly_operator = HilbertOperator
+        
+        if coefficients is None:
+            if ketwise:
+                self.coefficients = np.zeros(shape=(self.dim, 1))
+            else:
+                self.coefficients = np.zeros(shape=(1, self.dim))
+        else: 
+            assert type(coefficients)==np.ndarray
+            ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
+            bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
+            if not ket_condition and not bra_condition:
+                raise ValueError("Inconsistent initialization of state vector. \n\
+                                Did you get the shape right?")
+            else:
+                self.coefficients = coefficients.astype('complex')
 
     def copy(self):
-        return GFMCSpinState(self.n_particles, self.coefficients.copy(), self.ketwise)
+        return HilbertState(self.n_particles, self.coefficients.copy(), self.ketwise, isospin=self.isospin)
     
-    def __add__(self, other):
+    def __add__(self, other: Self):
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other):
+    def __sub__(self, other: Self):
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
+    def inner(self, other: Self):
+        assert not self.ketwise and other.ketwise
+        return np.dot(self.coefficients, other.coefficients) 
+        
     def __mul__(self, other):
-        if self.ketwise:  # |self><other|
-            assert not other.ketwise
-            out = GFMCSpinOperator(self.n_particles)
-            out.matrix = np.matmul(self.coefficients, other.coefficients)
-            return out
-        else:  # <self|other> or <self|operator
-            if isinstance(other, GFMCSpinState):
-                assert other.ketwise
-                out = complex(np.dot(self.coefficients, other.coefficients))
-            elif isinstance(other, GFMCSpinOperator):
-                out = self.copy()
-                out.coefficients = np.matmul(self.coefficients, other.matrix)
-            else:
-                raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out
+        return self.inner(other)
+    
+    def scalar_multiply(self, other):
+        self.coefficients *= other
+        return self    
     
     def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.coefficients *= other
-        else:
-            raise TypeError(f'Not supported: {type(other)} * {self.__class__.__name__}')
-        return out
-
+        return self.scalar_multiply(other)
+    
+    def outer(self, other: Self):
+        assert self.ketwise and not other.ketwise
+        return np.matmul(self.coefficients, other.coefficients, dtype='complex') 
+    
     def dagger(self):
         """ copy-based conjugate transpose """
         out = self.copy()
@@ -265,262 +252,97 @@ class GFMCSpinState(State):
         return self
     
     def zero(self):
+        """ in-place zero """
         self.coefficients = np.zeros_like(self.coefficients)
         return self
 
 
-class GFMCSpinIsospinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
-        super().__init__(n_particles, ketwise)
-        self.dim = 4 ** self.n_particles
-        ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
-        bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
-        if not ket_condition and not bra_condition:
-            raise ValueError('Inconsistent initialization of state vector')
-        else:
-            self.coefficients = coefficients.astype('complex')
-        self.friendly_operator = GFMCSpinIsospinOperator
-    
+class HilbertOperator:
+    def __init__(self, n_particles: int, isospin=True):
+        self.n_particles = n_particles
+        self.isospin = isospin
+        self.n_basis = 2 + 2*isospin
+        self.dimension = self.n_basis ** self.n_particles
+        self.dim = self.dimension
+        self.coefficients = np.identity(self.dim, dtype=complex)
+        self.friendly_state = HilbertState
+
     def copy(self):
-        return GFMCSpinIsospinState(self.n_particles, self.coefficients.copy(), self.ketwise)
+        out = HilbertOperator(self.n_particles, self.isospin)
+        out.coefficients = self.coefficients.copy()
+        return out
     
-    def __add__(self, other):
+    def __add__(self, other: Self):
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other):
+    def __sub__(self, other: Self):
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
-    def __mul__(self, other):
-        if self.ketwise: # |self><other|
-            assert not other.ketwise
-            out = GFMCSpinIsospinOperator(self.n_particles)
-            out.matrix = np.matmul(self.coefficients, other.coefficients)
-            return out
-        else: # <self|other> or <self|*operator
-            if isinstance(other, GFMCSpinIsospinState):
-                assert other.ketwise
-                out = complex(np.dot(self.coefficients, other.coefficients))
-            elif isinstance(other, GFMCSpinIsospinOperator):
-                out = self.copy()
-                out.coefficients = np.matmul(self.coefficients, other.matrix)
-            else:
-                raise TypeError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out 
-
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.coefficients *= other
-        else:
-            raise TypeError(f'Not supported: {type(other)} * {self.__class__.__name__}')
-        return out
-
-    def dagger(self):
-        """ copy-based conjugate transpose """
-        out = self.copy()
-        out.coefficients = self.coefficients.conj().T
-        out.ketwise = not self.ketwise
+    def __mul__(self, other: HilbertState):
+        """ operator * |ket> """
+        assert other.ketwise
+        out = other.copy()
+        out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
         
-    def __str__(self):
-        orient = 'ket'
-        if not self.ketwise:
-            orient = 'bra'
-        out = [f'{self.__class__.__name__} {orient} of {self.n_particles} particles:']
-        out += [str(self.coefficients)]
-        return "\n".join(out)
+    def __matmul__(self, other: Self):
+        """ operator_A @ operator_B"""
+        out = other.copy()
+        out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
+        return out
+
+    def scalar_multiply(self, other):
+        """ c * operator """
+        self.coefficients *= other
+        return self    
     
-    def randomize(self, seed):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = rng.standard_normal(size=self.coefficients.shape)
-        self.coefficients /= np.linalg.norm(self.coefficients)
+    def __rmul__(self, other):
+        """ c * operator """
+        return self.scalar_multiply(other)
+
+    def __str__(self):
+        out = f"{self.__class__.__name__}\n"
+        re = str(np.real(self.coefficients))
+        im = str(np.imag(self.coefficients))
+        out += "Re=\n" + re + "\nIm:\n" + im
+        return out
+
+    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix=None):
+        obo = [np.identity(self.n_basis, dtype=complex) for _ in range(self.n_particles)]
+        if self.isospin:
+            if isospin_matrix is None:
+                isospin_matrix = np.identity(2, dtype=complex)
+            op = repeated_kronecker_product([isospin_matrix, spin_matrix])
+        else:
+            op = spin_matrix
+        assert op.shape == obo[particle_index].shape
+        obo[particle_index] = op
+        obo = repeated_kronecker_product(obo)
+        self.coefficients = np.matmul(obo, self.coefficients, dtype=complex)
+        return self
+        
+    def apply_sigma(self, particle_index: int, dimension: int):
+        return self.apply_onebody_operator(particle_index=particle_index, spin_matrix=pauli(dimension), isospin_matrix=np.identity(2, dtype=complex) )
+
+    def apply_tau(self, particle_index: int, dimension: int):
+        return self.apply_onebody_operator(particle_index=particle_index, spin_matrix=np.identity(2, dtype=complex), isospin_matrix=pauli(dimension) )
+                
+    def exp(self):
+        self.coefficients = expm(self.coefficients)
         return self
 
     def zero(self):
         self.coefficients = np.zeros_like(self.coefficients)
         return self
-
-
-class GFMCSpinOperator(Operator):
-    def __init__(self, n_particles: int):
-        super().__init__(n_particles)
-        self.matrix = np.identity(2 ** n_particles, dtype=complex)
-        self.friendly_state = GFMCSpinState
-
-    def copy(self):
-        out = GFMCSpinOperator(self.n_particles)
-        out.matrix = self.matrix.copy()
-        return out
-    
-    def __add__(self, other):
-        out = self.copy()
-        out.matrix = self.matrix + other.matrix
-        return out
-
-    def __sub__(self, other):
-        out = self.copy()
-        out.matrix = self.matrix - other.matrix
-        return out
-
-    def __mul__(self, other):
-        if isinstance(other, GFMCSpinState): # operator * |ket>
-            assert other.ketwise
-            out = other.copy()
-            out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
-            return out
-        elif isinstance(other, GFMCSpinOperator): # op * op
-            out = other.copy()
-            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
-            return out
-        else:
-            raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
-
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.matrix = other * out.matrix
-        else:
-            raise ValueError(f'rmul not set up for {self.__class__.__name__}')
-        return out
-
-    def __str__(self):
-        out = f"{self.__class__.__name__}\n"
-        re = str(np.real(self.matrix))
-        im = str(np.imag(self.matrix))
-        out += "Re=\n" + re + "\nIm:\n" + im
-        return out
-
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
-        obo = [np.identity(2, dtype=complex) for _ in range(self.n_particles)]
-        obo[particle_index] = matrix
-        obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
-        return self
-        
-    def apply_sigma(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
-    
-    def exchange(self, particle_a: int, particle_b: int):
-        """ in-place exchange using the sigma dot sigma rule"""
-        P_1 = GFMCSpinOperator(n_particles=self.n_particles)
-        P_x = P_1.copy(); P_y = P_1.copy(); P_z = P_1.copy()
-        P_x.apply_sigma(particle_a, 0).apply_sigma(particle_b, 0)
-        P_y.apply_sigma(particle_a, 1).apply_sigma(particle_b, 1)
-        P_z.apply_sigma(particle_a, 2).apply_sigma(particle_b, 2)
-        self = 0.5 * (P_x + P_y + P_z + P_1) * self
-        return self
-
-    def exp(self):
-        self.matrix = expm(self.matrix)
-        return self
-
-    def zero(self):
-        self.matrix = np.zeros_like(self.matrix)
-        return self
         
     def dagger(self):
         """ copy-based conj transpose"""
         out = self.copy()
-        out.matrix = self.matrix.conj().T
-        return out
-
-
-class GFMCSpinIsospinOperator(Operator):
-    def __init__(self, n_particles: int):
-        super().__init__(n_particles)
-        self.matrix = np.identity(4 ** n_particles, dtype=complex)
-        self.friendly_state = GFMCSpinIsospinState
-
-    def copy(self):
-        out = GFMCSpinIsospinOperator(self.n_particles)
-        out.matrix = self.matrix.copy()
-        return out
-    
-    def __add__(self, other):
-        out = self.copy()
-        out.matrix = self.matrix + other.matrix
-        return out
-
-    def __sub__(self, other):
-        out = self.copy()
-        out.matrix = self.matrix - other.matrix
-        return out
-
-    def __mul__(self, other):
-        if isinstance(other, GFMCSpinIsospinState):
-            assert other.ketwise
-            out = other.copy()
-            out.coefficients = np.matmul(self.matrix, out.coefficients, dtype=complex)
-            return out
-        elif isinstance(other, GFMCSpinIsospinOperator):
-            out = other.copy()
-            out.matrix = np.matmul(self.matrix, out.matrix, dtype=complex)
-            return out
-        else:
-            raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or {self.__class__.__name__}')
-
-    def __rmul__(self, other):
-        if np.isscalar(other):
-            out = self.copy()
-            out.matrix = other * out.matrix
-        else:
-            raise ValueError(f'rmul not set up for {self.__class__.__name__}')
-        return out
-
-    def __str__(self):
-        out = f"{self.__class__.__name__}\n"
-        re = str(np.real(self.matrix))
-        im = str(np.imag(self.matrix))
-        out += "Re=\n" + re + "\nIm:\n" + im
-        return out
-    
-    def __repr__(self):
-        return self.matrix.__repr__()
-
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
-        obo = [np.identity(4, dtype=complex) for _ in range(self.n_particles)]
-        obo[particle_index] = repeated_kronecker_product([isospin_matrix, spin_matrix])
-        obo = repeated_kronecker_product(obo)
-        self.matrix = np.matmul(obo, self.matrix, dtype=complex)
-        return self
-        
-    def apply_sigma(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, isospin_matrix=np.identity(2, dtype=complex),
-                                          spin_matrix=pauli(dimension))
-
-    def apply_tau(self, particle_index: int, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, isospin_matrix=pauli(dimension),
-                                          spin_matrix=np.identity(2, dtype=complex))
-        
-    
-    def exchange(self, particle_a: int, particle_b: int):
-        """ in-place exchange using the sigma dot sigma rule"""
-        P_1 = GFMCSpinIsospinOperator(n_particles=self.n_particles)
-        P_x = P_1.copy(); P_y = P_1.copy(); P_z = P_1.copy()
-        P_x.apply_sigma(particle_a, 0).apply_sigma(particle_b, 0)
-        P_y.apply_sigma(particle_a, 1).apply_sigma(particle_b, 1)
-        P_z.apply_sigma(particle_a, 2).apply_sigma(particle_b, 2)
-        self = 0.5 * (P_x + P_y + P_z + P_1) * self
-        return self
-
-    def exp(self):
-        self.matrix = expm(self.matrix)
-        return self
-
-    def zero(self):
-        self.matrix = np.zeros_like(self.matrix)
-        return self
-        
-    def dagger(self):
-        """ copy-based conj transpose"""
-        out = self.copy()
-        out.matrix = self.matrix.conj().T
+        out.coefficients = self.coefficients.conj().T
         return out
 
 
@@ -528,8 +350,8 @@ class GFMCSpinIsospinOperator(Operator):
 # ONE-BODY BASIS CLASSES
         
 
-class AFDMCSpinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
+class ProductState:
+    def __init__(self, n_particles: int, coefficients=None, ketwise=True, isospin=True):
         """an array of single particle spinors
 
         Orientation must be consistent with array shape!
@@ -544,55 +366,55 @@ class AFDMCSpinState(State):
         Raises:
             ValueError: _description_
         """
-        super().__init__(n_particles, ketwise)
-        ket_condition = (coefficients.shape == (n_particles, 2, 1)) and ketwise
-        bra_condition = (coefficients.shape == (n_particles, 1, 2)) and not ketwise
-        if not ket_condition and not bra_condition:
-            ValueError("Inconsistent initialization of state vector. \n\
-                             Did you get the shape right?")
-        else:
-            self.sp_stack = coefficients.astype(complex)
-        self.friendly_operator = AFDMCSpinOperator
+        self.n_particles = n_particles
+        self.isospin = isospin
+        self.n_basis = 2 + 2*isospin
+        self.ketwise = ketwise
+        self.friendly_operator = ProductOperator
         
+        if coefficients is None:
+            if ketwise:
+                self.coefficients = np.zeros(shape=(self.n_particles, self.n_basis, 1))
+            else:
+                self.coefficients = np.zeros(shape=(self.n_particles, 1, self.n_basis))
+        else: 
+            assert type(coefficients)==np.ndarray
+            ket_condition = (coefficients.shape == (n_particles, self.n_basis, 1)) and ketwise
+            bra_condition = (coefficients.shape == (n_particles, 1, self.n_basis)) and not ketwise
+            if not ket_condition and not bra_condition:
+                raise ValueError("Inconsistent initialization of state vector. \n\
+                                Did you get the shape right?")
+            else:
+                self.coefficients = coefficients.astype('complex')
 
     def __add__(self, other):
-        raise SyntaxError('AFDMC states do not add')
+        raise SyntaxError('Product states do not add')
     
     def __sub__(self, other):
-        raise SyntaxError('AFDMC states do not subtract')
+        raise SyntaxError('Product states do not subtract')
 
     def copy(self):
-        return AFDMCSpinState(self.n_particles, self.sp_stack.copy(), self.ketwise)
+        return ProductState(self.n_particles, self.coefficients.copy(), self.ketwise, self.isospin)
 
     def to_list(self):
-        return [self.sp_stack[i] for i in range(self.n_particles)]
+        return [self.coefficients[i] for i in range(self.n_particles)]
 
+    def inner(self, other: Self):
+        return complex(np.prod([np.dot(self.coefficients[i], other.coefficients[i]) for i in range(self.n_particles)]))
+        
     def __mul__(self, other):
-        """
-        bra can multiply a ket or an operator, ket can only multiply a bra
-        """
-        if self.ketwise:  # |self><other|
-            assert isinstance(other, AFDMCSpinState) and not other.ketwise
-            out = AFDMCSpinOperator(n_particles=self.n_particles)
-            for i in range(self.n_particles):
-                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
-            return out
-        else:   # <self|other> or <self|*operator
-            if isinstance(other, AFDMCSpinState):
-                assert other.ketwise
-                out = complex(np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)]))
-            elif isinstance(other, AFDMCSpinOperator):
-                out = self.copy()
-                for i in range(self.n_particles):
-                    out.sp_stack[i] = np.matmul(self.sp_stack[i], other.op_stack[i], dtype=complex)
-            else:
-                raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out
+        return self.inner(other)
+        
+    def outer(self, other: Self):
+        out = ProductOperator(n_particles=self.n_particles, isospin=self.isospin)
+        for i in range(self.n_particles):
+            out.coefficients[i] = np.matmul(self.coefficients[i], other.coefficients[i], dtype=complex)
+        return out
 
     def dagger(self):
         """ copy_based conj transpose"""
         out = self.copy()
-        out.sp_stack = np.transpose(self.sp_stack, axes=(0,2,1)).conj()
+        out.coefficients = np.transpose(self.coefficients, axes=(0,2,1)).conj()
         out.ketwise = not self.ketwise
         return out
 
@@ -610,37 +432,30 @@ class AFDMCSpinState(State):
         """project the NxA TP state into the full N^A MB basis"""
         sp_mb = repeated_kronecker_product(self.to_list())
         if self.ketwise:
-            sp_mb = sp_mb.reshape(2 ** self.n_particles, 1)
+            sp_mb = sp_mb.reshape(self.n_basis ** self.n_particles, 1)
         else:
-            sp_mb = sp_mb.reshape(1, 2 ** self.n_particles)
-        return GFMCSpinState(self.n_particles, sp_mb, self.ketwise)
+            sp_mb = sp_mb.reshape(1, self.n_basis ** self.n_particles)
+        return HilbertState(self.n_particles, sp_mb, self.ketwise, self.isospin)
 
     def normalize(self):
         for i in range(self.n_particles):
-            n = np.linalg.norm(self.sp_stack[i])
-            self.sp_stack[i] /= n
+            n = np.linalg.norm(self.coefficients[i])
+            self.coefficients[i] /= n
         return self
 
     def scalar_mult(self, particle_index, b):
-        self.sp_stack[particle_index] *= b
-        return self
-        
-    def spread_scalar_mult(self, b):
-        self.sp_stack *= b ** (1 / self.n_particles)
-        return self
-        
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
-        self.sp_stack[particle_index] = np.matmul(matrix, self.sp_stack[particle_index], dtype=complex)
+        self.coefficients[particle_index] *= b
         return self
 
-    def apply_sigma(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
-    
+    def spread_scalar_mult(self, b):
+        self.coefficients *= b ** (1 / self.n_particles)
+        return self
+
     def randomize(self, seed):
         rng = np.random.default_rng(seed=seed)
-        self.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
+        self.coefficients = rng.standard_normal(size=self.coefficients.shape)
         for i in range(self.n_particles):
-            self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
+            self.coefficients[i] /= np.linalg.norm(self.coefficients[i])
         return self
 
     def zero(self):
@@ -648,172 +463,44 @@ class AFDMCSpinState(State):
         return self
 
 
-class AFDMCSpinIsospinState(State):
-    def __init__(self, n_particles: int, coefficients: np.ndarray, ketwise=True):
-        """an array of single particle spinors
 
-        Orientation must be consistent with array shape!
-        The shape of a bra is (A, 4, 1)
-        The shape of a ket is (A, 1, 4)
 
-        Args:
-            n_particles (int): number of single particle states
-            coefficients (np.ndarray): array of complex numbers
-            ketwise (bool)
+class ProductOperator:
+    def __init__(self, n_particles: int, isospin=True):
+        self.n_particles = n_particles
+        self.isospin = isospin
+        self.n_basis = 2 + 2*isospin
+        self.coefficients = np.stack(self.n_particles*[np.identity(self.n_basis)], dtype=complex)    
+        self.friendly_state = ProductState
 
-        Raises:
-            ValueError: _description_
-        """
-        super().__init__(n_particles, ketwise)
-        ket_condition = (coefficients.shape == (n_particles, 4, 1)) and ketwise
-        bra_condition = (coefficients.shape == (n_particles, 1, 4)) and not ketwise
-        if not ket_condition and not bra_condition:
-            raise ValueError("Inconsistent initialization of state vector. \n\
-                             Did you get the shape right?")
-        else:
-            self.sp_stack = coefficients.astype(complex)
-        self.friendly_operator = AFDMCSpinIsospinOperator
+    def __add__(self, other):
+        raise SyntaxError('Product operators do not add')
+    
+    def __sub__(self, other):
+        raise SyntaxError('Product operators do not subtract')
+
+    def copy(self):
+        out = ProductOperator(self.n_particles, self.isospin)
+        for i in range(self.n_particles):
+            out.coefficients[i] = self.coefficients[i]
+        return out
+
+    def to_list(self):
+        return [self.coefficients[i] for i in range(self.n_particles)]
+    
+    def __mul__(self, other: HilbertState):
+        """ operator * |ket> """
+        out = other.copy()
+        for i in range(self.n_particles):
+                out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
+        return out
         
-
-    def __add__(self, other):
-        raise SyntaxError('AFDMC states do not add')
-    
-    def __sub__(self, other):
-        raise SyntaxError('AFDMC states do not subtract')
-
-    def copy(self):
-        return AFDMCSpinIsospinState(self.n_particles, self.sp_stack.copy(), self.ketwise)
-
-    def to_list(self):
-        return [self.sp_stack[i] for i in range(self.n_particles)]
-
-
-    def __mul__(self, other):
-        """
-        bra can multiply a ket or an operator, ket can only multiply a bra
-        """
-        if self.ketwise:  # |self><other|
-            assert isinstance(other, AFDMCSpinIsospinState) and not other.ketwise
-            out = AFDMCSpinIsospinOperator(n_particles=self.n_particles)
-            for i in range(self.n_particles):
-                out.op_stack[i] = np.matmul(self.sp_stack[i], other.sp_stack[i], dtype=complex)
-            return out
-        else:   # <self|other> or <self|*operator
-            if isinstance(other, AFDMCSpinIsospinState):
-                assert other.ketwise
-                out = complex(np.prod([np.dot(self.sp_stack[i], other.sp_stack[i]) for i in range(self.n_particles)]))
-            elif isinstance(other, AFDMCSpinIsospinOperator):
-                out = self.copy()
-                for i in range(self.n_particles):
-                    out.sp_stack[i] = np.matmul(self.sp_stack[i], other.op_stack[i], dtype=complex)
-            else:
-                raise ValueError(f'{self.__class__.__name__} * {other.__class__.__name__}, invalid multiplication')
-            return out
-            
-
-    def dagger(self):
-        """ copy_based conj transpose"""
-        out = self.copy()
-        out.sp_stack = np.transpose(self.sp_stack, axes=(0,2,1)).conj()
-        out.ketwise = not self.ketwise
-        return out
-
-    def __str__(self):
-        orient = "ket"
-        if not self.ketwise:
-            orient = "bra"
-        out = f"{self.__class__.__name__} {orient} of {self.n_particles} particles: \n"
-        for i, ci in enumerate(self.to_list()):
-            out += f"{orient} #{i}:\n"
-            out += str(ci) + "\n"
-        return out
-
-    def to_manybody_basis(self):
-        """project the NxA TP state into the full N^A MB basis"""
-        sp_mb = repeated_kronecker_product(self.to_list())
-        if self.ketwise:
-            sp_mb = sp_mb.reshape(4 ** self.n_particles, 1)
-        else:
-            sp_mb = sp_mb.reshape(1, 4 ** self.n_particles)
-        return GFMCSpinIsospinState(self.n_particles, sp_mb, self.ketwise)
-
-    def normalize(self):
+    def __matmul__(self, other: Self):
+        """ operator_A @ operator_B"""
+        out = other.copy()
         for i in range(self.n_particles):
-            n = np.linalg.norm(self.sp_stack[i])
-            self.sp_stack[i] /= n
-        return self
-
-    def scalar_mult(self, particle_index, b):
-        self.sp_stack[particle_index] *= b
-        return self
-
-    def spread_scalar_mult(self, b):
-        self.sp_stack *= b ** (1 / self.n_particles)
-        return self
-
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
-        onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
-        self.sp_stack[particle_index] = np.matmul(onebody_matrix, self.sp_stack[particle_index], dtype=complex)
-        return self
-
-    def apply_sigma(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
-                                          isospin_matrix=np.identity(2, dtype=complex),
-                                          spin_matrix=pauli(dimension))
-
-    def apply_tau(self, particle_index, dimension):
-        return self.apply_onebody_operator(particle_index=particle_index,
-                                          isospin_matrix=pauli(dimension),
-                                          spin_matrix=np.identity(2, dtype=complex))
-
-    def randomize(self, seed):
-        rng = np.random.default_rng(seed=seed)
-        self.sp_stack = rng.standard_normal(size=self.sp_stack.shape)
-        for i in range(self.n_particles):
-            self.sp_stack[i] /= np.linalg.norm(self.sp_stack[i])
-        return self
-
-    def zero(self):
-        self.coefficients = np.zeros_like(self.coefficients)
-        return self
-
-
-class AFDMCSpinOperator(Operator):
-    def __init__(self, n_particles: int):
-        super().__init__(n_particles)
-        self.op_stack = np.stack(self.n_particles*[np.identity(2)], dtype=complex)    
-        self.friendly_state = AFDMCSpinState
-
-    def __add__(self, other):
-        raise SyntaxError('AFDMC operators do not add')
-    
-    def __sub__(self, other):
-        raise SyntaxError('AFDMC operators do not subtract')
-
-    def copy(self):
-        out = AFDMCSpinOperator(self.n_particles)
-        for i in range(self.n_particles):
-            out.op_stack[i] = self.op_stack[i]
+                out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
         return out
-
-    def to_list(self):
-        return [self.op_stack[i] for i in range(self.n_particles)]
-    
-    def __mul__(self, other):
-        if isinstance(other, AFDMCSpinState): # op * |ket>
-            assert other.ketwise
-            out = other.copy()
-            for i in range(self.n_particles):
-                out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
-            return out
-        elif isinstance(other, AFDMCSpinOperator): # op * op
-            out = other.copy()
-            for i in range(self.n_particles):
-                out.sp_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
-            return out
-        else:
-            raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or a {self.__class__.__name__}')
 
     def __str__(self):
         out = f"{self.__class__.__name__}\n"
@@ -823,82 +510,16 @@ class AFDMCSpinOperator(Operator):
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
-    def apply_onebody_operator(self, particle_index: int, matrix: np.ndarray):
-        self.op_stack[particle_index] = np.matmul(matrix, self.op_stack[particle_index], dtype=complex)
-        return self
-
-    def apply_sigma(self, particle_index, dimension: int):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=pauli(dimension))
-
-    def scalar_mult(self, particle_index, b):
-        return self.apply_onebody_operator(particle_index=particle_index, matrix=b * np.identity(2))
-
-    def spread_scalar_mult(self, b):
-        for i in range(self.n_particles):
-            self.scalar_mult(i, b ** (1 / self.n_particles))
-        return self
-
-    def zero(self):
-        self.op_stack = np.zeros_like(self.op_stack)
-        return self
-
-    def dagger(self):
-        """ copy-based conj transpose"""
-        out = self.copy()
-        out.op_stack = np.transpose(self.op_stack, axes=(0,2,1)).conj()
-        return out
-    
-
-class AFDMCSpinIsospinOperator(Operator):
-    def __init__(self, n_particles: int):
-        super().__init__(n_particles)
-        self.op_stack = np.stack(self.n_particles*[np.identity(4)], dtype=complex)    
-        self.friendly_state = AFDMCSpinIsospinState
-
-    def __add__(self, other):
-        raise SyntaxError('AFDMC operators do not add')
-    
-    def __sub__(self, other):
-        raise SyntaxError('AFDMC operators do not subtract')
-
-    def copy(self):
-        out = AFDMCSpinIsospinOperator(self.n_particles)
-        for i in range(self.n_particles):
-            out.op_stack[i] = self.op_stack[i]
-        return out
-
-    def to_list(self):
-        return [self.op_stack[i] for i in range(self.n_particles)]
-    
-    def __mul__(self, other):
-        if isinstance(other, AFDMCSpinIsospinState):
-            assert other.ketwise
-            out = other.copy()
-            for i in range(self.n_particles):
-                out.sp_stack[i] = np.matmul(self.op_stack[i], out.sp_stack[i], dtype=complex)
-            return out
-        elif isinstance(other, AFDMCSpinIsospinOperator):
-            out = other.copy()
-            for i in range(self.n_particles):
-                out.op_stack[i] = np.matmul(self.op_stack[i], out.op_stack[i], dtype=complex)
-            return out
+    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix=None):
+        if self.isospin:
+            if isospin_matrix is None:
+                isospin_matrix = np.identity(2, dtype=complex)
+            onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
         else:
-            raise ValueError(
-                f'{self.__class__.__name__} must multiply a {self.friendly_state.__name__}, or a {self.__class__.__name__}')
-
-
-    def __str__(self):
-        out = f"{self.__class__.__name__}\n"
-        for i, op in enumerate(self.to_list()):
-            re = str(np.real(op))
-            im = str(np.imag(op))
-            out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
-        return out
-
-    def apply_onebody_operator(self, particle_index: int, isospin_matrix: np.ndarray, spin_matrix: np.ndarray):
-        onebody_matrix = repeated_kronecker_product([isospin_matrix, spin_matrix])
-        self.op_stack[particle_index] = np.matmul(onebody_matrix, self.op_stack[particle_index], dtype=complex)
+            onebody_matrix = spin_matrix
+        self.coefficients[particle_index] = np.matmul(onebody_matrix, self.coefficients[particle_index], dtype=complex)
         return self
+
 
     def apply_sigma(self, particle_index, dimension):
         return self.apply_onebody_operator(particle_index=particle_index,
@@ -911,23 +532,24 @@ class AFDMCSpinIsospinOperator(Operator):
                                           spin_matrix=np.identity(2, dtype=complex))
 
     def scalar_mult(self, particle_index, b):
-        return self.apply_onebody_operator(particle_index=particle_index,
-                                          isospin_matrix = b * np.identity(2),
-                                          spin_matrix = np.identity(2))
+        # return self.apply_onebody_operator(particle_index=particle_index,
+        #                                   isospin_matrix = b * np.identity(2),
+        #                                   spin_matrix = np.identity(2))
+        self.coefficients[particle_index] *= b
+        return self
         
-    def spread_scalar_mult(self, b):
-        for i in range(self.n_particles):
-            self.scalar_mult(i, b ** (1 / self.n_particles))
+    def scale_all(self, b):
+        self.coefficients *= b ** (1 / self.n_particles)
         return self
 
     def zero(self):
-        self.op_stack = np.zeros_like(self.op_stack)
+        self.coefficients = np.zeros_like(self.coefficients)
         return self
 
     def dagger(self):
         """ copy-based conj transpose"""
         out = self.copy()
-        out.op_stack = np.transpose(self.op_stack, axes=(0,2,1)).conj()
+        out.coefficients = np.transpose(self.coefficients, axes=(0,2,1)).conj()
         return out        
     
     
@@ -1169,11 +791,11 @@ class ArgonnePotential:
 # PROPAGATOR CLASSES
 
 class Propagator:
-    def __init__(self, n_particles, dt, include_prefactors=True):
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
         self.n_particles = n_particles
         self.dt = dt
         self.include_prefactors = include_prefactors
-
+        self.isospin = isospin
         self._xyz = [0, 1, 2]
         self._1b_idx = interaction_indices(n_particles, 1)
         self._2b_idx = interaction_indices(n_particles, 2)
@@ -1182,13 +804,13 @@ class Propagator:
         self._n3 = len(self._3b_idx)
 
 
-class GFMCPropagatorHS(Propagator):
+class HilbertPropagatorHS(Propagator):
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, dt, include_prefactors=True):
-        super().__init__(n_particles, dt, include_prefactors)        
-        self._ident = GFMCSpinIsospinOperator(self.n_particles)
-        self._sig_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self._tau_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)        
+        self._ident = HilbertOperator(self.n_particles, isospin=isospin)
+        self._sig_op = [[HilbertOperator(self.n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[HilbertOperator(self.n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self.n_aux_sigma = 9 * self._n2
         self.n_aux_sigmatau = 27 * self._n2
         self.n_aux_tau = 3 * self._n2
@@ -1199,7 +821,7 @@ class GFMCPropagatorHS(Propagator):
         """exp (- k opi)"""
         return (- k * operator).exp()        
 
-    def twobody_sample(self, k: complex, x: complex, operator_i: Operator, operator_j: Operator):
+    def twobody_sample(self, k: complex, x: complex, operator_i, operator_j):
         """ exp( x sqrt( -k ) opi ) * exp( x sqrt( -k ) opj ) """
         arg = csqrt(-k)*x
         if self.include_prefactors:
@@ -1229,7 +851,7 @@ class GFMCPropagatorHS(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         k = 0.5 * self.dt * potential.sigmatau[a,i,b,j]
-                        out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a]*self._tau_op[i][c], self._sig_op[j][b]*self._tau_op[j][c]) )
+                        out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a] @ self._tau_op[i][c], self._sig_op[j][b] @ self._tau_op[j][c]) )
                         idx += 1
         return out
     
@@ -1248,7 +870,7 @@ class GFMCPropagatorHS(Propagator):
         for i,j in self._2b_idx:
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 if self.include_prefactors:
-                    out.append(cexp(-k) * GFMCSpinIsospinOperator(self.n_particles))
+                    out.append(cexp(-k) * HilbertOperator(self.n_particles, self.isospin))
                 out.append( self.onebody(k, self._tau_op[i][2]) )
                 out.append( self.onebody(k, self._tau_op[j][2]) )
                 out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
@@ -1269,19 +891,18 @@ class GFMCPropagatorHS(Propagator):
                     out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                     idx += 1
         if self.include_prefactors:
-            out.append( np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * GFMCSpinIsospinOperator(self.n_particles) )
+            out.append( np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * HilbertOperator(self.n_particles, self.isospin) )
         return out
 
 
 
-class GFMCPropagatorRBM(Propagator):
+class HilbertPropagatorRBM(Propagator):
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, dt, include_prefactors=True):
-        super().__init__(n_particles, dt, include_prefactors)
-        
-        self._ident = GFMCSpinIsospinOperator(self.n_particles)
-        self._sig_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self._tau_op = [[GFMCSpinIsospinOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)
+        self._ident = HilbertOperator(self.n_particles)
+        self._sig_op = [[HilbertOperator(self.n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[HilbertOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self.n_aux_sigma = 9 * self._n2
         self.n_aux_sigmatau = 27 * self._n2
         self.n_aux_tau = 3 * self._n2
@@ -1302,7 +923,7 @@ class GFMCPropagatorRBM(Propagator):
         sgn = k/abs(k)
         gi = ccosh(arg) * self._ident + csinh(arg) * operator_i
         gj = ccosh(arg) * self._ident - sgn*csinh(arg) * operator_j
-        return prefactor * gi * gj
+        return prefactor * gi @ gj
 
     def factors_sigma(self, potential: ArgonnePotential, aux: list):
         out = []
@@ -1342,7 +963,7 @@ class GFMCPropagatorRBM(Propagator):
         for i,j in self._2b_idx:
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 if self.include_prefactors:
-                    out.append(cexp(-k) * GFMCSpinIsospinOperator(self.n_particles))
+                    out.append(cexp(-k) * HilbertOperator(self.n_particles, self.isospin))
                 out.append( self.onebody(k, self._tau_op[i][2]) )
                 out.append( self.onebody(k, self._tau_op[j][2]) )
                 out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
@@ -1363,14 +984,14 @@ class GFMCPropagatorRBM(Propagator):
                     out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                     idx += 1
         if self.include_prefactors:
-            out.append( np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * GFMCSpinIsospinOperator(self.n_particles) )
+            out.append( np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) * HilbertOperator(self.n_particles, self.isospin) )
         return out
 
 
-class AFDMCPropagatorHS(Propagator):
+class ProductPropagatorHS(Propagator):
     """ exp( - k op_i op_j )"""
-    def __init__(self, n_particles, dt, include_prefactors=True):
-        super().__init__(n_particles, dt, include_prefactors)
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)
         self._ident = np.identity(4)
         self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
         self._tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
@@ -1382,8 +1003,8 @@ class AFDMCPropagatorHS(Propagator):
 
     def onebody(self, k, i, matrix):
         """exp (- k opi) * |ket> """
-        out = AFDMCSpinIsospinOperator(self.n_particles)
-        out.op_stack[i] = ccosh(k) * out.op_stack[i] - csinh(k) * matrix @ out.op_stack[i]
+        out = ProductOperator(self.n_particles, self.isospin)
+        out.coefficient[i] = ccosh(k) * out.coefficient[i] - csinh(k) * matrix @ out.coefficient[i]
         return out
     
     def twobody_sample(self, k, x, i, j, operator_i, operator_j):
@@ -1393,11 +1014,11 @@ class AFDMCPropagatorHS(Propagator):
             prefactor = cexp(k)
         else:
             prefactor = 1.0
-        out = AFDMCSpinIsospinOperator(self.n_particles)
-        out.op_stack[i] = ccosh(arg) * out.op_stack[i] + csinh(arg) * operator_i @ out.op_stack[i]
-        out.op_stack[j] = ccosh(arg) * out.op_stack[j] + csinh(arg) * operator_j @ out.op_stack[j]
-        out.op_stack[i] *= csqrt(prefactor)
-        out.op_stack[j] *= csqrt(prefactor)
+        out = ProductOperator(self.n_particles, self.isospin)
+        out.coefficient[i] = ccosh(arg) * out.coefficient[i] + csinh(arg) * operator_i @ out.coefficient[i]
+        out.coefficient[j] = ccosh(arg) * out.coefficient[j] + csinh(arg) * operator_j @ out.coefficient[j]
+        out.coefficient[i] *= csqrt(prefactor)
+        out.coefficient[j] *= csqrt(prefactor)
         return out
 
     def factors_sigma(self, potential: ArgonnePotential, aux: list):
@@ -1438,7 +1059,7 @@ class AFDMCPropagatorHS(Propagator):
         for i,j in self._2b_idx:
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 if self.include_prefactors:
-                    norm_op = AFDMCSpinIsospinOperator(self.n_particles)
+                    norm_op = ProductOperator(self.n_particles, self.isospin)
                     norm_op = norm_op.spread_scalar_mult(cexp(-k))
                     out.append(norm_op)
                 out.append( self.onebody(k, i, self._tau[2]) )
@@ -1461,18 +1082,18 @@ class AFDMCPropagatorHS(Propagator):
                     out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
                     idx += 1
         if self.include_prefactors:
-            norm_op = AFDMCSpinIsospinOperator(self.n_particles)
+            norm_op = ProductOperator(self.n_particles, self.isospin)
             norm_op = norm_op.spread_scalar_mult(np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) )
             out.append( norm_op )
         return out    
 
 
-class AFDMCPropagatorRBM(Propagator):
+class ProductPropagatorRBM(Propagator):
     """ exp( - k op_i op_j )
     seed determines mixing
     """
-    def __init__(self, n_particles, dt, include_prefactors=True):
-        super().__init__(n_particles, dt, include_prefactors)
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)
         self._ident = np.identity(4)
         self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
         self._tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
@@ -1484,8 +1105,8 @@ class AFDMCPropagatorRBM(Propagator):
 
     def onebody(self, k, i, matrix):
         """exp (- k opi) * |ket> """
-        out = AFDMCSpinIsospinOperator(self.n_particles)
-        out.op_stack[i] = ccosh(k) * out.op_stack[i] - csinh(k) * matrix @ out.op_stack[i]
+        out = ProductOperator(self.n_particles)
+        out.coefficients[i] = ccosh(k) * out.coefficients[i] - csinh(k) * matrix @ out.coefficients[i]
         return out
     
     def twobody_sample(self, k, h, i, j, operator_i, operator_j):
@@ -1495,11 +1116,11 @@ class AFDMCPropagatorRBM(Propagator):
             prefactor = 1.0
         W = carctanh(csqrt(ctanh(abs(k))))
         arg = W*(2*h-1)
-        out = AFDMCSpinIsospinOperator(self.n_particles)
-        out.op_stack[i] = ccosh(arg) * out.op_stack[i] + csinh(arg) * operator_i @ out.op_stack[i]
-        out.op_stack[j] = ccosh(arg) * out.op_stack[j] - np.sign(k) * csinh(arg) * operator_j @ out.op_stack[j]
-        out.op_stack[i] *= csqrt(prefactor)
-        out.op_stack[j] *= csqrt(prefactor)
+        out = ProductOperator(self.n_particles, self.isospin)
+        out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * operator_i @ out.coefficients[i]
+        out.coefficients[j] = ccosh(arg) * out.coefficients[j] - np.sign(k) * csinh(arg) * operator_j @ out.coefficients[j]
+        out.coefficients[i] *= csqrt(prefactor)
+        out.coefficients[j] *= csqrt(prefactor)
         return out
 
     def factors_sigma(self, potential: ArgonnePotential, aux: list):
@@ -1540,8 +1161,8 @@ class AFDMCPropagatorRBM(Propagator):
         for i,j in self._2b_idx:
                 k = 0.125 * self.dt * potential.coulomb[i,j]
                 if self.include_prefactors:
-                    norm_op = AFDMCSpinIsospinOperator(self.n_particles)
-                    norm_op = norm_op.spread_scalar_mult(cexp(-k))
+                    norm_op = ProductOperator(self.n_particles)
+                    norm_op = norm_op.scale_all(cexp(-k))
                     out.append(norm_op)
                 out.append( self.onebody(k, i, self._tau[2]) )
                 out.append( self.onebody(k, j, self._tau[2]) )
@@ -1564,8 +1185,8 @@ class AFDMCPropagatorRBM(Propagator):
                     out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
                     idx += 1
         if self.include_prefactors:
-            norm_op = AFDMCSpinIsospinOperator(self.n_particles)
-            norm_op = norm_op.spread_scalar_mult(np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) )
+            norm_op = ProductOperator(self.n_particles)
+            norm_op = norm_op.scale_all(np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) )
             out.append( norm_op )
         return out    
 
@@ -1575,14 +1196,15 @@ class ExactGFMC:
     we use Pade approximants for matrix exponentials
     the LS term can be represented using a linear approximation or the factorization procedure described in Stefano's thesis
     """
-    def __init__(self,n_particles):
+    def __init__(self, n_particles, isospin=True):
         self.n_particles = n_particles
-        self.ident = GFMCSpinIsospinOperator(n_particles)
-        self.sig = [[GFMCSpinIsospinOperator(n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-        self.tau = [[GFMCSpinIsospinOperator(n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        self.isospin = isospin
+        self.ident = HilbertOperator(n_particles, self.isospin)
+        self.sig = [[HilbertOperator(n_particles, self.isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        self.tau = [[HilbertOperator(n_particles, self.isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
 
     def g_pade_sig(self, dt, asig, i, j):
-        out = GFMCSpinIsospinOperator(self.n_particles).zero()
+        out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
                 out += asig[a, i, b, j] * self.sig[i][a] * self.sig[j][b]
@@ -1591,7 +1213,7 @@ class ExactGFMC:
 
 
     def g_pade_sigtau(self, dt, asigtau, i, j):
-        out = GFMCSpinIsospinOperator(self.n_particles).zero()
+        out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
                 for c in range(3):
@@ -1601,7 +1223,7 @@ class ExactGFMC:
 
 
     def g_pade_tau(self, dt, atau, i, j):
-        out = GFMCSpinIsospinOperator(self.n_particles).zero()
+        out = HilbertOperator(self.n_particles, self.isospin).zero()
         for c in range(3):
             out += atau[i, j] * self.tau[i][c] * self.tau[j][c]
         out = -0.5 * dt * out
@@ -1623,7 +1245,7 @@ class ExactGFMC:
 
     def g_ls_linear(self, gls, i):
         # linear approx to LS
-        out = GFMCSpinIsospinOperator(self.n_particles)
+        out = HilbertOperator(self.n_particles)
         for a in range(3):
             out = (self.ident - 1.j * gls[a, i] * self.sig[i][a]) * out 
         return out
@@ -1643,7 +1265,7 @@ class ExactGFMC:
 
     def g_pade_sig_3b(self, dt, asig3b, i, j, k):
         # 3-body sigma
-        out = GFMCSpinIsospinOperator(self.n_particles).zero()
+        out = HilbertOperator(self.n_particles).zero()
         for a in range(3):
             for b in range(3):
                 for c in range(3):
@@ -1684,9 +1306,9 @@ class ExactGFMC:
 
 class Integrator():
     def __init__(self, potential: ArgonnePotential, propagator):
-        if type(propagator) in [GFMCPropagatorHS, AFDMCPropagatorHS]:
+        if type(propagator) in [HilbertPropagatorHS, ProductPropagatorHS]:
             self.method = 'HS'
-        elif type(propagator) in [GFMCPropagatorRBM, AFDMCPropagatorRBM]:
+        elif type(propagator) in [HilbertPropagatorRBM, ProductPropagatorRBM]:
             self.method = 'RBM'
         self.n_particles = potential.n_particles
         self.potential = potential
@@ -1722,7 +1344,7 @@ class Integrator():
         self.is_ready = True
         return self.controls
 
-    def bracket(self, bra: State, ket: State, aux_fields):
+    def bracket(self, bra, ket, aux_fields):
         ket_prop = ket.copy()
         idx = 0
         self.prop_list = []
@@ -1747,7 +1369,7 @@ class Integrator():
             ket_prop = p * ket_prop
         return bra * ket_prop
 
-    def run(self, bra: State, ket: State, parallel=True, n_processes=None):
+    def run(self, bra, ket, parallel=True, n_processes=None):
         if not self.is_ready:
             raise ValueError("Integrator is not ready. Did you run .setup() ?")
         assert (ket.ketwise) and (not bra.ketwise)
@@ -1759,7 +1381,7 @@ class Integrator():
         b_array = np.array(b_array).flatten()
         return b_array
             
-    def exact(self, bra: State, ket: State):
+    def exact(self, bra, ket):
         ex = ExactGFMC(self.n_particles)
         g_exact = ex.make_g_exact(self.propagator.dt, self.potential, self.controls)
         b_exact = bra * g_exact * ket
