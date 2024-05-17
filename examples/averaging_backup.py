@@ -1,19 +1,11 @@
 from quap import *
 from quap.extras import chistogram
 
-
-parallel = True
-
-def print_dict(d):
-    for key in d.keys():
-        print(f"{key} : {d[key]}")
-
-def hilbert_average(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False, isospin=True):
+def gfmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)
 
-    ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_manybody_basis()
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
     bra = ket.copy().dagger()
-    
     pot = ArgonnePotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
     pot.sigmatau.generate(1.0, seed=next(seeder))
@@ -22,17 +14,17 @@ def hilbert_average(n_particles, dt, n_samples, method, controls: dict, balance=
     pot.spinorbit.generate(dt, seed=next(seeder))
 
     if method=='hs':
-        prop = HilbertPropagatorHS(n_particles, dt, isospin=isospin)
+        prop = GFMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = HilbertPropagatorRBM(n_particles, dt, isospin=isospin)
+        prop = GFMCPropagatorRBM(n_particles, dt)
     
-    integ = Integrator(pot, prop, isospin=isospin)
+    integ = Integrator(pot, prop)
 
     integ.setup(n_samples=n_samples, **controls)
-    b_plus = integ.run(bra, ket, parallel=parallel)
+    b_plus = integ.run(bra, ket, parallel=True)
     if balance:
         integ.setup(n_samples=n_samples, **controls, flip_aux=True)
-        b_minus = integ.run(bra, ket, parallel=parallel)
+        b_minus = integ.run(bra, ket, parallel=True)
         b_array = np.concatenate([b_plus, b_minus])
     else:
         b_array = b_plus
@@ -40,40 +32,25 @@ def hilbert_average(n_particles, dt, n_samples, method, controls: dict, balance=
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
     b_exact = integ.exact(bra, ket)
-    ratio = np.abs(b_m)/np.abs(b_exact) 
-    abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
-    
-    print("<bra|ket> = ", bra.inner(ket) )
+
+    print("<bra|ket> = ", bra * ket)
     print(f'<bra|G|ket> = {b_m} +/- {b_s}')
     print('exact = ',b_exact)
-    print("ratio = ", ratio )
-    print("abs error = ", abs_error )
+    print("ratio = ", np.abs(b_m)/np.abs(b_exact) )
+    print("abs error = ", abs(1-np.abs(b_m)/np.abs(b_exact)) )
     print("dt^2 = ", dt**2)
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
     if plot:
-        filename = f"examples/outputs/hilbert_A{n_particles}_N{n_samples}_{method}.pdf"
-        chistogram(b_array, filename=filename, title='Hilbert space simulation')
-
-    out = {"n_particles": n_particles,
-           "dt": dt,
-           "n_samples": n_samples,
-           "method": method,
-           "balance": balance,
-           "b_m": b_m,
-           "b_s": b_s,
-           "b_exact": b_exact,
-           "ratio": ratio,
-           "abs_error": abs_error
-           }
-    out.update(controls)
-    return out
+        filename = f"examples/outputs/gfmc_A{n_particles}_N{n_samples}_{method}.pdf"
+        chistogram(b_array, filename=filename, title='GFMC')
 
 
-def product_average(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False, isospin=True):
+
+def afdmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)
 
-    ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder))
     bra = ket.copy().dagger()
     pot = ArgonnePotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
@@ -83,38 +60,37 @@ def product_average(n_particles, dt, n_samples, method, controls: dict, balance=
     pot.spinorbit.generate(dt, seed=next(seeder))
 
     if method=='hs':
-        prop = ProductPropagatorHS(n_particles, dt, isospin=isospin)
+        prop = AFDMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = ProductPropagatorRBM(n_particles, dt, isospin=isospin)
+        prop = AFDMCPropagatorRBM(n_particles, dt)
     
-    integ = Integrator(pot, prop, isospin=isospin)
+    integ = Integrator(pot, prop)
 
     integ.setup(n_samples=n_samples, **controls)
-    b_plus = integ.run(bra, ket, parallel=parallel)
+    b_plus = integ.run(bra, ket, parallel=True)
     if balance:
         integ.setup(n_samples=n_samples, **controls, flip_aux=True)
-        b_minus = integ.run(bra, ket, parallel=parallel)
+        b_minus = integ.run(bra, ket, parallel=True)
         b_array = np.concatenate([b_plus, b_minus])
     else:
         b_array = b_plus
 
     b_m = np.mean(b_array)
     b_s = np.std(b_array)/np.sqrt(n_samples)
-    b_exact = integ.exact(bra.to_manybody_basis(), ket.to_manybody_basis())
-    ratio = np.abs(b_m)/np.abs(b_exact) 
-    abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
 
-    print("<bra|ket> = ", bra.inner(ket))
+    b_exact = integ.exact(bra.to_manybody_basis(), ket.to_manybody_basis())
+
+    print("<bra|ket> = ", bra * ket)
     print(f'<bra|G|ket> = {b_m} +/- {b_s}')
     print('exact = ',b_exact)
-    print("ratio = ", ratio )
-    print("abs error = ", abs_error )
+    print("ratio = ", np.abs(b_m)/np.abs(b_exact) )
+    print("abs error = ", abs(1-np.abs(b_m)/np.abs(b_exact)) )
     print("dt^2 = ", dt**2)
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
     if plot:
-        filename = f"examples/outputs/product_A{n_particles}_N{n_samples}_{method}.pdf"
-        chistogram(b_array, filename=filename, title='Product space simulation')
+        filename = f"examples/outputs/afdmc_A{n_particles}_N{n_samples}_{method}.pdf"
+        chistogram(b_array, filename=filename, title='AFDMC')
 
     out = {"n_particles": n_particles,
            "dt": dt,
@@ -123,9 +99,7 @@ def product_average(n_particles, dt, n_samples, method, controls: dict, balance=
            "balance": balance,
            "b_m": b_m,
            "b_s": b_s,
-           "b_exact": b_exact,
-            "ratio": ratio,
-           "abs_error": abs_error
+           "b_exact": b_exact
            }
     out.update(controls)
     return out
@@ -136,25 +110,23 @@ def main():
     n_particles = 2
     dt = 0.001
     n_samples = 100000
-    method = 'rbm'
-    isospin = True
-    balance = True
-    plot = False
 
+    method = 'rbm'
     controls = {"mix": True,
-                "seed": 0,
+                "seed": 1,
                 "sigma": True,
-                "sigmatau": False,
-                "tau": False,
+                "sigmatau": True,
+                "tau": True,
                 "coulomb": False,
                 "spinorbit": False,
                 }
+    plot = True
+
+    # gfmc_avg(n_particles, dt, n_samples, method, controls, plot=plot)
+    afdmc_avg(n_particles, dt, n_samples, method, controls, plot=plot)
     
-    hilbert_out = hilbert_average(n_particles, dt, n_samples, method, controls, balance, plot, isospin)
-    product_out = product_average(n_particles, dt, n_samples, method, controls, balance, plot, isospin)
-    print_dict(hilbert_out)
-    print_dict(product_out)
-    
+
+
 def list_from_dict(input_dict):
     """ produces a list of dicts from a dict of lists """
     return [dict(zip(input_dict,t)) for t in zip(*input_dict.values())]

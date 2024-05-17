@@ -1,6 +1,7 @@
-from quap import *
+from quap.core_backup import *
+from quap.core import ArgonnePotential
 
-n_particles = 4
+n_particles = 2
 dt = 0.001
 
 seed = itertools.count(0,1)
@@ -14,13 +15,13 @@ pot.spinorbit.generate(dt, seed=next(seed))
 
 def hilbert_bracket(method, controls):
     seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed)).to_manybody_basis()
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1))).randomize(seed=next(seed)).to_manybody_basis()
     bra = ket.copy().dagger()
     
     if method=='hs':
-        prop = HilbertPropagatorHS(n_particles, dt)
+        prop = GFMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = HilbertPropagatorRBM(n_particles, dt)
+        prop = GFMCPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
@@ -45,19 +46,19 @@ def hilbert_bracket(method, controls):
     rng.shuffle(prop_list)
     ket_prop = ket.copy()
     for p in prop_list:
-        ket_prop = p.multiply_state(ket_prop)
-    return bra.inner(ket_prop)
+        ket_prop = p * ket_prop
+    return bra * ket_prop
 
 
 def product_bracket(method, controls):
     seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed))
+    ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1))).randomize(seed=next(seed))
     bra = ket.copy().dagger()
     
     if method=='hs':
-        prop = ProductPropagatorHS(n_particles, dt)
+        prop = AFDMCPropagatorHS(n_particles, dt)
     elif method=='rbm':
-        prop = ProductPropagatorRBM(n_particles, dt)
+        prop = AFDMCPropagatorRBM(n_particles, dt)
     else:
         raise ValueError
 
@@ -82,18 +83,21 @@ def product_bracket(method, controls):
     rng.shuffle(prop_list)
     ket_prop = ket.copy()
     for p in prop_list:
-        ket_prop = p.multiply_state(ket_prop)
-    return bra.inner(ket_prop)
+        ket_prop = p * ket_prop
+    return bra * ket_prop
 
 
 if __name__ == "__main__":
-    method = 'rbm'
+    method = 'hs'
+    
+    pot.sigma = 0.*pot.sigma
+    pot.sigma[0,0,0,1] = 1.
     
     controls = {"sigma": True,
-                "sigmatau": True,
-                "tau": True,
-                "coulomb": True,
-                "spinorbit": True,
+                "sigmatau": False,
+                "tau": False,
+                "coulomb": False,
+                "spinorbit": False,
                 }
     b_hilbert = hilbert_bracket(method, controls)
     print('hilbert = ', b_hilbert)
