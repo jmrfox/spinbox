@@ -1,6 +1,6 @@
 from quap import *
 from quap.extras import chistogram
-
+import pandas as pd
 
 parallel = True
 
@@ -89,7 +89,8 @@ def product_average(n_particles, dt, n_samples, method, controls: dict, balance=
     
     integ = Integrator(pot, prop, isospin=isospin)
 
-    integ.setup(n_samples=n_samples, **controls)
+    # integ.setup(n_samples=n_samples, **controls)
+    integ.setup(**controls)
     b_plus = integ.run(bra, ket, parallel=parallel)
     if balance:
         integ.setup(n_samples=n_samples, **controls, flip_aux=True)
@@ -121,6 +122,7 @@ def product_average(n_particles, dt, n_samples, method, controls: dict, balance=
            "n_samples": n_samples,
            "method": method,
            "balance": balance,
+           "b_array": b_array,
            "b_m": b_m,
            "b_s": b_s,
            "b_exact": b_exact,
@@ -157,7 +159,8 @@ def main():
     
 def list_from_dict(input_dict):
     """ produces a list of dicts from a dict of lists """
-    return [dict(zip(input_dict,t)) for t in zip(*input_dict.values())]
+    keys, values = zip(*input_dict.items())
+    return [dict(zip(keys, v)) for v in itertools.product(*values)]
 
 
 def experiment():
@@ -165,15 +168,15 @@ def experiment():
     n_samples_list = [1000]
     # dt_list = [0.01, 0.005, 0.0025, 0.001, 0.0005, 0.00025, 0.0001]
     dt_list = [0.001]
-    method_list = ["rbm"]
+    method_list = ["hs","rbm"]
     seed_list = [0]
     balance_list = [True, False]
     mix_list = [True, False]
-    sigma_list = [True, False]
-    sigmatau_list = [True, False]
-    tau_list = [True, False]
-    coulomb_list = [True, False]
-    spinorbit_list = [True, False]
+    sigma_list = [True]
+    sigmatau_list = [False]
+    tau_list = [False]
+    coulomb_list = [False]
+    spinorbit_list = [False]
     
     input_dict = {
     "n_particles": n_particles_list,
@@ -190,15 +193,18 @@ def experiment():
     "spinorbit": spinorbit_list,
     }
 
-    print(input_dict)
-    # arg_grid = list_from_dict(input_dict)
+    # print(input_dict)
+    arg_grid = list_from_dict(input_dict)
     # print(arg_grid)
+    out = []
+    for arg in arg_grid:
+        out.append(product_average(arg["n_particles"], arg["dt"], arg["n_samples"], arg["method"], controls=arg, balance=arg["balance"], plot=False, isospin=True))
+        
+    df = pd.DataFrame.from_dict(out)
+    df.to_csv("test.csv")
 
-
-def test():
-    DL = {'a': [0, 1], 'b': [2, 3]}
-    v = [dict(zip(DL,t)) for t in zip(*DL.values())]
-    print(v)
 
 if __name__ == "__main__":
-    main()
+    # main()
+    experiment()
+    
