@@ -1319,20 +1319,25 @@ class ExactGFMC:
         return out.exp()
 
 
-    def make_g_exact(self, dt, potential, controls):
+    def make_g_exact(self, dt, potential,
+                     sigma,
+                     sigmatau,
+                     tau,
+                     coulomb,
+                     spinorbit):
         # compute exact bracket
         g_exact = self.ident.copy()
         pairs_ij = interaction_indices(self.n_particles)
         for i,j in pairs_ij:
-            if controls['sigma']:
+            if sigma:
                 g_exact = self.g_pade_sig(dt, potential.sigma, i, j).multiply_operator(g_exact)
-            if controls['sigmatau']:
+            if sigmatau:
                 g_exact = self.g_pade_sigtau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
-            if controls['tau']:
+            if tau:
                 g_exact = self.g_pade_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
-            if controls['coulomb']:
+            if coulomb:
                 g_exact = self.g_pade_coul(dt, potential.coulomb, i, j).multiply_operator(g_exact)
-        if controls['spinorbit']:
+        if spinorbit:
             # linear approximation
             # for i in range(self.n_particles):
             #     g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
@@ -1361,24 +1366,41 @@ class Integrator:
         self.isospin = isospin
         self.is_ready = False
 
-    def setup(self, n_samples, seed=1729, mix=True, flip_aux=False,
-              sigma=False, sigmatau=False, tau=False, coulomb=False, spinorbit=False):
-        self.controls={"seed":seed, "mix":mix, "sigma":sigma, "sigmatau":sigmatau, 
-                       "tau":tau, "coulomb":coulomb, "spinorbit":spinorbit}
+    def setup(self, 
+              n_samples, 
+              seed=1729, 
+              mix=True,
+              flip_aux=False,
+              sigma=False, 
+              sigmatau=False, 
+              tau=False, 
+              coulomb=False, 
+              spinorbit=False,
+              parallel=True,
+              n_processes=None):
         
         n_aux = 0
-        if self.controls['sigma']:
+        if sigma:
             n_aux += self.propagator.n_aux_sigma
-        if self.controls['sigmatau']:
+        if sigmatau:
             n_aux += self.propagator.n_aux_sigmatau
-        if self.controls['tau']:
+        if tau:
             n_aux += self.propagator.n_aux_tau
-        if self.controls['coulomb']:
+        if coulomb:
             n_aux += self.propagator.n_aux_coulomb
-        if self.controls['spinorbit']:
+        if spinorbit:
             n_aux += self.propagator.n_aux_spinorbit
 
-        self.rng = np.random.default_rng(seed=self.controls["seed"])
+        self.sigma = sigma
+        self.sigmatau = sigmatau
+        self.tau = tau
+        self.coulomb = coulomb
+        self.spinorbit = spinorbit
+        self.mix = mix
+        self.parallel = parallel
+        self.n_processes = n_processes
+
+        self.rng = np.random.default_rng(seed=seed)
         if self.method=='HS':
             self.aux_fields = self.rng.standard_normal(size=(n_samples,n_aux))
             if flip_aux:
@@ -1388,39 +1410,38 @@ class Integrator:
             if flip_aux:
                 self.aux_fields = np.ones_like(self.aux_fields) - self.aux_fields
         self.is_ready = True
-        return self.controls
 
     def bracket(self, bra, ket, aux_fields):
         ket_prop = ket.copy()
         idx = 0
         self.prop_list = []
-        if self.controls['sigma']:
+        if self.sigma:
             self.prop_list.extend( self.propagator.factors_sigma(self.potential, aux_fields[idx : idx + self.propagator.n_aux_sigma] ) )
             idx += self.propagator.n_aux_sigma
-        if self.controls['sigmatau']:
+        if self.sigmatau:
             self.prop_list.extend( self.propagator.factors_sigmatau(self.potential, aux_fields[idx : idx + self.propagator.n_aux_sigmatau] ) )
             idx += self.propagator.n_aux_sigmatau
-        if self.controls['tau']:
+        if self.tau:
             self.prop_list.extend( self.propagator.factors_tau(self.potential, aux_fields[idx : idx + self.propagator.n_aux_tau] ) )
             idx += self.propagator.n_aux_tau
-        if self.controls['coulomb']:
+        if self.coulomb:
             self.prop_list.extend( self.propagator.factors_coulomb(self.potential, aux_fields[idx : idx + self.propagator.n_aux_coulomb] ) )
             idx += self.propagator.n_aux_coulomb
-        if self.controls['spinorbit']:
+        if self.spinorbit:
             self.prop_list.extend( self.propagator.factors_spinorbit(self.potential, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
             idx += self.propagator.n_aux_spinorbit
-        if self.controls["mix"]:
+        if self.mix:
             self.rng.shuffle(self.prop_list)
         for p in self.prop_list:
             ket_prop = p.multiply_state(ket_prop)
         return bra.inner(ket_prop)
 
-    def run(self, bra, ket, parallel=True, n_processes=None):
+    def run(self, bra, ket):
         if not self.is_ready:
             raise ValueError("Integrator is not ready. Did you run .setup() ?")
         assert (ket.ketwise) and (not bra.ketwise)
-        if parallel:
-            with Pool(processes=n_processes) as pool:
+        if self.parallel:
+            with Pool(processes=self.n_processes) as pool:
                 b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields], leave=True)).get()
         else:
             b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields])))
@@ -1429,6 +1450,12 @@ class Integrator:
             
     def exact(self, bra, ket):
         ex = ExactGFMC(self.n_particles, isospin=self.isospin)
-        g_exact = ex.make_g_exact(self.propagator.dt, self.potential, self.controls)
+        g_exact = ex.make_g_exact(self.propagator.dt, 
+                                  self.potential,
+                                  self.sigma,
+                                  self.sigmatau,
+                                  self.tau,
+                                  self.coulomb,
+                                  self.spinorbit)
         b_exact = bra.inner(g_exact.multiply_state(ket))
         return b_exact
