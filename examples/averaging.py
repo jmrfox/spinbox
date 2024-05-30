@@ -167,11 +167,11 @@ def experiment():
     
     input_dict = {
     "n_particles": [2],
-    "n_samples": [100000],
+    "n_samples": [10000],
     "dt": [0.01, 0.001, 0.0001],
     "full_basis": [False],
     "seed": [0],
-    "method": ["rbm"],
+    "method": ["hs", "rbm"],
     "balance": [True, False],
     "mix": [True, False],
     "sigma": [True],
