@@ -136,28 +136,27 @@ def average(n_particles,
 
 
 def main():
-    n_particles = 2
-    dt = 0.001
-    n_samples = 100000
-    method = 'rbm'
-    isospin = True
-    balance = True
-    plot = False
+    args = {
+    "n_particles": 2,
+    "n_samples": 1000,
+    "dt": 0.001,
+    "full_basis": False,
+    "seed": 0,
+    "method": "rbm",
+    "balance": True,
+    "mix": False,
+    "sigma": True,
+    "sigmatau": True,
+    "tau": True,
+    "coulomb": False,
+    "spinorbit": False,
+    "plot":False
+    }
 
-    controls = {"mix": True,
-                "seed": 0,
-                "sigma": True,
-                "sigmatau": False,
-                "tau": False,
-                "coulomb": False,
-                "spinorbit": False,
-                }
-    
-    hilbert_out = hilbert_average(n_particles, dt, n_samples, method, controls, balance, plot, isospin)
-    product_out = product_average(n_particles, dt, n_samples, method, controls, balance, plot, isospin)
-    print_dict(hilbert_out)
-    print_dict(product_out)
-    
+    out = average(**args)
+    print_dict(out)
+    return out
+
 def list_from_dict(input_dict):
     """ produces a list of dicts from a dict of lists """
     keys, values = zip(*input_dict.items())
@@ -192,6 +191,6 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    # main()
-    experiment()
+    main()
+    # experiment()
      
