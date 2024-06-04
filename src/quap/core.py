@@ -217,7 +217,7 @@ class HilbertState:
         if SAFE:
             assert type(other) == type(self)
             assert not self.ketwise and other.ketwise
-        return np.dot(self.coefficients.flatten(), other.coefficients.flatten())
+        return np.dot(self.coefficients, other.coefficients)
         
     def outer(self, other):
         if SAFE:
@@ -246,11 +246,11 @@ class HilbertState:
         out += [str(self.coefficients)]
         return "\n".join(out)
 
-    def randomize(self, seed):
+    def randomize(self, seed=0):
         """ randomize """
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
-        out.coefficients = rng.standard_normal(size=out.coefficients.shape)
+        out.coefficients = rng.standard_normal(size=out.coefficients.shape) + 1.j*rng.standard_normal(size=out.coefficients.shape)
         out.coefficients /= np.linalg.norm(out.coefficients)
         return out
     
@@ -259,6 +259,47 @@ class HilbertState:
         out = self.copy()
         out.coefficients = np.zeros_like(self.coefficients)
         return out
+    
+    def entropy(self):
+         return - np.sum(self.coefficients * np.log(self.coefficients))
+     
+    def generate_basis_states(self):
+        coeffs_list = list(np.eye(self.n_basis**self.n_particles))
+        out = [HilbertState(self.n_particles, coefficients=c, ketwise=True, isospsin=self.isospin) for c in coeffs_list]
+        return out
+    
+    def nearby_product_state(self, seed: int, maxiter=100):
+        from scipy.optimize import minimize, NonlinearConstraint
+        fit = ProductState(self.n_particles, isospin=self.isospin).randomize(seed)
+        shape = fit.coefficients.shape
+        n_coeffs = len(fit.coefficients.flatten())
+        n_params = 2*n_coeffs
+        def x_to_coef(x):
+            return x[:n_params//2].reshape(shape) + 1.j*x[n_params//2:].reshape(shape)   
+        def loss(x):
+            fit.coefficients = x_to_coef(x)
+            overlap = self.dagger().inner(fit.to_manybody_basis())
+            return (1 - np.real(overlap))**2 + np.imag(overlap)**2
+        def norm(x):
+            fit.coefficients = x_to_coef(x)
+            return fit.dagger().inner(fit)
+        start = np.concatenate([np.real(fit.coefficients).flatten() , np.imag(fit.coefficients).flatten()])
+        print(start)
+        normalize = NonlinearConstraint(norm,1.0,1.0)
+        result = minimize(loss, x0=start, constraints=normalize, options={'maxiter':maxiter,'disp':True},tol=10**-15)
+        fit.coefficients = x_to_coef(result.x)
+        return fit, result
+    
+    def nearest_product_state(self, seeds: list, maxiter=100):
+        overlap = 0.
+        for seed in seeds:
+            this_fit, _ = self.nearby_product_state(seed, maxiter=maxiter)
+            this_overlap = this_fit.to_manybody_basis().dagger().inner(self)
+            if this_overlap>overlap:
+                overlap = this_overlap
+                fit = this_fit
+        return fit
+    
 
 
 class HilbertOperator:
@@ -369,8 +410,9 @@ class ProductState:
         """an array of single particle spinors
 
         Orientation must be consistent with array shape!
-        The shape of a bra is (A, 2, 1)
-        The shape of a ket is (A, 1, 2)
+        The shape of a bra is (A, n_basis, 1)
+        The shape of a ket is (A, 1, n_basis)
+        n_basis = 2 for spin, 4 for spin-isospin
 
         Args:
             n_particles (int): number of single particle states
@@ -470,10 +512,10 @@ class ProductState:
         out.coefficients *= b ** (1 / out.n_particles)
         return out
 
-    def randomize(self, seed):
+    def randomize(self, seed=0):
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
-        out.coefficients = rng.standard_normal(size=out.coefficients.shape)
+        out.coefficients = rng.standard_normal(size=out.coefficients.shape) + 1.j*rng.standard_normal(size=out.coefficients.shape)
         for i in range(out.n_particles):
             out.coefficients[i] /= np.linalg.norm(out.coefficients[i])
         return out
@@ -483,6 +525,10 @@ class ProductState:
         out.coefficients = np.zeros_like(out.coefficients)
         return out
 
+    def generate_basis_states(self):
+        coeffs_list = [np.concatenate(x).reshape(self.n_particles,self.n_basis,1) for x in itertools.product(list(np.eye(self.n_basis)), repeat=self.n_particles)]
+        out = [ProductState(self.n_particles, coefficients=c, ketwise=True, isospsin=self.isospin) for c in coeffs_list]
+        return out
 
 
 
@@ -575,7 +621,12 @@ class ProductOperator:
         return HilbertOperator(self.n_particles, new_coeffs, self.isospin)
 
     
-            
+    
+# BASIS AND ENTANGLEMENT 
+    
+    
+    
+    
 
 # COUPLINGS / POTENTIALS
 
@@ -1332,10 +1383,11 @@ class ExactGFMC:
                 g_exact = self.g_pade_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
             if controls['coulomb']:
                 g_exact = self.g_pade_coul(dt, potential.coulomb, i, j).multiply_operator(g_exact)
-        if controls['spinorbit']:
+        if controls['spinorbit-linear']:
             # linear approximation
-            # for i in range(self.n_particles):
-            #     g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+            for i in range(self.n_particles):
+                g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+        elif controls['spinorbit-factored']:
             # factorized into one- and two-body
             for i in range(self.n_particles):
                 for a in range(3):

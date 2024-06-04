@@ -158,7 +158,8 @@ def test_product_prop(n_particles, dt, isospin):
     return out
 
     
-
+    
+    
 if __name__=="__main__":
     n_particles = 2
     dt = 0.01
@@ -175,5 +176,7 @@ if __name__=="__main__":
     # print(b_hilbert, b_product)
     # print(b_hilbert - b_product)
     
-    result = test_overlaps(isospin=True)
-    print(result)
+    # result = test_overlaps(isospin=True)
+    # print(result)
+        
+    
