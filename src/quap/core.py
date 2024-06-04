@@ -1295,6 +1295,8 @@ class ExactGFMC:
         self.ident = HilbertOperator(n_particles, self.isospin)
         self.sig = [[HilbertOperator(n_particles, self.isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
         self.tau = [[HilbertOperator(n_particles, self.isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        
+        self.linear_spinorbit = False # secret parameter to use the linear approximation of LS instead of the factorization
 
     def g_pade_sig(self, dt: float, asig: SigmaCoupling, i: int, j: int):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
@@ -1389,19 +1391,18 @@ class ExactGFMC:
             if coulomb:
                 g_exact = self.g_pade_coul(dt, potential.coulomb, i, j).multiply_operator(g_exact)
         if spinorbit:
-            # linear approximation
-            for i in range(self.n_particles):
-                g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
-        elif controls['spinorbit-factored']:
-            # factorized into one- and two-body
-            for i in range(self.n_particles):
-                for a in range(3):
-                    g_exact = self.g_ls_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
-            for i in range(self.n_particles):
-                for j in range(self.n_particles):
+            if self.linear_spinorbit:
+                for i in range(self.n_particles):
+                    g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+            else:
+                for i in range(self.n_particles):
                     for a in range(3):
-                        for b in range(3):
-                            g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
+                        g_exact = self.g_ls_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
+                for i in range(self.n_particles):
+                    for j in range(self.n_particles):
+                        for a in range(3):
+                            for b in range(3):
+                                g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
         return g_exact
     
 
@@ -1420,7 +1421,7 @@ class Integrator:
 
     def setup(self, 
               n_samples, 
-              seed=1729, 
+              seed=0, 
               mix=True,
               flip_aux=False,
               sigma=False, 
