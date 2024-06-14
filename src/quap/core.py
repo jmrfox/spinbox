@@ -537,7 +537,7 @@ class ProductOperator:
         self.n_particles = n_particles
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
-        self.coefficients = np.stack(self.n_particles*[np.identity(self.n_basis)], dtype=complex)    
+        self.coefficients = np.stack(self.n_particles*[np.identity(self.n_basis)], dtype=complex)
         self.friendly_state = ProductState
 
     def copy(self):
@@ -620,12 +620,6 @@ class ProductOperator:
         new_coeffs = repeated_kronecker_product(self.to_list())
         return HilbertOperator(self.n_particles, new_coeffs, self.isospin)
 
-    
-    
-# BASIS AND ENTANGLEMENT 
-    
-    
-    
     
 
 # COUPLINGS / POTENTIALS
@@ -1084,6 +1078,12 @@ class HilbertPropagatorRBM3(Propagator):
         self._tau_op = [[HilbertOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self.n_aux_sigma = 9 * self._n3
 
+    def a2b_factors(z):
+        n = cexp(-abs(z))/2.
+        w = carctanh(csqrt(ctanh(abs(z))))
+        s = z/abs(z)
+        return n, w, s
+
     def _a3b_factors(a3):
         log = lambda x: np.log(x, dtype=complex)
         if a3>0:
@@ -1126,28 +1126,34 @@ class HilbertPropagatorRBM3(Propagator):
         gj = self._ident.scale(ccosh(arg)) - operator_j.scale(np.sign(z) * csinh(arg))
         return gi.multiply_operator(gj).scale(prefactor)
 
-    def threebody_sample(self, z: float, h: int, operator_i: HilbertOperator, operator_j: HilbertOperator, operator_k: HilbertOperator):
+    def threebody_sample(self, z: float, h_list: list, operator_i: HilbertOperator, operator_j: HilbertOperator, operator_k: HilbertOperator):
             N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
             if self.include_prefactors:
-                prefactor = N*cexp(-h*C)
+                prefactor = N*cexp(-h_list[0]*C)
             else:
                 prefactor = 1.0
             # one-body factors
-            arg = A1 + h*W
+            arg = A1 - h_list[0]*W
             gi = self._ident.scale(ccosh(arg)) + operator_i.scale(csinh(arg))
-            gj = self._ident.scale(ccosh(arg)) - operator_j.scale(np.sign(z) * csinh(arg))
-            return gi.multiply_operator(gj).scale(prefactor)
+            gj = self._ident.scale(ccosh(arg)) + operator_j.scale(csinh(arg))
+            gk = self._ident.scale(ccosh(arg)) + operator_k.scale(csinh(arg))
+            out = gk.multiply_operator(gj).multiply_operator(gi).scale(prefactor)
+            # two-body factors
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[1], operator_i, operator_j))
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[2], operator_i, operator_k))
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[3], operator_j, operator_k))
+            return out.scale(prefactor)
 
-    def factors_sigma(self, potential: ArgonnePotential, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    k = 0.5 * self.dt * potential.sigma[a,i,b,j]
-                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
-                    idx += 1
-        return out
+    # def factors_sigma(self, potential: ArgonnePotential, aux: list):
+    #     out = []
+    #     idx = 0
+    #     for i,j in self._2b_idx:
+    #         for a in self._xyz:
+    #             for b in self._xyz:
+    #                 k = 0.5 * self.dt * potential.sigma[a,i,b,j]
+    #                 out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+    #                 idx += 1
+    #     return out
 
 
 class ProductPropagatorHS(Propagator):
@@ -1357,6 +1363,69 @@ class ProductPropagatorRBM(Propagator):
             norm_op = norm_op.scale_all(np.exp( 0.5 * np.sum(potential.spinorbit.coefficients**2)) )
             out.append( norm_op )
         return out    
+
+
+class ProductPropagatorRBM3(Propagator):
+    """ exp( - k op_i op_j op_k )
+    seed determines mixing
+    """
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)
+        self._ident = np.identity(4)
+        self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+        self._tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+        self.n_aux_sigma = 9 * self._n3
+
+    def onebody(self, z: complex, i: int, onebody_matrix: np.ndarray):
+        """exp (- k opi) * |ket> """
+        out = ProductOperator(self.n_particles)
+        out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
+        return out
+    
+    def twobody_sample(self, z: complex, h: int, i: int, j: int, onebody_matrix_i, onebody_matrix_j):
+        if self.include_prefactors:
+            prefactor = cexp(-abs(z))
+        else:
+            prefactor = 1.0
+        W = carctanh(csqrt(ctanh(abs(z))))
+        arg = W*(2*h-1)
+        out = ProductOperator(self.n_particles, self.isospin)
+        out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * onebody_matrix_i @ out.coefficients[i]
+        out.coefficients[j] = ccosh(arg) * out.coefficients[j] - np.sign(z) * csinh(arg) * onebody_matrix_j @ out.coefficients[j]
+        out.coefficients[i] *= csqrt(prefactor)
+        out.coefficients[j] *= csqrt(prefactor)
+        return out
+    
+
+    def threebody_sample(self, z: float, h_list: list, i: int, j: int, k: int, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
+            N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
+            if self.include_prefactors:
+                prefactor = N*cexp(-h_list[0]*C)
+            else:
+                prefactor = 1.0
+            out = ProductOperator(self.n_particles, self.isospin)
+            # one-body factors
+            arg = A1 - h_list[0]*W
+            out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * onebody_matrix_i @ out.coefficients[i]
+            out.coefficients[j] = ccosh(arg) * out.coefficients[j] + csinh(arg) * onebody_matrix_j @ out.coefficients[j]
+            out.coefficients[k] = ccosh(arg) * out.coefficients[k] + csinh(arg) * onebody_matrix_k @ out.coefficients[k]
+            # two-body factors
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[1], onebody_matrix_i, onebody_matrix_j))
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[2], onebody_matrix_i, onebody_matrix_k))
+            out = out.multiply_operator(self.twobody_sample(-A2, h_list[3], onebody_matrix_j, onebody_matrix_k))
+            return out.scale(prefactor)
+
+    def factors_sigma(self, potential: ArgonnePotential, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    k = 0.5 * self.dt * potential.sigma[a,i,b,j]
+                    out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
+                    idx += 1
+        return out
+    
 
 
 class ExactGFMC:

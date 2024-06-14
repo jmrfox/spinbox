@@ -58,43 +58,43 @@ def gfmc_3b_1d(n_particles, dt, a3):
     b_exact = bra.inner(ket_prop)
 
     ##### rbm take 1: use 3b rbm and exact 2b
-    ket_prop = ket.copy() # outside loops
-    # 3b
-    N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-    ket_temp = ket_prop.copy().zero()  #right before h loop
-    for h in [0.,1.]:
-        ket_temp += (-h*C*ident + (A1 - h*W)*(sig[0][0] + sig[1][0] + sig[2][0])).exp() * ket_prop
-    ket_prop = N * ket_temp.copy()
-    # 2b
-    ket_prop = (A2*(sig[0][0]*sig[1][0] + sig[0][0]*sig[2][0] + sig[1][0]*sig[2][0])).exp() * ket_prop
-    b_rbm = bra * ket_prop
+    # ket_prop = ket.copy() # outside loops
+    # # 3b
+    # N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
+    # ket_temp = ket_prop.copy().zero()  #right before h loop
+    # for h in [0.,1.]:
+    #     ket_temp += (-h*C*ident + (A1 - h*W)*(sig[0][0] + sig[1][0] + sig[2][0])).exp() * ket_prop
+    # ket_prop = N * ket_temp.copy()
+    # # 2b
+    # ket_prop = (A2*(sig[0][0]*sig[1][0] + sig[0][0]*sig[2][0] + sig[1][0]*sig[2][0])).exp() * ket_prop
+    # b_rbm = bra * ket_prop
 
     ##### rbm take 2: use 3b rbm and 2b rbm (x3)
-    # ket_prop = ket.copy() # outside loops
-    # ## 3b
-    # ket_temp = ket_prop.copy().zero()  #right before h loop
-    # N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-    # for h in [0.,1.]:
-    #     ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale((h*W - A1))).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## 2b
-    # N, W, S = a2b_factors(-A2)
-    # ## i,j
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[0][0] - sig[1][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## i,k
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[0][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## j,k
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[1][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # b_rbm = bra.inner(ket_prop)
+    ket_prop = ket.copy() # outside loops
+    ## 3b
+    ket_temp = ket_prop.copy().zero()  #right before h loop
+    N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
+    for h in [0.,1.]:
+        ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale((h*W - A1))).exp().multiply_state(ket_prop)
+    ket_prop = ket_temp.copy().scale(N)
+    ## 2b
+    N, W, S = a2b_factors(-A2)
+    ## i,j
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (sig[0][0] - sig[1][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+    ket_prop = ket_temp.copy().scale(N)
+    ## i,k
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (sig[0][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+    ket_prop = ket_temp.copy().scale(N)
+    ## j,k
+    ket_temp = ket_prop.copy().zero()
+    for h in [0.,1.]:
+        ket_temp += (sig[1][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+    ket_prop = ket_temp.copy().scale(N)
+    b_rbm = bra.inner(ket_prop)
 
     return b_exact, b_rbm
 
