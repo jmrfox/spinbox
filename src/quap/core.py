@@ -1075,6 +1075,81 @@ class HilbertPropagatorRBM(Propagator):
         return out
 
 
+class HilbertPropagatorRBM3(Propagator):
+    """ exp( - z op_i op_j op_k )"""
+    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
+        super().__init__(n_particles, dt, isospin, include_prefactors)
+        self._ident = HilbertOperator(self.n_particles)
+        self._sig_op = [[HilbertOperator(self.n_particles).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self._tau_op = [[HilbertOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
+        self.n_aux_sigma = 9 * self._n3
+
+    def _a3b_factors(a3):
+        log = lambda x: np.log(x, dtype=complex)
+        if a3>0:
+            x = csqrt(cexp(8*a3) - 1)
+            x = csqrt( 2*cexp(4*a3)*( cexp(4*a3)*x + cexp(8*a3) - 1  ) - x)
+            x = x + cexp(6*a3) + cexp(2*a3)*csqrt(cexp(8*a3) - 1)
+            x = x*2*cexp(2*a3) - 1
+            c = 0.5*log(x)
+            w = c
+            a1 = 0.125*( 6*c - log(cexp(4*c) + 1) + log(2) )
+            a2 = 0.125*( 2*c - log(cexp(4*c) + 1) + log(2) )
+            top = cexp( 5 * c / 4)
+            bottom = 2**(3/8) * csqrt(cexp(2*c) + 1) * (cexp(4*c) + 1)**0.125
+            n = top/bottom
+        else:
+            x = csqrt(1 - cexp(8*a3))
+            x = csqrt( 2*(x + 1) - cexp(8*a3) * ( x + 2) )
+            x = x + 1 + csqrt(1 - cexp(8*a3))
+            c = 0.5 * log(2*cexp(-8*a3)*x - 1)
+            w = -c
+            a1 = 0.125*( log(0.5*(cexp(4*c) + 1)) - 6*c )
+            a2 = 0.125*( 2*c - log(cexp(4*c) + 1) + log(2) )
+            top = cexp( c / 4)
+            bottom = 2**(3/8) * csqrt(cexp(-2*c) + 1) * (cexp(4*c) + 1)**0.125
+            n = top/bottom
+        return n, c, w, a1, a2
+        
+    def onebody(self, z: complex, operator: HilbertOperator):
+        """exp (- z opi)"""
+        return operator.scale(-z).exp()
+
+    def twobody_sample(self, z: float, h: int, operator_i: HilbertOperator, operator_j: HilbertOperator):
+        if self.include_prefactors:
+            prefactor = cexp(-abs(z))
+        else:
+            prefactor = 1.0
+        W = carctanh(csqrt(ctanh(abs(z))))
+        arg = W*(2*h-1)
+        gi = self._ident.scale(ccosh(arg)) + operator_i.scale(csinh(arg))
+        gj = self._ident.scale(ccosh(arg)) - operator_j.scale(np.sign(z) * csinh(arg))
+        return gi.multiply_operator(gj).scale(prefactor)
+
+    def threebody_sample(self, z: float, h: int, operator_i: HilbertOperator, operator_j: HilbertOperator, operator_k: HilbertOperator):
+            N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
+            if self.include_prefactors:
+                prefactor = N*cexp(-h*C)
+            else:
+                prefactor = 1.0
+            # one-body factors
+            arg = A1 + h*W
+            gi = self._ident.scale(ccosh(arg)) + operator_i.scale(csinh(arg))
+            gj = self._ident.scale(ccosh(arg)) - operator_j.scale(np.sign(z) * csinh(arg))
+            return gi.multiply_operator(gj).scale(prefactor)
+
+    def factors_sigma(self, potential: ArgonnePotential, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    k = 0.5 * self.dt * potential.sigma[a,i,b,j]
+                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+                    idx += 1
+        return out
+
+
 class ProductPropagatorHS(Propagator):
     """ exp( - k op_i op_j )"""
     def __init__(self, n_particles: int, dt: float, isospin=True, include_prefactors=True):
