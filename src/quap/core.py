@@ -1078,7 +1078,7 @@ class HilbertPropagatorRBM3(Propagator):
         self._tau_op = [[HilbertOperator(self.n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
         self.n_aux_sigma = 9 * self._n3
 
-    def a2b_factors(z):
+    def _a2b_factors(z):
         n = cexp(-abs(z))/2.
         w = carctanh(csqrt(ctanh(abs(z))))
         s = z/abs(z)
