@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 # need to actually make this an independent test script
 

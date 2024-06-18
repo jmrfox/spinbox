@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 from tqdm import tqdm
 
 # do some tests for 2 particles in the spin-isospin one-body basis

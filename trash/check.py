@@ -1,5 +1,5 @@
-from quap.core_backup import *
-from quap.core import ArgonnePotential
+from spinbox.core_backup import *
+from spinbox.core import ArgonnePotential
 
 n_particles = 2
 dt = 0.001

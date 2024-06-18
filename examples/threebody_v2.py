@@ -1,4 +1,4 @@
-from quap import *    
+from spinbox import *    
 
 from cProfile import Profile
 from pstats import SortKey, Stats

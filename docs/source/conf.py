@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'quap'
+project = 'spinbox'
 copyright = '2024, Jordan M. R. Fox'
 author = 'Jordan M. R. Fox'
 release = '0.1'

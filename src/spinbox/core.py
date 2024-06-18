@@ -1,4 +1,4 @@
-# quap
+# spinbox
 # a quantum mechanics playground
 # jordan m r fox 2024
 

@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 from scipy.optimize import minimize
 np.set_printoptions(linewidth=300)
 

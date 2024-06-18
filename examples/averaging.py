@@ -1,5 +1,5 @@
-from quap import *
-from quap.extras import chistogram
+from spinbox import *
+from spinbox.extras import chistogram
 import time
 import pickle as pkl
 

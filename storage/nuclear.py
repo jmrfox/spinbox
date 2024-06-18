@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import os
-from quap import *
+from spinbox import *
 import itertools 
 
 #from icecream import ic

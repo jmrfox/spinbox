@@ -1,5 +1,5 @@
 import nuctest as nt
-from quap import *
+from spinbox import *
 from tqdm import tqdm
 from cProfile import Profile
 from pstats import SortKey, Stats

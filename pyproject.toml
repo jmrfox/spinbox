@@ -3,7 +3,7 @@ requires = ["pdm-backend"]
 build-backend = "pdm.backend"
 
 [project]
-name = "quap"
+name = "spinbox"
 version = "0.1.0"
 authors = [
     { name="Jordan M. R. Fox", email="jordanmrfox@gmail.com" },
@@ -25,4 +25,4 @@ dependencies = [
 license = {text = "MIT"}
 
 [project.urls]
-"Homepage" = "https://github.com/jmrfox/quap"
+"Homepage" = "https://github.com/jmrfox/spinbox"

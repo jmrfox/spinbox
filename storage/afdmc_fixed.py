@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 n_particles = 2
 dt = 0.001

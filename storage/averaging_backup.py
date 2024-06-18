@@ -1,5 +1,5 @@
-from quap import *
-from quap.extras import chistogram
+from spinbox import *
+from spinbox.extras import chistogram
 
 def gfmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, plot=False):
     seeder = itertools.count(controls["seed"], 1)

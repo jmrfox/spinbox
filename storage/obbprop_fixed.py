@@ -1,5 +1,5 @@
 import nuctest as nt
-from quap import *
+from spinbox import *
 
 ident = np.identity(4)
 sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]

@@ -2,7 +2,7 @@ dist/
 build/
 __pycache__/
 examples/__pycache__/
-quap/__pycache__/
-src/quap/__pycache__/
+spinbox/__pycache__/
+src/spinbox/__pycache__/
 .idea/
 .vscode/

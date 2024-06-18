@@ -1,5 +1,5 @@
-from quap import *
-#from context import quap
+from spinbox import *
+#from context import spinbox
 
 num_particles = 2
 

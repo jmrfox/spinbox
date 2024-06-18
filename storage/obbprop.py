@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 from tqdm import tqdm
 

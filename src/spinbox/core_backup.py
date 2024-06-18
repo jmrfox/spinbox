@@ -1,4 +1,4 @@
-# quap
+# spinbox
 # a quantum mechanics playground
 # jordan fox 2023
 

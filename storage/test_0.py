@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 # test basic spin states and operators
 

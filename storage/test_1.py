@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 # test spin+isospin states and operators
 

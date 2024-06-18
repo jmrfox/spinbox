@@ -1,4 +1,4 @@
-from quap import *
+from spinbox import *
 
 ket = ProductState(n_particles=5, isospin=True).randomize(seed=1729)
 bra = ket.copy().dagger()
