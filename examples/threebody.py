@@ -131,9 +131,9 @@ def afdmc_3b_1d(n_particles, dt, a3):
     ket_1_temp = ket_1.copy().zero()
     for h in [0.,1.]:
         arg = W*(2*h-1)
-        ket_0_temp.coefficients[0] += ccosh(arg) * ket_0_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_0_temp.coefficients[0]
+        ket_0_temp.coefficients[0] = ccosh(arg) * ket_0_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_0_temp.coefficients[0]
         ket_0_temp.coefficients[1] = ccosh(arg) * ket_0_temp.coefficients[1] - S * csinh(arg) * sig[0] @ ket_0_temp.coefficients[1]
-        ket_1_temp.coefficients[0] += ccosh(arg) * ket_1_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_1_temp.coefficients[0]
+        ket_1_temp.coefficients[0] = ccosh(arg) * ket_1_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_1_temp.coefficients[0]
         ket_1_temp.coefficients[1] = ccosh(arg) * ket_0_temp.coefficients[1] - S * csinh(arg) * sig[0] @ ket_0_temp.coefficients[1]
     ket_prop = N * ket_temp.copy()
     ## i,k

@@ -25,10 +25,33 @@ def test_overlaps(isospin):
         err += np.sum(abs(x0 - x1))
     return err < error_threshold
 
+def test_overlaps_unsafe(isospin):
+
+    def exam(s0, s1):
+        out = []
+        out.append( s0.dagger() * s0  )
+        out.append( s1.dagger() * s1  )
+        out.append( s0.dagger() * s1  )
+        return out
+
+    s0 = ProductState(n_particles, isospin=isospin, safe=False).randomize(100).to_manybody_basis()
+    s1 = ProductState(n_particles, isospin=isospin, safe=False).randomize(101).to_manybody_basis()
+    hilbert_list = exam(s0, s1)
+    s0 = ProductState(n_particles, isospin=isospin, safe=False).randomize(100)
+    s1 = ProductState(n_particles, isospin=isospin, safe=False).randomize(101)
+    product_list = exam(s0, s1)
+    err = 0.
+    for x0, x1 in zip(hilbert_list, product_list):
+        err += np.sum(abs(x0 - x1))
+    return err < error_threshold
+
+
 def test_hilbert_basics(n_particles, isospin):
     print('HILBERT RANDOM STATES')
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100).to_manybody_basis()
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101).to_manybody_basis()
+    # s0 = ProductState(n_particles, isospin=isospin).randomize(100).to_manybody_basis()
+    # s1 = ProductState(n_particles, isospin=isospin).randomize(101).to_manybody_basis()
+    s0 = HilbertState(n_particles, isospin=isospin).randomize(100)
+    s1 = HilbertState(n_particles, isospin=isospin).randomize(101)
     print("|0> = \n", s0)
     print("|1> = \n", s1)
     print('HILBERT INNER PRODUCTS')
@@ -42,8 +65,8 @@ def test_hilbert_basics(n_particles, isospin):
     print('DONE TESTING HILBERT STATES')
 
 def test_hilbert_operators(n_particles, isospin):
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100).to_manybody_basis()
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101).to_manybody_basis()
+    s0 = HilbertState(n_particles, isospin=isospin).randomize(100)
+    s1 = HilbertState(n_particles, isospin=isospin).randomize(101)
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     for i in range(n_particles):
         for a in range(3):
@@ -177,6 +200,7 @@ if __name__=="__main__":
     # print(b_hilbert - b_product)
     
     # result = test_overlaps(isospin=True)
-    # print(result)
+    result = test_overlaps_unsafe(isospin=isospin)
+    print(result)
         
     
