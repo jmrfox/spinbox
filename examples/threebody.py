@@ -42,7 +42,7 @@ def a2b_factors(k):
 
 
 
-def gfmc_3b_1d(n_particles, dt, a3):
+def gfmc_3b_1d(n_particles, dt, a3, mode=1):
     # exp( - dt/2 sig_1x sig_2x sig_3x)
     ident = HilbertOperator(n_particles, isospin=isospin)
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
@@ -57,44 +57,54 @@ def gfmc_3b_1d(n_particles, dt, a3):
     ket_prop = force.scale(- 0.5 * dt).exp().multiply_state(ket_prop)
     b_exact = bra.inner(ket_prop)
 
-    ##### rbm take 1: use 3b rbm and exact 2b
-    ket_prop = ket.copy() # outside loops
-    # 3b
-    N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-    ket_temp = ket_prop.copy().zero()  #right before h loop
-    for h in [0.,1.]:
-        ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale(A1 - h*W)).exp().multiply_state(ket_prop)
-    ket_prop = ket_temp.scale(N)
-    # 2b
-    ket_prop = (sig[0][0].multiply_operator(sig[1][0]) + sig[0][0].multiply_operator(sig[2][0]) + sig[1][0].multiply_operator(sig[2][0])).scale(A2).exp().multiply_state(ket_prop)
-    b_rbm = bra.inner(ket_prop)
+    
+    if mode==1:    # rbm take 1: use 3b rbm and exact 2b
+        ket_prop = ket.copy() # outside loops
+        # 3b
+        N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
+        ket_temp = ket_prop.copy().zero()  #right before h loop
+        for h in [0.,1.]:
+            ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale(A1 - h*W)).exp().multiply_state(ket_prop)
+        ket_prop = ket_temp.scale(N)
+        # 2b
+        ket_prop = (sig[0][0].multiply_operator(sig[1][0]) + sig[0][0].multiply_operator(sig[2][0]) + sig[1][0].multiply_operator(sig[2][0])).scale(A2).exp().multiply_state(ket_prop)
+        b_rbm = bra.inner(ket_prop)
 
-    ##### rbm take 2: use 3b rbm and 2b rbm (x3)
-    # ket_prop = ket.copy() # outside loops
-    # ## 3b
-    # ket_temp = ket_prop.copy().zero()  #right before h loop
-    # N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-    # for h in [0.,1.]:
-    #     ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale((h*W - A1))).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## 2b
-    # N, W, S = a2b_factors(-A2)
-    # ## i,j
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[0][0] - sig[1][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## i,k
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[0][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # ## j,k
-    # ket_temp = ket_prop.copy().zero()
-    # for h in [0.,1.]:
-    #     ket_temp += (sig[1][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
-    # ket_prop = ket_temp.copy().scale(N)
-    # b_rbm = bra.inner(ket_prop)
+    elif mode==2: # rbm take 2: use 3b rbm and 2b rbm (x3)
+        ket_prop = ket.copy() # outside loops
+        ## 3b
+        ket_temp = ket_prop.copy().zero()  #right before h loop
+        N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
+        for h in [0.,1.]:
+            ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale((h*W - A1))).exp().multiply_state(ket_prop)
+        ket_prop = ket_temp.copy().scale(N)
+        ## 2b
+        N, W, S = a2b_factors(-A2)
+        ## i,j
+        ket_temp = ket_prop.copy().zero()
+        for h in [0.,1.]:
+            ket_temp += (sig[0][0] - sig[1][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+        ket_prop = ket_temp.copy().scale(N)
+        ## i,k
+        ket_temp = ket_prop.copy().zero()
+        for h in [0.,1.]:
+            ket_temp += (sig[0][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+        ket_prop = ket_temp.copy().scale(N)
+        ## j,k
+        ket_temp = ket_prop.copy().zero()
+        for h in [0.,1.]:
+            ket_temp += (sig[1][0] - sig[2][0].scale(S)).scale(W*(2*h-1)).exp().multiply_state(ket_prop)
+        ket_prop = ket_temp.copy().scale(N)
+        b_rbm = bra.inner(ket_prop)
+    
+    elif mode==3: # sum using propagator class
+        ket_prop = ket.copy() # outside loops
+        prop_3b = HilbertPropagatorRBM3(n_particles, dt, isospin)
+        h_list = itertools.product([0,1], repeat=4)
+        for h in h_list:
+            print(h)
+            ket_prop = prop_3b.threebody_sample_2b(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]) * ket_prop
+        b_rbm = bra * ket_prop
 
     return b_exact, b_rbm
 
@@ -219,7 +229,7 @@ def compare():
     a3 = 1.0
     seed = 1
 
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=3)
     # b_exact, b_rbm = gfmc_3bprop(n_particles, dt, seed)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
@@ -227,12 +237,12 @@ def compare():
     print("error = ", (b_rbm - b_exact)/b_exact)  
     print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
     print("--------------")
-    b_rbm = afdmc_3b_1d(n_particles, dt, a3)
-    print("rbm = ", b_rbm)
-    print("exact = ", b_exact)
-    print("difference = ", b_rbm - b_exact)
-    print("error = ", (b_rbm - b_exact)/b_exact)  
-    print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
+    # b_rbm = afdmc_3b_1d(n_particles, dt, a3)
+    # print("rbm = ", b_rbm)
+    # print("exact = ", b_exact)
+    # print("difference = ", b_rbm - b_exact)
+    # print("error = ", (b_rbm - b_exact)/b_exact)  
+    # print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
     
 
 
