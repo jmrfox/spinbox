@@ -11,7 +11,7 @@ In Diffusion Monte Carlo methods (DMC, GFMC, AFDMC), the central calculation is 
 Although quantum wavefunctions generally must be described by a probability distribution over a basis, DMC imbues particles (within one sample) with classical spatial coordinates. 
 This method is unusual, so other Python packages are typically not set up to do this easily.
  
-Spinbox is designed with this oddity in mind. It has the following.
+Spinbox is designed with this particularity in mind. It has the following.
 - numerical representation of samples of the many-body wavefunctions
 - the same for many-body operators: general, spin, imaginary-time propagation
 - the correct associated arithmetic and algebra
@@ -19,3 +19,4 @@ Spinbox is designed with this oddity in mind. It has the following.
 - large-scale parallel integration over random variables, crucial for the AFDMC method 
 
 My goal is to make this package open source so that anyone may use it and contribute to it, particularly other researchers doing AFDMC calculations.
+- Jordan M. R. Fox
