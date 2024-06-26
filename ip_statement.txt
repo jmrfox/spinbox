@@ -1,0 +1,5 @@
+Spinbox is a piece of software that facilitates quantum mechanical calculations relevant to Monte Carlo simulation of atomic nuclei. 
+At the front lines of research on the nuclear many-body problem are a number of supercomputer-scale simulation codes. 
+These codes produce valuable results but can be hard to understand, especially for physicists without intimate knowledge of the relevant theoretical methods. Thus, tools that bridge this pedagogical gap are extremely valuable. 
+Spinbox allows one to replicate and analyze the computational processes in a Quantum Monte Carlo (QMC) simulation that may be difficult to understand/debug/analyze due to the scale of the simulation software.
+Spinbox is written in Python using other state-of-the-art Python modules for numerical calculations.
