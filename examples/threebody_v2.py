@@ -229,7 +229,7 @@ def compare():
     a3 = 1.0
     seed = 1
 
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=3)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=2)
     # b_exact, b_rbm = gfmc_3bprop(n_particles, dt, seed)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
