@@ -335,11 +335,9 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    # main_1d()
+    main_1d()
     # main()
     # experiment()
     
-    plot_from_pickle("C:\\Users\\MainUser\\Documents\\GitHub\\quap\\examples\\outputs\\averaging_1718939734.pkl",
-                     ".\\examples\\outputs\\test.pdf",
-                     "test")
+    # plot_from_pickle(".\\examples\\outputs\\averaging_1718939734.pkl", ".\\examples\\outputs\\test.pdf", "test")
      
