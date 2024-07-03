@@ -977,7 +977,7 @@ class Propagator:
 
 
 class HilbertPropagatorHS(Propagator):
-    """ exp( - k op_i op_j )"""
+    """ exp( - z op_i op_j )"""
     def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
         super().__init__(n_particles, dt, isospin, include_prefactors)
         self._ident = HilbertOperator(self.n_particles, isospin=isospin)
@@ -989,15 +989,15 @@ class HilbertPropagatorHS(Propagator):
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
 
-    def onebody(self, k: complex, operator: HilbertOperator):
-        """exp (- k opi)"""
-        return operator.scale(-k).exp()        
+    def onebody(self, z: complex, operator: HilbertOperator):
+        """exp (- z opi)"""
+        return operator.scale(-z).exp()        
 
-    def twobody_sample(self, k: complex, x: float, operator_i: HilbertOperator, operator_j: HilbertOperator):
-        """ exp( x sqrt( -k ) opi ) * exp( x sqrt( -k ) opj ) """
-        arg = csqrt(-k)*x
+    def twobody_sample(self, z: complex, x: float, operator_i: HilbertOperator, operator_j: HilbertOperator):
+        """ exp( x sqrt( -z ) opi ) * exp( x sqrt( -z ) opj ) """
+        arg = csqrt(-z)*x
         if self.include_prefactors:
-            prefactor = cexp(k)
+            prefactor = cexp(z)
         else:
             prefactor = 1.0
         gi = self._ident.scale(ccosh(arg)) + operator_i.scale(csinh(arg))
@@ -1010,8 +1010,8 @@ class HilbertPropagatorHS(Propagator):
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
-                    k = 0.5 * self.dt * coupling[a,i,b,j]
-                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+                    z = 0.5 * self.dt * coupling[a,i,b,j]
+                    out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                     idx += 1
         return out
 
@@ -1022,10 +1022,10 @@ class HilbertPropagatorHS(Propagator):
             for a in self._xyz:
                 for b in self._xyz:
                     for c in self._xyz:
-                        k = 0.5 * self.dt * coupling[a,i,b,j]
+                        z = 0.5 * self.dt * coupling[a,i,b,j]
                         opi = self._sig_op[i][a].multiply_operator(self._tau_op[i][c])
                         opj = self._sig_op[j][b].multiply_operator(self._tau_op[j][c])
-                        out.append( self.twobody_sample(k, aux[idx], opi, opj) )
+                        out.append( self.twobody_sample(z, aux[idx], opi, opj) )
                         idx += 1
         return out
     
@@ -1034,20 +1034,20 @@ class HilbertPropagatorHS(Propagator):
         idx = 0
         for i,j in self._2b_idx:
             for a in self._xyz:
-                    k = 0.5 * self.dt * coupling[i,j]
-                    out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
+                    z = 0.5 * self.dt * coupling[i,j]
+                    out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
         return out
 
     def factors_coulomb(self, coupling: Coupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
-                k = 0.125 * self.dt * coupling[i,j]
+                z = 0.125 * self.dt * coupling[i,j]
                 if self.include_prefactors:
-                    out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-k)))
-                out.append( self.onebody(k, self._tau_op[i][2]) )
-                out.append( self.onebody(k, self._tau_op[j][2]) )
-                out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
+                    out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-z)))
+                out.append( self.onebody(z, self._tau_op[i][2]) )
+                out.append( self.onebody(z, self._tau_op[j][2]) )
+                out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
                 idx += 1
         return out
     
@@ -1056,13 +1056,13 @@ class HilbertPropagatorHS(Propagator):
         idx = 0
         for i in self._1b_idx:
             for a in self._xyz:
-                k = 1.j * coupling[a,i]
-                out.append( self.onebody(k,  self._sig_op[i][a])  )
+                z = 1.j * coupling[a,i]
+                out.append( self.onebody(z,  self._sig_op[i][a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
-                    k = - 0.5 * coupling[a, i] * coupling[b, j] 
-                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+                    z = - 0.5 * coupling[a, i] * coupling[b, j] 
+                    out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                     idx += 1
         if self.include_prefactors:
             prefactor = np.exp( 0.5 * np.sum(coupling.coefficients**2))
@@ -1072,7 +1072,7 @@ class HilbertPropagatorHS(Propagator):
 
 
 class HilbertPropagatorRBM(Propagator):
-    """ exp( - k op_i op_j )"""
+    """ exp( - z op_i op_j )"""
     def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
         super().__init__(n_particles, dt, isospin, include_prefactors)
         self._ident = HilbertOperator(self.n_particles, isospin=isospin)
@@ -1085,107 +1085,11 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_spinorbit = 9 * self._n2
 
     def _a2b_factors(self, z):
-        n = cexp(-abs(z))/2.
+        n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
         s = z/abs(z)
         return n, w, s
-
-    def onebody(self, z: complex, operator: HilbertOperator):
-        """exp (- z opi)"""
-        return operator.scale(-z).exp()
-
-    def twobody_sample(self, z: float, h: int, operator_i: HilbertOperator, operator_j: HilbertOperator):
-        N, W, S = self._a2b_factors(z)
-        if self.include_prefactors:
-            prefactor = N
-        else:
-            prefactor = 1.0
-        arg = W*(2*h-1)
-        gi = self._ident.scale(ccosh(arg)) + operator_i.scale(csinh(arg))
-        gj = self._ident.scale(ccosh(arg)) - operator_j.scale(S * csinh(arg))
-        return gi.multiply_operator(gj).scale(prefactor)
-
-    def factors_sigma(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    k = 0.5 * self.dt * coupling[a,i,b,j]
-                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
-                    idx += 1
-        return out
-
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    for c in self._xyz:
-                        k = 0.5 * self.dt * coupling[a,i,b,j]
-                        opi = self._sig_op[i][a].multiply_operator(self._tau_op[i][c])
-                        opj = self._sig_op[j][b].multiply_operator(self._tau_op[j][c])
-                        out.append( self.twobody_sample(k, aux[idx], opi, opj) )
-                        idx += 1
-        return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                    k = 0.5 * self.dt * coupling[i,j]
-                    out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
-        return out
-
-    def factors_coulomb(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-                k = 0.125 * self.dt * coupling[i,j]
-                if self.include_prefactors:
-                    out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-k)))
-                out.append( self.onebody(k, self._tau_op[i][2]) )
-                out.append( self.onebody(k, self._tau_op[j][2]) )
-                out.append( self.twobody_sample(k, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
-                idx += 1
-        return out
-    
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i in self._1b_idx:
-            for a in self._xyz:
-                k = 1.j * coupling[a,i]
-                out.append( self.onebody(k,  self._sig_op[i][a])  )
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    k = - 0.5 * coupling[a, i] * coupling[b, j] 
-                    out.append( self.twobody_sample(k, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
-                    idx += 1
-        if self.include_prefactors:
-            prefactor = np.exp( 0.5 * np.sum(coupling.coefficients**2))
-            out.append( HilbertOperator(self.n_particles, self.isospin).scale(prefactor) )
-        return out
-
-
-class HilbertPropagatorRBM3(Propagator):
-    """ exp( - z op_i op_j op_k )"""
-    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
-        super().__init__(n_particles, dt, isospin, include_prefactors)
-        self._ident = HilbertOperator(self.n_particles, isospin=isospin)
-        self._sig_op = [[HilbertOperator(self.n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self._tau_op = [[HilbertOperator(self.n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(self.n_particles)]
-        self.n_aux_sigma = 9 * self._n3
-
-    def _a2b_factors(self, z):
-        n = cexp(-abs(z))/2.
-        w = carctanh(csqrt(ctanh(abs(z))))
-        s = z/abs(z)
-        return n, w, s
-
     def _a3b_factors(self, a3):
         log = lambda x: np.log(x, dtype=complex)
         if a3>0:
@@ -1212,7 +1116,7 @@ class HilbertPropagatorRBM3(Propagator):
             bottom = 2**(3/8) * csqrt(cexp(-2*c) + 1) * (cexp(4*c) + 1)**0.125
             n = top/bottom
         return n, c, w, a1, a2
-        
+
     def onebody(self, z: complex, operator: HilbertOperator):
         """exp (- z opi)"""
         return operator.scale(-z).exp()
@@ -1229,7 +1133,7 @@ class HilbertPropagatorRBM3(Propagator):
         return gi.multiply_operator(gj).scale(prefactor)
 
     def threebody_sample_partial(self, z: float, h_list: list, operator_i: HilbertOperator, operator_j: HilbertOperator, operator_k: HilbertOperator):
-            N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
+            N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
                 prefactor = N*cexp(-h_list[0]*C)
             else:
@@ -1247,7 +1151,7 @@ class HilbertPropagatorRBM3(Propagator):
             return out.scale(prefactor)
 
     def threebody_sample_full(self, z: float, h_list: list, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
-            N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
+            N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
                 prefactor = N*cexp(-3*abs(A2)-h_list[0]*C)
             else:
@@ -1265,10 +1169,76 @@ class HilbertPropagatorRBM3(Propagator):
             out = onebody_matrix_k.scale(arg).exp() * out
             return out.scale(prefactor)
 
+    def factors_sigma(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    z = 0.5 * self.dt * coupling[a,i,b,j]
+                    out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+                    idx += 1
+        return out
+
+    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    for c in self._xyz:
+                        z = 0.5 * self.dt * coupling[a,i,b,j]
+                        opi = self._sig_op[i][a].multiply_operator(self._tau_op[i][c])
+                        opj = self._sig_op[j][b].multiply_operator(self._tau_op[j][c])
+                        out.append( self.twobody_sample(z, aux[idx], opi, opj) )
+                        idx += 1
+        return out
+    
+    def factors_tau(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                    z = 0.5 * self.dt * coupling[i,j]
+                    out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
+        return out
+
+    def factors_coulomb(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+                z = 0.125 * self.dt * coupling[i,j]
+                if self.include_prefactors:
+                    out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-z)))
+                out.append( self.onebody(z, self._tau_op[i][2]) )
+                out.append( self.onebody(z, self._tau_op[j][2]) )
+                out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][2], self._tau_op[j][2]) )
+                idx += 1
+        return out
+    
+    def factors_spinorbit(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i in self._1b_idx:
+            for a in self._xyz:
+                z = 1.j * coupling[a,i]
+                out.append( self.onebody(z,  self._sig_op[i][a])  )
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    z = - 0.5 * coupling[a, i] * coupling[b, j] 
+                    out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
+                    idx += 1
+        if self.include_prefactors:
+            prefactor = np.exp( 0.5 * np.sum(coupling.coefficients**2))
+            out.append( HilbertOperator(self.n_particles, self.isospin).scale(prefactor) )
+        return out
+
+
 ## PRODUCT STATE PROPAGATORS
 
 class ProductPropagatorHS(Propagator):
-    """ exp( - k op_i op_j )"""
+    """ exp( - z op_i op_j )"""
     def __init__(self, n_particles: int, dt: float, isospin=True, include_prefactors=True):
         super().__init__(n_particles, dt, isospin, include_prefactors)
         
@@ -1286,17 +1256,17 @@ class ProductPropagatorHS(Propagator):
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
 
-    def onebody(self, k: complex, i: int, onebody_matrix: np.ndarray):
-        """exp (- k opi) * |ket> """
+    def onebody(self, z: complex, i: int, onebody_matrix: np.ndarray):
+        """exp (- z opi)  """
         out = ProductOperator(self.n_particles, self.isospin)
-        out.coefficients[i] = ccosh(k) * out.coefficients[i] - csinh(k) * onebody_matrix @ out.coefficients[i]
+        out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
     
-    def twobody_sample(self, k: complex, x: float, i: int, j: int, onebody_matrix_i: np.ndarray, onebody_matrix_j: np.ndarray):
-        """exp ( sqrt( -kx ) opi opj) * |ket>  """
-        arg = csqrt(-k)*x
+    def twobody_sample(self, z: complex, x: float, i: int, j: int, onebody_matrix_i: np.ndarray, onebody_matrix_j: np.ndarray):
+        """exp ( x * sqrt( -z ) opi)  exp ( x * sqrt( -z ) opj)  """
+        arg = csqrt(-z)*x
         if self.include_prefactors:
-            prefactor = cexp(k)
+            prefactor = cexp(z)
         else:
             prefactor = 1.0
         out = ProductOperator(self.n_particles, self.isospin)
@@ -1312,8 +1282,8 @@ class ProductPropagatorHS(Propagator):
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
-                    k = 0.5 * self.dt * coupling[a,i,b,j]
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
+                    z = 0.5 * self.dt * coupling[a,i,b,j]
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
                     idx += 1
         return out
 
@@ -1324,8 +1294,8 @@ class ProductPropagatorHS(Propagator):
             for a in self._xyz:
                 for b in self._xyz:
                     for c in self._xyz:
-                        k = 0.5 * self.dt * coupling[a,i,b,j]
-                        out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a] @ self._tau[c], self._sig[b] @ self._tau[c]) )
+                        z = 0.5 * self.dt * coupling[a,i,b,j]
+                        out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a] @ self._tau[c], self._sig[b] @ self._tau[c]) )
                         idx += 1
         return out
     
@@ -1334,22 +1304,22 @@ class ProductPropagatorHS(Propagator):
         idx = 0
         for i,j in self._2b_idx:
             for a in self._xyz:
-                    k = 0.5 * self.dt * coupling[i,j]
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._tau[a], self._tau[a]) )
+                    z = 0.5 * self.dt * coupling[i,j]
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[a], self._tau[a]) )
         return out
 
     def factors_coulomb(self, coupling: Coupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
-                k = 0.125 * self.dt * coupling[i,j]
+                z = 0.125 * self.dt * coupling[i,j]
                 if self.include_prefactors:
                     norm_op = ProductOperator(self.n_particles, self.isospin)
-                    norm_op = norm_op.scale_all(cexp(-k))
+                    norm_op = norm_op.scale_all(cexp(-z))
                     out.append(norm_op)
-                out.append( self.onebody(k, i, self._tau[2]) )
-                out.append( self.onebody(k, j, self._tau[2]) )
-                out.append( self.twobody_sample(k, aux[idx], i, j, self._tau[2], self._tau[2]) )
+                out.append( self.onebody(z, i, self._tau[2]) )
+                out.append( self.onebody(z, j, self._tau[2]) )
+                out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[2], self._tau[2]) )
                 idx += 1
         return out
     
@@ -1358,13 +1328,13 @@ class ProductPropagatorHS(Propagator):
         idx = 0
         for i in self._1b_idx:
             for a in self._xyz:
-                k = 1.j * coupling[a,i]
-                out.append( self.onebody(k, i, self._sig[a])  )
+                z = 1.j * coupling[a,i]
+                out.append( self.onebody(z, i, self._sig[a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
-                    k = - 0.5 * coupling[a, i] * coupling[b, j] 
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
+                    z = - 0.5 * coupling[a, i] * coupling[b, j] 
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
                     idx += 1
         if self.include_prefactors:
             norm_op = ProductOperator(self.n_particles, self.isospin)
@@ -1374,7 +1344,7 @@ class ProductPropagatorHS(Propagator):
 
 
 class ProductPropagatorRBM(Propagator):
-    """ exp( - k op_i op_j )
+    """ exp( - z op_i op_j )
     seed determines mixing
     """
     def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
@@ -1393,112 +1363,8 @@ class ProductPropagatorRBM(Propagator):
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
 
-    def onebody(self, k: complex, i: int, onebody_matrix: np.ndarray):
-        """exp (- k opi) * |ket> """
-        out = ProductOperator(self.n_particles)
-        out.coefficients[i] = ccosh(k) * out.coefficients[i] - csinh(k) * onebody_matrix @ out.coefficients[i]
-        return out
-    
-    def twobody_sample(self, k: complex, h: int, i: int, j: int, onebody_matrix_i, onebody_matrix_j):
-        if self.include_prefactors:
-            prefactor = cexp(-abs(k))
-        else:
-            prefactor = 1.0
-        W = carctanh(csqrt(ctanh(abs(k))))
-        arg = W*(2*h-1)
-        out = ProductOperator(self.n_particles, self.isospin)
-        out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * onebody_matrix_i @ out.coefficients[i]
-        out.coefficients[j] = ccosh(arg) * out.coefficients[j] - np.sign(k) * csinh(arg) * onebody_matrix_j @ out.coefficients[j]
-        out.coefficients[i] *= csqrt(prefactor)
-        out.coefficients[j] *= csqrt(prefactor)
-        return out
-
-    def factors_sigma(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    k = 0.5 * self.dt * coupling[a,i,b,j]
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
-                    idx += 1
-        return out
-
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    for c in self._xyz:
-                        k = 0.5 * self.dt * coupling[a,i,b,j]
-                        out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a] @ self._tau[c], self._sig[b] @ self._tau[c]) )
-                        idx += 1
-        return out
-    
-    def factors_tau(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                    k = 0.5 * self.dt * coupling[i,j]
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._tau[a], self._tau[a]) )
-        return out
-
-    def factors_coulomb(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i,j in self._2b_idx:
-                k = 0.125 * self.dt * coupling[i,j]
-                if self.include_prefactors:
-                    norm_op = ProductOperator(self.n_particles)
-                    norm_op = norm_op.scale_all(cexp(-k))
-                    out.append(norm_op)
-                out.append( self.onebody(k, i, self._tau[2]) )
-                out.append( self.onebody(k, j, self._tau[2]) )
-                out.append( self.twobody_sample(k, aux[idx], i, j, self._tau[2], self._tau[2]) )
-                idx += 1
-        return out
-    
-    
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
-        out = []
-        idx = 0
-        for i in self._1b_idx:
-            for a in self._xyz:
-                k = 1.j * coupling[a,i]
-                out.append( self.onebody(k, i, self._sig[a])  )
-        for i,j in self._2b_idx:
-            for a in self._xyz:
-                for b in self._xyz:
-                    k = - 0.5 * coupling[a, i] * coupling[b, j] 
-                    out.append( self.twobody_sample(k, aux[idx], i, j, self._sig[a], self._sig[b]) )
-                    idx += 1
-        if self.include_prefactors:
-            norm_op = ProductOperator(self.n_particles)
-            norm_op = norm_op.scale_all(np.exp( 0.5 * np.sum(coupling.coefficients**2)) )
-            out.append( norm_op )
-        return out    
-
-
-class ProductPropagatorRBM3(Propagator):
-    """ exp( - k op_i op_j op_k )
-    seed determines mixing
-    """
-    def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
-        super().__init__(n_particles, dt, isospin, include_prefactors)
-        if isospin:
-            self._ident = np.identity(4)
-            self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-            self._tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
-        else:
-            self._ident = np.identity(2)
-            self._sig = pauli('list')
-            self._tau = None
-        self.n_aux_sigma = 9 * self._n3
-        
     def _a2b_factors(self, z):
-        n = cexp(-abs(z))/2.
+        n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
         s = z/abs(z)
         return n, w, s
@@ -1531,27 +1397,27 @@ class ProductPropagatorRBM3(Propagator):
         return n, c, w, a1, a2
 
     def onebody(self, z: complex, i: int, onebody_matrix: np.ndarray):
-        """exp (- k opi) * |ket> """
+        """exp (- z opi) * |ket> """
         out = ProductOperator(self.n_particles)
         out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
     
     def twobody_sample(self, z: complex, h: int, i: int, j: int, onebody_matrix_i, onebody_matrix_j):
+        N, W, S = self._a2b_factors(z)
         if self.include_prefactors:
-            prefactor = cexp(-abs(z))
+            prefactor = N
         else:
             prefactor = 1.0
-        W = carctanh(csqrt(ctanh(abs(z))))
         arg = W*(2*h-1)
         out = ProductOperator(self.n_particles, self.isospin)
         out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * onebody_matrix_i @ out.coefficients[i]
-        out.coefficients[j] = ccosh(arg) * out.coefficients[j] - np.sign(z) * csinh(arg) * onebody_matrix_j @ out.coefficients[j]
+        out.coefficients[j] = ccosh(arg) * out.coefficients[j] - S * csinh(arg) * onebody_matrix_j @ out.coefficients[j]
         out.coefficients[i] *= csqrt(prefactor)
         out.coefficients[j] *= csqrt(prefactor)
         return out
-    
+
     def threebody_sample(self, z: float, h_list: list, i: int, j: int, k: int, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
-            N, C, W, A1, A2 = self._a3b_factors(0.5 * self.dt * z)
+            N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
                 prefactor = N*cexp(-3*abs(A2)-h_list[0]*C)
             else:
@@ -1568,6 +1434,75 @@ class ProductPropagatorRBM3(Propagator):
             arg = W2*S2*(2*h_list[2] - 2*h_list[3] - 2) + A1 - h_list[0]*W
             out.coefficients[k] = ccosh(arg) * out.coefficients[k] + csinh(arg) * onebody_matrix_k @ out.coefficients[k]
             return out.scale_all(prefactor)
+
+    def factors_sigma(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    z = 0.5 * self.dt * coupling[a,i,b,j]
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
+                    idx += 1
+        return out
+
+    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    for c in self._xyz:
+                        z = 0.5 * self.dt * coupling[a,i,b,j]
+                        out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a] @ self._tau[c], self._sig[b] @ self._tau[c]) )
+                        idx += 1
+        return out
+    
+    def factors_tau(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                    z = 0.5 * self.dt * coupling[i,j]
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[a], self._tau[a]) )
+        return out
+
+    def factors_coulomb(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i,j in self._2b_idx:
+                z = 0.125 * self.dt * coupling[i,j]
+                if self.include_prefactors:
+                    norm_op = ProductOperator(self.n_particles)
+                    norm_op = norm_op.scale_all(cexp(-z))
+                    out.append(norm_op)
+                out.append( self.onebody(z, i, self._tau[2]) )
+                out.append( self.onebody(z, j, self._tau[2]) )
+                out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[2], self._tau[2]) )
+                idx += 1
+        return out
+    
+    
+    def factors_spinorbit(self, coupling: Coupling, aux: list):
+        out = []
+        idx = 0
+        for i in self._1b_idx:
+            for a in self._xyz:
+                z = 1.j * coupling[a,i]
+                out.append( self.onebody(z, i, self._sig[a])  )
+        for i,j in self._2b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    z = - 0.5 * coupling[a, i] * coupling[b, j] 
+                    out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
+                    idx += 1
+        if self.include_prefactors:
+            norm_op = ProductOperator(self.n_particles)
+            norm_op = norm_op.scale_all(np.exp( 0.5 * np.sum(coupling.coefficients**2)) )
+            out.append( norm_op )
+        return out    
+
+
 
     
 
@@ -1757,19 +1692,19 @@ class Integrator:
         idx = 0
         self.prop_list = []
         if self.sigma:
-            self.prop_list.extend( self.propagator.factors_sigma(self.potential, aux_fields[idx : idx + self.propagator.n_aux_sigma] ) )
+            self.prop_list.extend( self.propagator.factors_sigma(self.potential.sigma, aux_fields[idx : idx + self.propagator.n_aux_sigma] ) )
             idx += self.propagator.n_aux_sigma
         if self.sigmatau:
-            self.prop_list.extend( self.propagator.factors_sigmatau(self.potential, aux_fields[idx : idx + self.propagator.n_aux_sigmatau] ) )
+            self.prop_list.extend( self.propagator.factors_sigmatau(self.potential.sigmatau, aux_fields[idx : idx + self.propagator.n_aux_sigmatau] ) )
             idx += self.propagator.n_aux_sigmatau
         if self.tau:
-            self.prop_list.extend( self.propagator.factors_tau(self.potential, aux_fields[idx : idx + self.propagator.n_aux_tau] ) )
+            self.prop_list.extend( self.propagator.factors_tau(self.potential.tau, aux_fields[idx : idx + self.propagator.n_aux_tau] ) )
             idx += self.propagator.n_aux_tau
         if self.coulomb:
-            self.prop_list.extend( self.propagator.factors_coulomb(self.potential, aux_fields[idx : idx + self.propagator.n_aux_coulomb] ) )
+            self.prop_list.extend( self.propagator.factors_coulomb(self.potential.coulomb, aux_fields[idx : idx + self.propagator.n_aux_coulomb] ) )
             idx += self.propagator.n_aux_coulomb
         if self.spinorbit:
-            self.prop_list.extend( self.propagator.factors_spinorbit(self.potential, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
+            self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
             idx += self.propagator.n_aux_spinorbit
         if self.mix:
             self.rng.shuffle(self.prop_list)

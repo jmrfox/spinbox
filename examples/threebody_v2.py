@@ -99,11 +99,11 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
     
     elif mode==3: # sum using propagator class
         ket_prop = ket.copy() # outside loops
-        prop_3b = HilbertPropagatorRBM3(n_particles, dt, isospin)
+        prop_3b = HilbertPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
-            ket_temp = prop_3b.threebody_sample_2b(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]) * ket_prop
+            ket_temp = prop_3b.threebody_sample_partial(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]) * ket_prop
             b_array.append(bra * ket_temp)
         b_rbm = np.mean(b_array)
     return b_exact, b_rbm
@@ -217,7 +217,6 @@ def gfmc_3bprop(n_particles, dt, seed):
 def three_body_comms():
     n_particles = 3
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    # tau = [[GFMCSpinIsospinOperator(n_particles).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     o_0 = sig[0][0] * sig[1][0] * sig[2][0]
     o_1 = sig[0][1] * sig[1][1] * sig[2][1]
     print(np.linalg.norm((o_0*o_1 - o_1*o_0).matrix) )
@@ -229,20 +228,18 @@ def compare():
     a3 = 1.0
     seed = 1
 
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=2)
-    # b_exact, b_rbm = gfmc_3bprop(n_particles, dt, seed)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=3)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
-    print("difference = ", b_rbm - b_exact)
-    print("error = ", (b_rbm - b_exact)/b_exact)  
-    print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
-    print("--------------")
+    print("difference = ", b_exact - b_rbm)
+    print("error = ", (b_exact - b_rbm)/b_exact)
+    
+    # print("--------------")
     # b_rbm = afdmc_3b_1d(n_particles, dt, a3)
     # print("rbm = ", b_rbm)
     # print("exact = ", b_exact)
-    # print("difference = ", b_rbm - b_exact)
-    # print("error = ", (b_rbm - b_exact)/b_exact)  
-    # print("error by ratio = ", abs(1 - abs(b_rbm)/abs(b_exact)))
+    # print("difference = ", b_exact - b_rbm)
+    # print("error = ", (b_exact - b_rbm)/b_exact)  
     
 
 

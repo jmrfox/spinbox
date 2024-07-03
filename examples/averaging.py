@@ -30,7 +30,7 @@ def average_1d(n_particles,
     bra = ket.copy().dagger()
 
     pot = ArgonnePotential(n_particles)
-    pot.sigma[0,0,0,1] = 20.0
+    pot.sigma[0,0,0,1] = 10.0  # coupling is all zero except the i=0 j=1 a=b=x element
         
     if full_basis:
         if method=='hs':
@@ -335,8 +335,8 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    main_1d()
-    # main()
+    # main_1d()
+    main()
     # experiment()
     
     # plot_from_pickle(".\\examples\\outputs\\averaging_1718939734.pkl", ".\\examples\\outputs\\test.pdf", "test")

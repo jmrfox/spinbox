@@ -27,19 +27,19 @@ def hilbert_bracket(method, controls):
     prop_list = []
     if controls["sigma"]:
         aux = np.ones(prop.n_aux_sigma).flatten()
-        prop_list.extend( prop.factors_sigma(pot, aux) )
+        prop_list.extend( prop.factors_sigma(pot.sigma, aux) )
     if controls["sigmatau"]:
         aux = np.ones(prop.n_aux_sigmatau).flatten()
-        prop_list.extend( prop.factors_sigmatau(pot, aux) )
+        prop_list.extend( prop.factors_sigmatau(pot.sigmatau, aux) )
     if controls["tau"]:
         aux = np.ones(prop.n_aux_tau).flatten()
-        prop_list.extend( prop.factors_tau(pot, aux) )
+        prop_list.extend( prop.factors_tau(pot.tau, aux) )
     if controls["coulomb"]:
         aux = np.ones(prop.n_aux_coulomb).flatten()
-        prop_list.extend( prop.factors_coulomb(pot, aux) )
+        prop_list.extend( prop.factors_coulomb(pot.coulomb, aux) )
     if controls["spinorbit"]: 
         aux = np.ones(prop.n_aux_spinorbit).flatten()  # use sigma shape for spinorbit
-        prop_list.extend( prop.factors_spinorbit(pot, aux) )
+        prop_list.extend( prop.factors_spinorbit(pot.spinorbit, aux) )
     
     rng = np.random.default_rng(seed=next(seed))
     rng.shuffle(prop_list)
@@ -61,23 +61,25 @@ def product_bracket(method, controls):
     else:
         raise ValueError
 
+
     prop_list = []
     if controls["sigma"]:
         aux = np.ones(prop.n_aux_sigma).flatten()
-        prop_list.extend( prop.factors_sigma(pot, aux) )
+        prop_list.extend( prop.factors_sigma(pot.sigma, aux) )
     if controls["sigmatau"]:
         aux = np.ones(prop.n_aux_sigmatau).flatten()
-        prop_list.extend( prop.factors_sigmatau(pot, aux) )
+        prop_list.extend( prop.factors_sigmatau(pot.sigmatau, aux) )
     if controls["tau"]:
         aux = np.ones(prop.n_aux_tau).flatten()
-        prop_list.extend( prop.factors_tau(pot, aux) )
+        prop_list.extend( prop.factors_tau(pot.tau, aux) )
     if controls["coulomb"]:
         aux = np.ones(prop.n_aux_coulomb).flatten()
-        prop_list.extend( prop.factors_coulomb(pot, aux) )
+        prop_list.extend( prop.factors_coulomb(pot.coulomb, aux) )
     if controls["spinorbit"]: 
         aux = np.ones(prop.n_aux_spinorbit).flatten()  # use sigma shape for spinorbit
-        prop_list.extend( prop.factors_spinorbit(pot, aux) )
-    
+        prop_list.extend( prop.factors_spinorbit(pot.spinorbit, aux) )
+        
+            
     rng = np.random.default_rng(seed=next(seed))
     rng.shuffle(prop_list)
     ket_prop = ket.copy()
