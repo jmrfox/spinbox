@@ -1156,18 +1156,14 @@ class HilbertPropagatorRBM(Propagator):
                 prefactor = N*cexp(-3*abs(A2)-h_list[0]*C)
             else:
                 prefactor = 1.0
-            out = HilbertOperator(self.n_particles, self.isospin)
             # one-body factors
             W2 = carctanh(csqrt(ctanh(abs(A2))))
             S2 = A2/abs(A2)
-            # i
-            arg = W2*(2*h_list[1] + 2*h_list[2] - 2) + A1 - h_list[0]*W
-            out = onebody_matrix_i.scale(arg).exp() * out
-            arg = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
-            out = onebody_matrix_j.scale(arg).exp() * out
-            arg = W2*S2*(2*h_list[2] - 2*h_list[3] - 2) + A1 - h_list[0]*W
-            out = onebody_matrix_k.scale(arg).exp() * out
-            return out.scale(prefactor)
+            arg_i = W2*(2*h_list[1] - 2*h_list[2] - 2) + (A1 - h_list[0]*W)
+            arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + (A1 - h_list[0]*W)
+            arg_k = W2*S2*(2*h_list[2] - 2*h_list[3] - 2) + A1 - h_list[0]*W
+            out = onebody_matrix_i.scale(arg_i) + onebody_matrix_j.scale(arg_j) + onebody_matrix_k.scale(arg_k)
+            return out.exp().scale(prefactor)
 
     def factors_sigma(self, coupling: Coupling, aux: list):
         out = []

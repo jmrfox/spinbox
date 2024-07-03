@@ -98,14 +98,14 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         b_rbm = bra.inner(ket_prop)
     
     elif mode==3: # sum using propagator class
-        ket_prop = ket.copy() # outside loops
         prop_3b = HilbertPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
-            ket_temp = prop_3b.threebody_sample_partial(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]) * ket_prop
+            print(h)
+            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]).multiply_state(ket.copy()).scale(1/8)
             b_array.append(bra * ket_temp)
-        b_rbm = np.mean(b_array)
+        b_rbm = np.sum(b_array)
     return b_exact, b_rbm
 
 
@@ -224,7 +224,7 @@ def three_body_comms():
 
 def compare():
     n_particles = 3
-    dt = 0.001
+    dt = 0.01
     a3 = 1.0
     seed = 1
 
