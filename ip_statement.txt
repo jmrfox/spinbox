@@ -1,11 +1,11 @@
-Spinbox is a piece of software that facilitates quantum mechanical calculations relevant to Monte Carlo simulation of atomic nuclei. 
+`spinbox` is a Python package that facilitates quantum mechanical calculations relevant to Monte Carlo simulation of atomic nuclei and condensed matter systems. 
 
 At the front lines of research on the nuclear many-body problem are a large number of supercomputer-scale simulation codes. 
 These codes produce valuable results but can be hard to understand, especially for those without intimate knowledge of the relevant theoretical methods. 
 Thus, tools that fill pedagogical roles are extremely valuable. 
-Spinbox makes it easy for one to replicate and analyze the computational processes relevant to a Quantum Monte Carlo (QMC) simulation that may be difficult to understand/debug/analyze due to the scale of the corresponding simulation software.
+`spinbox` makes it easy for one to replicate and analyze the computational processes relevant to a Quantum Monte Carlo (QMC) simulation that may be difficult to understand/debug/analyze due to the scale of the corresponding simulation software.
 
-Spinbox is written in Python using other state-of-the-art Python modules for numerical calculations. 
+`spinbox` uses other state-of-the-art Python modules for numerical calculations. 
 While a number of Python libraries exist that are suited to general quantum many-body calculations, the motivation of Spinbox is quite particular.  
 In Diffusion Monte Carlo methods (DMC, GFMC, AFDMC), the central calculation is the imaginary-time propagation of individual samples of the many-body wavefunction. 
 Although quantum wavefunctions generally must be described by a probability distribution over a basis, DMC imbues particles (within one sample) with classical spatial coordinates. 
