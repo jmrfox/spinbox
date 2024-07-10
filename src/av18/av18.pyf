@@ -1,0 +1,43 @@
+!    -*- f90 -*-
+! Note: the context of this file is case sensitive.
+
+python module argonne ! in 
+    interface  ! in :argonne
+        subroutine av18pw(lpot,l,s,j,t,t1z,t2z,r,vpw) ! in :argonne:av18.f
+            integer, intent(in) :: lpot
+            integer, intent(in) :: l
+            integer, intent(in) :: s
+            integer, intent(in) :: j
+            integer, intent(in) :: t
+            integer, intent(in) :: t1z
+            integer, intent(in) :: t2z
+            real*8, intent(in) :: r
+            real*8 dimension(2,2), intent(out) :: vpw
+        end subroutine av18pw
+        subroutine av18op(lpot,r,vnn) ! in :argonne:av18.f
+            integer, intent(in) :: lpot
+            real*8, intent(in) :: r
+            real*8 dimension(18), intent(out) :: vnn
+        end subroutine av18op
+        subroutine empot(lpot,r,vem) ! in :argonne:av18.f
+            integer, intent(in) :: lpot
+            real*8, intent(in) :: r
+            real*8 dimension(14), intent(out) :: vem
+        end subroutine empot
+        subroutine consts(lpot,hc,mpi0,mpic,mp,mn,alpha,mup,mun) ! in :argonne:av18.f
+            integer, intent(in) :: lpot
+            real*8, intent(out) :: hc
+            real*8, intent(out) :: mpi0
+            real*8, intent(out) :: mpic
+            real*8, intent(out) :: mp
+            real*8, intent(out) :: mn
+            real*8, intent(out) :: alpha
+            real*8, intent(out) :: mup
+            real*8, intent(out) :: mun
+        end subroutine consts
+    end interface 
+end python module argonne
+
+! This file was auto-generated with f2py (version:1.24.2).
+! See:
+! https://web.archive.org/web/20140822061353/http://cens.ioc.ee/projects/f2py2e

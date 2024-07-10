@@ -135,4 +135,7 @@ def test_rbm_sigma():
     b_prod = bra.inner(ket_prop)
     assert eq(b_hilb, b_prod, verbose=True)
     
+
+def test_argonne():
+    pass
     

@@ -335,6 +335,10 @@ class HilbertState:
             else:
                 raise NotImplementedError("Unsupported multiply.")
 
+    def attach_coordinates(self, coordinates):
+        assert coordinates.shape == (self.n_particles, 3)
+        self.coordinates = coordinates
+
     
 
 class HilbertOperator:
@@ -600,6 +604,10 @@ class ProductState:
             else:
                 raise NotImplementedError("Unsupported multiply.")
             
+    def attach_coordinates(self, coordinates):
+        assert coordinates.shape == (self.n_particles, 3)
+        self.coordinates = coordinates
+
 
 
 class ProductOperator:
@@ -748,7 +756,7 @@ class Coupling:
 
     def __str__(self):
         return str(self.coefficients)
-    
+        
         
         
 # I wrote my own classes for the sigma, sigmatau, tau, coulomb, LS coupling arrays, but its is not necessary to use these.
@@ -775,7 +783,7 @@ class SigmaCoupling(Coupling):
                     for b in range(3):
                         assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
     
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
@@ -808,7 +816,7 @@ class SigmaTauCoupling(Coupling):
                     for b in range(3):
                         assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
         
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
@@ -835,7 +843,7 @@ class TauCoupling(Coupling):
             for j in range(self.n_particles):
                 assert self.coefficients[i,j]==self.coefficients[j,i]
 
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
@@ -861,7 +869,7 @@ class CoulombCoupling(Coupling):
             for j in range(self.n_particles):
                 assert self.coefficients[i,j]==self.coefficients[j,i]
 
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
@@ -887,7 +895,7 @@ class SpinOrbitCoupling(Coupling):
         assert self.coefficients.shape==self.shape
         # gLS is a vector. no symmetry to validate.   
 
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         return self
@@ -922,7 +930,7 @@ class ThreeBodyCoupling(Coupling):
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,i,c,j]
                                 assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,j,c,i]
 
-    def generate(self, scale, seed=0):
+    def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
         self.coefficients = scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
@@ -935,16 +943,28 @@ class ThreeBodyCoupling(Coupling):
 
 
 class ArgonnePotential:
-    def __init__(self, n_particles):
+    """data class for Argonne potential
+    """
+    def __init__(self, n_particles, potential_name='av6p'):
         self.n_particles = n_particles
-        self.sigma = SigmaCoupling(n_particles)
-        self.sigmatau = SigmaTauCoupling(n_particles)
-        self.tau = TauCoupling(n_particles)
+        self.potential_name = potential_name
+        if self.potential_name == 'av2p':
+            self.sigma = SigmaCoupling(n_particles)
+        if self.potential_name == 'av4p':
+            self.sigma = SigmaCoupling(n_particles)
+            self.sigmatau = SigmaTauCoupling(n_particles)
+            self.tau = TauCoupling(n_particles)
+        if self.potential_name == 'av6p':
+            self.sigma = SigmaCoupling(n_particles)
+            self.sigmatau = SigmaTauCoupling(n_particles)
+            self.tau = TauCoupling(n_particles)
         self.coulomb = CoulombCoupling(n_particles)
         self.spinorbit = SpinOrbitCoupling(n_particles)
     
     def read_sigma(self, filename):
         self.sigma.read(filename)
+
+    def compute_sigma(self, i_coordinates, j_coordinates)
 
     def read_sigmatau(self, filename):
         self.sigmatau.read(filename)
