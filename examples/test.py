@@ -83,7 +83,7 @@ def test_hs_sigma():
     isospin = True
     dt = 0.01
     pot = ArgonnePotential(n_particles)
-    pot.sigma.generate(1.0)
+    pot.sigma.random(1.0)
     ###
     ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
     bra = ket.copy().dagger()
@@ -112,7 +112,7 @@ def test_rbm_sigma():
     isospin = True
     dt = 0.01
     pot = ArgonnePotential(n_particles)
-    pot.sigma.generate(1.0)
+    pot.sigma.random(1.0)
     ###
     ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
     bra = ket.copy().dagger()

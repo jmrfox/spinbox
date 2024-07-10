@@ -945,26 +945,16 @@ class ThreeBodyCoupling(Coupling):
 class ArgonnePotential:
     """data class for Argonne potential
     """
-    def __init__(self, n_particles, potential_name='av6p'):
+    def __init__(self, n_particles):
         self.n_particles = n_particles
-        self.potential_name = potential_name
-        if self.potential_name == 'av2p':
-            self.sigma = SigmaCoupling(n_particles)
-        if self.potential_name == 'av4p':
-            self.sigma = SigmaCoupling(n_particles)
-            self.sigmatau = SigmaTauCoupling(n_particles)
-            self.tau = TauCoupling(n_particles)
-        if self.potential_name == 'av6p':
-            self.sigma = SigmaCoupling(n_particles)
-            self.sigmatau = SigmaTauCoupling(n_particles)
-            self.tau = TauCoupling(n_particles)
+        self.sigma = SigmaCoupling(n_particles)
+        self.sigmatau = SigmaTauCoupling(n_particles)
+        self.tau = TauCoupling(n_particles)
         self.coulomb = CoulombCoupling(n_particles)
         self.spinorbit = SpinOrbitCoupling(n_particles)
     
     def read_sigma(self, filename):
         self.sigma.read(filename)
-
-    def compute_sigma(self, i_coordinates, j_coordinates)
 
     def read_sigmatau(self, filename):
         self.sigmatau.read(filename)
