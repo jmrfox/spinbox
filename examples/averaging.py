@@ -151,11 +151,11 @@ def average_argonne(n_particles,
     bra = ket.copy().dagger()
 
     pot = ArgonnePotential(n_particles)
-    pot.sigma.generate(1.0, seed=next(seeder))
-    pot.sigmatau.generate(1.0, seed=next(seeder))
-    pot.tau.generate(1.0, seed=next(seeder))
-    pot.coulomb.generate(0.1, seed=next(seeder))
-    pot.spinorbit.generate(dt, seed=next(seeder))
+    pot.sigma.random(10.0, seed=next(seeder))
+    pot.sigmatau.random(10.0, seed=next(seeder))
+    pot.tau.random(10.0, seed=next(seeder))
+    pot.coulomb.random(1.0, seed=next(seeder))
+    pot.spinorbit.random(dt, seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -276,10 +276,10 @@ def main():
     "seed": 0,
     "method": "rbm",
     "balance": True,
-    "mix": False,
-    "sigma": True,
+    "mix": True,
+    "sigma": False,
     "sigmatau": False,
-    "tau": False,
+    "tau": True,
     "coulomb": False,
     "spinorbit": False,
     "plot":True
@@ -310,8 +310,8 @@ def experiment():
     
     input_dict = {
     "n_particles": [2],
-    "n_samples": [10000],
-    "dt": [0.01, 0.001, 0.0001],
+    "n_samples": [1000],
+    "dt": np.logspace(-5, -2, 5), # [0.01, 0.001, 0.0001],
     "full_basis": [False],
     "seed": [0],
     "method": ["hs", "rbm"],
@@ -320,7 +320,7 @@ def experiment():
     "sigma": [True],
     "sigmatau": [True],
     "tau": [True],
-    "coulomb": [False],
+    "coulomb": [True],
     "spinorbit": [False],
     "plot":[False]
     }

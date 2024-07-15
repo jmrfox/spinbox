@@ -5,11 +5,11 @@ dt = 0.001
 
 seed = itertools.count(0,1)
 pot = ArgonnePotential(n_particles)
-pot.sigma.generate(1.0, seed=next(seed))
-pot.sigmatau.generate(1.0, seed=next(seed))
-pot.tau.generate(1.0, seed=next(seed))
-pot.coulomb.generate(0.1, seed=next(seed))
-pot.spinorbit.generate(dt, seed=next(seed))
+pot.sigma.random(1.0, seed=next(seed))
+pot.sigmatau.random(1.0, seed=next(seed))
+pot.tau.random(1.0, seed=next(seed))
+pot.coulomb.random(0.1, seed=next(seed))
+pot.spinorbit.random(dt, seed=next(seed))
 
 
 def hilbert_bracket(method, controls):

@@ -1,4 +1,4 @@
-from spinbox.core_backup import *
+from storage.core_backup import *
 from spinbox.core import ArgonnePotential
 
 n_particles = 2
