@@ -1684,13 +1684,13 @@ class Integrator:
 
         self.rng = np.random.default_rng(seed=seed)
         if self.method=='HS':
-            self.aux_fields = self.rng.standard_normal(size=(n_samples,n_aux))
+            self.aux_fields_samples = self.rng.standard_normal(size=(n_samples,n_aux))
             if flip_aux:
-                self.aux_fields = - self.aux_fields
+                self.aux_fields_samples = - self.aux_fields_samples
         elif self.method=='RBM':
-            self.aux_fields = self.rng.integers(0,2,size=(n_samples,n_aux))
+            self.aux_fields_samples = self.rng.integers(0,2,size=(n_samples,n_aux))
             if flip_aux:
-                self.aux_fields = np.ones_like(self.aux_fields) - self.aux_fields
+                self.aux_fields_samples = np.ones_like(self.aux_fields_samples) - self.aux_fields_samples
         self.is_ready = True
 
     def bracket(self, bra, ket, aux_fields):

@@ -1,6 +1,6 @@
 from spinbox import *
 
-n_particles = 4
+n_particles = 3
 dt = 0.001
 
 seed = itertools.count(0,1)
@@ -62,9 +62,9 @@ def product_bracket(method, controls):
         raise ValueError
 
 
-    prop_list = []
+    prop_list = []   
     if controls["sigma"]:
-        aux = np.ones(prop.n_aux_sigma).flatten()
+        aux = np.ones(prop.n_aux_sigma).flatten() # evaluate aux field at 1 for all variables
         prop_list.extend( prop.factors_sigma(pot.sigma, aux) )
     if controls["sigmatau"]:
         aux = np.ones(prop.n_aux_sigmatau).flatten()

@@ -270,7 +270,7 @@ def main_1d():
 def main():
     args = {
     "n_particles": 2,
-    "n_samples": 1000000,
+    "n_samples": 100,
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,
