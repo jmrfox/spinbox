@@ -123,11 +123,25 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
-            print(h)
-            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, op_1, op_2, op_3).multiply_state(ket.copy()).scale(1/8)
+            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, op_1, op_2, op_3).multiply_state(ket.copy())
             b_array.append(bra * ket_temp)
-        b_rbm = np.sum(b_array)
+        b_rbm = np.sum(b_array) / 16
+    
+    elif mode==5: # sample using propagator class
+        n_samples = 10000
+        prop_3b = HilbertPropagatorRBM(n_particles, dt, isospin)
+        rng = np.random.default_rng(seed=0)
+        h_list = rng.integers(0,2,size=(n_samples, 4))
+        b_array = []
+        for h in h_list:
+            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, op_1, op_2, op_3).multiply_state(ket.copy())
+            b_array.append(bra * ket_temp)
+            h_flip = 1-h
+            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h_flip, op_1, op_2, op_3).multiply_state(ket.copy())
+            b_array.append(bra * ket_temp)
+        b_rbm = np.mean(b_array)
     return b_exact, b_rbm
+
 
 
 
@@ -145,7 +159,7 @@ def compare():
     a3 = 1.0
     seed = 1
 
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=3)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=5)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)

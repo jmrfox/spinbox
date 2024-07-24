@@ -1163,17 +1163,17 @@ class HilbertPropagatorRBM(Propagator):
     def threebody_sample_full(self, z: float, h_list: list, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
             N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
-                prefactor = N*cexp(-3*abs(A2)-h_list[0]*C)
+                prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
             else:
                 prefactor = 1.0
             # one-body factors
             W2 = carctanh(csqrt(ctanh(abs(A2))))
             S2 = A2/abs(A2)
-            arg_i = W2*(2*h_list[1] - 2*h_list[2] - 2) + (A1 - h_list[0]*W)
-            arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + (A1 - h_list[0]*W)
-            arg_k = W2*S2*(2*h_list[2] - 2*h_list[3] - 2) + A1 - h_list[0]*W
-            out = onebody_matrix_i.scale(arg_i) + onebody_matrix_j.scale(arg_j) + onebody_matrix_k.scale(arg_k)
-            return out.exp().scale(prefactor)
+            arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
+            arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
+            arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
+            out = onebody_matrix_i.scale(arg_i).exp() * onebody_matrix_j.scale(arg_j).exp() * onebody_matrix_k.scale(arg_k).exp()
+            return out.scale(prefactor)
 
     def factors_sigma(self, coupling: Coupling, aux: list):
         out = []
@@ -1642,6 +1642,110 @@ class Integrator:
             self.method = 'HS'
         elif type(propagator) in [HilbertPropagatorRBM, ProductPropagatorRBM]:
             self.method = 'RBM'
+        self.n_particles = potential.n_particles
+        self.potential = potential
+        self.propagator = propagator
+        self.isospin = isospin
+        self.is_ready = False
+
+    def setup(self, 
+              n_samples, 
+              seed=0, 
+              mix=True,
+              flip_aux=False,
+              sigma=False, 
+              sigmatau=False, 
+              tau=False, 
+              coulomb=False, 
+              spinorbit=False,
+              parallel=True,
+              n_processes=None):
+        
+        n_aux = 0
+        if sigma:
+            n_aux += self.propagator.n_aux_sigma
+        if sigmatau:
+            n_aux += self.propagator.n_aux_sigmatau
+        if tau:
+            n_aux += self.propagator.n_aux_tau
+        if coulomb:
+            n_aux += self.propagator.n_aux_coulomb
+        if spinorbit:
+            n_aux += self.propagator.n_aux_spinorbit
+
+        self.sigma = sigma
+        self.sigmatau = sigmatau
+        self.tau = tau
+        self.coulomb = coulomb
+        self.spinorbit = spinorbit
+        self.mix = mix
+        self.parallel = parallel
+        self.n_processes = n_processes
+
+        self.rng = np.random.default_rng(seed=seed)
+        if self.method=='HS':
+            self.aux_fields_samples = self.rng.standard_normal(size=(n_samples,n_aux))
+            if flip_aux:
+                self.aux_fields_samples = - self.aux_fields_samples
+        elif self.method=='RBM':
+            self.aux_fields_samples = self.rng.integers(0,2,size=(n_samples,n_aux))
+            if flip_aux:
+                self.aux_fields_samples = np.ones_like(self.aux_fields_samples) - self.aux_fields_samples
+        self.is_ready = True
+
+    def bracket(self, bra, ket, aux_fields):
+        ket_prop = ket.copy()
+        idx = 0
+        self.prop_list = []
+        if self.sigma:
+            self.prop_list.extend( self.propagator.factors_sigma(self.potential.sigma, aux_fields[idx : idx + self.propagator.n_aux_sigma] ) )
+            idx += self.propagator.n_aux_sigma
+        if self.sigmatau:
+            self.prop_list.extend( self.propagator.factors_sigmatau(self.potential.sigmatau, aux_fields[idx : idx + self.propagator.n_aux_sigmatau] ) )
+            idx += self.propagator.n_aux_sigmatau
+        if self.tau:
+            self.prop_list.extend( self.propagator.factors_tau(self.potential.tau, aux_fields[idx : idx + self.propagator.n_aux_tau] ) )
+            idx += self.propagator.n_aux_tau
+        if self.coulomb:
+            self.prop_list.extend( self.propagator.factors_coulomb(self.potential.coulomb, aux_fields[idx : idx + self.propagator.n_aux_coulomb] ) )
+            idx += self.propagator.n_aux_coulomb
+        if self.spinorbit:
+            self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
+            idx += self.propagator.n_aux_spinorbit
+        if self.mix:
+            self.rng.shuffle(self.prop_list)
+        for p in self.prop_list:
+            ket_prop = p.multiply_state(ket_prop)
+        return bra.inner(ket_prop)
+
+    def run(self, bra, ket):
+        if not self.is_ready:
+            raise ValueError("Integrator is not ready. Did you run .setup() ?")
+        assert (ket.ketwise) and (not bra.ketwise)
+        if self.parallel:
+            with Pool(processes=self.n_processes) as pool:
+                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields], leave=True)).get()
+        else:
+            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields])))
+        b_array = np.array(b_array).flatten()
+        return b_array
+            
+    def exact(self, bra, ket):
+        ex = ExactGFMC(self.n_particles, isospin=self.isospin)
+        g_exact = ex.make_g_exact(self.propagator.dt, 
+                                  self.potential,
+                                  self.sigma,
+                                  self.sigmatau,
+                                  self.tau,
+                                  self.coulomb,
+                                  self.spinorbit)
+        b_exact = bra.inner(g_exact.multiply_state(ket))
+        return b_exact
+    
+    
+    
+    class Integrator_3body:
+    def __init__(self, potential: ThreeBodyCoupling, propagator, isospin=True):
         self.n_particles = potential.n_particles
         self.potential = potential
         self.propagator = propagator
