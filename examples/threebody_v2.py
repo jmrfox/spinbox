@@ -51,9 +51,11 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
     ket = ket.to_manybody_basis()
     bra = bra.to_manybody_basis()
 
+    op_1 = sig[0][0]; op_2 = sig[1][0]; op_3 = sig[2][0]
+
     # exact
     ket_prop = ket.copy()
-    force = sig[0][0].multiply_operator(sig[1][0]).multiply_operator(sig[2][0]).scale(a3)
+    force = (op_1 * op_2 * op_3).scale(a3)
     ket_prop = force.scale(- 0.5 * dt).exp().multiply_state(ket_prop)
     b_exact = bra.inner(ket_prop)
 
@@ -64,10 +66,10 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
         ket_temp = ket_prop.copy().zero()  #right before h loop
         for h in [0.,1.]:
-            ket_temp += (ident.scale(-h*C) + (sig[0][0] + sig[1][0] + sig[2][0]).scale(A1 - h*W)).exp().multiply_state(ket_prop)
+            ket_temp += (ident.scale(-h*C) + (op_1 + op_2 + op_3).scale(A1 - h*W)).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.scale(N)
         # 2b
-        ket_prop = (sig[0][0].multiply_operator(sig[1][0]) + sig[0][0].multiply_operator(sig[2][0]) + sig[1][0].multiply_operator(sig[2][0])).scale(A2).exp().multiply_state(ket_prop)
+        ket_prop = (op_1 * op_2 + op_1 * op_3 + op_2 * op_3).scale(A2).exp().multiply_state(ket_prop)
         b_rbm = bra.inner(ket_prop)
 
     elif mode==2: # rbm take 2: use 3b rbm and 2b rbm (x3)
@@ -76,142 +78,57 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         ket_temp = ket_prop.copy().zero()  #right before h loop
         N3, C3, W3, A1, A2 = a3b_factors(0.5 * dt * a3)
         for h in [0.,1.]:
-            ket_temp += (ident.scale(-h*C3) + (sig[0][0] + sig[1][0] + sig[2][0]).scale((A1 - h*W3))).exp().multiply_state(ket_prop)
+            ket_temp += (ident.scale(-h*C3) + (op_1 + op_2 + op_3).scale((A1 - h*W3))).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N3)
         ## 2b
         N2, W2, S2 = a2b_factors(-A2)
         ## i,j
         ket_temp = ket_prop.copy().zero()
         for h in [0.,1.]:
-            ket_temp += (sig[0][0] - sig[1][0].scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
+            ket_temp += (op_1 - op_2.scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N2)
         ## i,k
         ket_temp = ket_prop.copy().zero()
         for h in [0.,1.]:
-            ket_temp += (sig[0][0] - sig[2][0].scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
+            ket_temp += (op_1 - op_3.scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N2)
         # j,k
         ket_temp = ket_prop.copy().zero()
         for h in [0.,1.]:
-            ket_temp += (sig[1][0] - sig[2][0].scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
+            ket_temp += (op_2 - op_3.scale(S2)).scale(W2*(2*h-1)).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N2)
         b_rbm = bra.inner(ket_prop)
     
-    elif mode==3: # sum using propagator class
+    elif mode==3:
+        def boltz_f(h, a1, a2, w1, w2, c):
+            s2 = a2/abs(a2)
+            g1 = op_1.scale(w2*(2*h[1]-1) + w2*(2*h[2]-1) + a1 - h[0]*w1).exp()
+            g2 = op_2.scale(w2*s2*(2*h[1]-1) + w2*(2*h[3]-1) + a1 - h[0]*w1).exp()
+            g3 = op_3.scale(w2*s2*(2*h[2]-1) + w2*s2*(2*h[3]-1) + a1 - h[0]*w1).exp()
+            return (g1 * g2 * g3).scale(cexp(-h[0]*c))
+        
+        N3, C3, W3, A1, A2 = a3b_factors(0.5 * dt * a3)
+        W2 = carctanh(csqrt(ctanh(abs(A2))))
+        h_list = itertools.product([0,1], repeat=4)
+        ket_prop = ket.copy()
+        ket_temp = ket_prop.copy().zero()
+        for h_vec in h_list:
+            ket_temp += boltz_f(h_vec, A1, A2, W3, W2, C3) * ket_prop.copy()
+        ket_prop = ket_temp.scale(N3 * cexp(-3*abs(A2)) * 0.125)
+        b_rbm = bra * ket_prop
+        
+        
+    elif mode==4: # sum using propagator class
         prop_3b = HilbertPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
             print(h)
-            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, sig[0][0], sig[1][0], sig[2][0]).multiply_state(ket.copy()).scale(1/8)
+            ket_temp = prop_3b.threebody_sample_full(0.5 * dt * a3, h, op_1, op_2, op_3).multiply_state(ket.copy()).scale(1/8)
             b_array.append(bra * ket_temp)
         b_rbm = np.sum(b_array)
     return b_exact, b_rbm
 
-
-def afdmc_3b_1d(n_particles, dt, a3):
-    # exp( - dt/2 sig_1x sig_2x sig_3x)
-    ident = np.identity(2)
-    sig = pauli('list')
-    if isospin:
-        ident = np.identity(4)
-        sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-        tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
-    bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
-    
-    prop_0 = ProductOperator(n_particles, isospin=isospin)
-    prop_1 = ProductOperator(n_particles, isospin=isospin)
-    
-    # 3b
-    N, C, W, A1, A2 = a3b_factors(0.5 * dt * a3)
-    prop_0.coefficients[0] = (ccosh(A1)*ident + csinh(A1)*sig[0]) @ prop_0.coefficients[0]
-    prop_0.coefficients[1] = (ccosh(A1)*ident + csinh(A1)*sig[0]) @ prop_0.coefficients[1]
-    prop_0.coefficients[2] = (ccosh(A1)*ident + csinh(A1)*sig[0]) @ prop_0.coefficients[2]
-    prop_1.coefficients[0] = cexp(-C/3)*(ccosh(A1-W)*ident + csinh(A1-W)*sig[0]) @ prop_1.coefficients[0]
-    prop_1.coefficients[1] = cexp(-C/3)*(ccosh(A1-W)*ident + csinh(A1-W)*sig[0]) @ prop_1.coefficients[1]
-    prop_1.coefficients[2] = cexp(-C/3)*(ccosh(A1-W)*ident + csinh(A1-W)*sig[0]) @ prop_1.coefficients[2]
-    
-    ket_0 = prop_0.multiply_state(ket)
-    ket_1 = prop_1.multiply_state(ket)
-    
-    N, W, S = a2b_factors(-A2)
-    ## i,j
-    ket_0_temp = ket_0.copy().zero()
-    ket_1_temp = ket_1.copy().zero()
-    for h in [0.,1.]:
-        arg = W*(2*h-1)
-        ket_0_temp.coefficients[0] = ccosh(arg) * ket_0_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_0_temp.coefficients[0]
-        ket_0_temp.coefficients[1] = ccosh(arg) * ket_0_temp.coefficients[1] - S * csinh(arg) * sig[0] @ ket_0_temp.coefficients[1]
-        ket_1_temp.coefficients[0] = ccosh(arg) * ket_1_temp.coefficients[0] + csinh(arg) * sig[0] @ ket_1_temp.coefficients[0]
-        ket_1_temp.coefficients[1] = ccosh(arg) * ket_0_temp.coefficients[1] - S * csinh(arg) * sig[0] @ ket_0_temp.coefficients[1]
-    ket_prop = N * ket_temp.copy()
-    ## i,k
-    ket_temp = ket_prop.copy().zero()
-    for h in [0.,1.]:
-        ket_temp += (W*(2*h-1)*(sig[0][0] - S*sig[2][0])).exp() * ket_prop
-    ket_prop = N * ket_temp.copy()
-    ## j,k
-    ket_temp = ket_prop.copy().zero()
-    for h in [0.,1.]:
-        ket_temp += (W*(2*h-1)*(sig[1][0] - S*sig[2][0])).exp() * ket_prop
-    ket_prop = N * ket_temp.copy()
-    b_rbm = bra * ket_prop
-
-    return b_rbm
-
-
-def gfmc_3bprop(n_particles, dt, seed):
-    seeder = itertools.count(seed, 1)
-    ident = HilbertOperator(n_particles, isospin=isospin)
-    sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    if isospin:
-        tau = [[HilbertOperator(n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
-    bra = ket.copy().dagger()
-    
-    asig3b = ThreeBodyCoupling(n_particles).generate(scale=100, seed=next(seeder))
-    g_exact = ExactGFMC(n_particles)
-    idx_3b = interaction_indices(n_particles, 3)
-    
-    ket_prop = ket.copy()
-    for i,j,k in idx_3b:
-        ket_prop = g_exact.g_pade_sig_3b(dt, asig3b, i, j, k) * ket_prop
-
-    b_exact = bra * ket_prop 
-
-    ket_prop = ket.copy()
-    for i,j,k in idx_3b:
-        print(f"--- particles: {i} {j} {k}")
-        for a in range(3):
-            for b in range(3):
-                for c in range(3):
-                    print(f"dimension: {a} {b} {c}")
-                    ket_temp = ket_prop.copy().zero()
-                    for h in [0.,1.]:
-                        N, C, W, A1, A2 = a3b_factors(0.5 * dt * asig3b[a,i,b,j,c,k])
-                        ket_temp += (-h*C*ident + (A1 - h*W)*(sig[i][a] + sig[j][b] + sig[k][c])).exp() * ket_prop
-                    ket_prop = N * ket_temp.copy()
-                    # ket_prop = (A2*(sig[i][a]*sig[j][b] + sig[i][a]*sig[k][c] + sig[j][b]*sig[k][c])).exp() * ket_prop
-                    N, W, S = a2b_factors(-A2)
-                    ## iajb
-                    ket_temp = ket_prop.copy().zero()
-                    for h in [0.,1.]:
-                        ket_temp += (W*(2*h-1)*(sig[i][a] - S*sig[j][b])).exp() * ket_prop
-                    ket_prop = N * ket_temp.copy()
-                    ## iakc
-                    ket_temp = ket_prop.copy().zero()
-                    for h in [0.,1.]:
-                        ket_temp += (W*(2*h-1)*(sig[i][a] - S*sig[k][c])).exp() * ket_prop
-                    ket_prop = N * ket_temp.copy()
-                    ## jbkc
-                    ket_temp = ket_prop.copy().zero()
-                    for h in [0.,1.]:
-                        ket_temp += (W*(2*h-1)*(sig[j][b] - S*sig[k][c])).exp() * ket_prop
-                    ket_prop = N * ket_temp.copy()
-
-    b_rbm = bra * ket_prop
-    return b_exact, b_rbm    
 
 
 def three_body_comms():
