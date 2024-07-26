@@ -155,7 +155,7 @@ def three_body_comms():
 
 def compare():
     n_particles = 3
-    dt = 0.01
+    dt = 0.001
     a3 = 1.0
     seed = 1
 

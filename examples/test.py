@@ -7,6 +7,7 @@ print(pytest.__version__)
 epsilon = 10**-12
 
 def eq(x,y,verbose=False):
+    """checks equality up to precision epsilon"""
     if verbose:
         print("x = ", x)
         print("y = ", y)

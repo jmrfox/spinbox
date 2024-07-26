@@ -320,7 +320,7 @@ class HilbertState:
         if SAFE:
             raise NotImplementedError("You cannot multiply with * in SAFE mode.")
         else:
-            if np.isscalar(other): # scalar * |s>
+            if np.isscalar(other): # |s> * scalar
                 return self.copy().scale(other)
             elif isinstance(other, HilbertState):
                 if self.ketwise and not other.ketwise: # |s><s'|
@@ -1093,6 +1093,7 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
+        self.n_aux_sigma_3b = 9 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
@@ -1143,6 +1144,7 @@ class HilbertPropagatorRBM(Propagator):
         return gi.multiply_operator(gj).scale(prefactor)
 
     def threebody_sample_partial(self, z: float, h_list: list, operator_i: HilbertOperator, operator_j: HilbertOperator, operator_k: HilbertOperator):
+            """three body propagator sample using three 2-body RBMs"""
             N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
                 prefactor = N*cexp(-h_list[0]*C)
@@ -1160,7 +1162,8 @@ class HilbertPropagatorRBM(Propagator):
             out = out.multiply_operator(self.twobody_sample(-A2, h_list[3], operator_j, operator_k))
             return out.scale(prefactor)
 
-    def threebody_sample_full(self, z: float, h_list: list, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
+    def threebody_sample(self, z: float, h_list: list, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
+            """three body RBM sample written for one combined 3-body RBM kernel function"""
             N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
                 prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
@@ -1175,7 +1178,7 @@ class HilbertPropagatorRBM(Propagator):
             out = onebody_matrix_i.scale(arg_i).exp() * onebody_matrix_j.scale(arg_j).exp() * onebody_matrix_k.scale(arg_k).exp()
             return out.scale(prefactor)
 
-    def factors_sigma(self, coupling: Coupling, aux: list):
+    def factors_sigma(self, coupling: SigmaCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1186,7 +1189,7 @@ class HilbertPropagatorRBM(Propagator):
                     idx += 1
         return out
 
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+    def factors_sigmatau(self, coupling: SigmaTauCoupling,  aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1200,7 +1203,7 @@ class HilbertPropagatorRBM(Propagator):
                         idx += 1
         return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
+    def factors_tau(self, coupling: TauCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1209,7 +1212,7 @@ class HilbertPropagatorRBM(Propagator):
                     out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
         return out
 
-    def factors_coulomb(self, coupling: Coupling, aux: list):
+    def factors_coulomb(self, coupling: CoulombCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1222,7 +1225,7 @@ class HilbertPropagatorRBM(Propagator):
                 idx += 1
         return out
     
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
+    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list):
         out = []
         idx = 0
         for i in self._1b_idx:
@@ -1238,6 +1241,18 @@ class HilbertPropagatorRBM(Propagator):
         if self.include_prefactors:
             prefactor = np.exp( 0.5 * np.sum(coupling.coefficients**2))
             out.append( HilbertOperator(self.n_particles, self.isospin).scale(prefactor) )
+        return out
+
+    def factors_sigma_3b(self, coupling: ThreeBodyCoupling, aux: list):
+        out = []
+        idx = 0
+        for i,j,k in self._3b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    for c in self._xyz:
+                        z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
+                        out.append( self.threebody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
+                        idx += 1
         return out
 
 
@@ -1423,22 +1438,21 @@ class ProductPropagatorRBM(Propagator):
         return out
 
     def threebody_sample(self, z: float, h_list: list, i: int, j: int, k: int, onebody_matrix_i, onebody_matrix_j, onebody_matrix_k):
+            """three body RBM sample written for one combined 3-body RBM kernel function"""
             N, C, W, A1, A2 = self._a3b_factors(z)
             if self.include_prefactors:
-                prefactor = N*cexp(-3*abs(A2)-h_list[0]*C)
+                prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
             else:
                 prefactor = 1.0
             out = ProductOperator(self.n_particles, self.isospin)
-            # one-body factors
             W2 = carctanh(csqrt(ctanh(abs(A2))))
             S2 = A2/abs(A2)
-            # i
-            arg = W2*(2*h_list[1] + 2*h_list[2] - 2) + A1 - h_list[0]*W
-            out.coefficients[i] = ccosh(arg) * out.coefficients[i] + csinh(arg) * onebody_matrix_i @ out.coefficients[i]
-            arg = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
-            out.coefficients[j] = ccosh(arg) * out.coefficients[j] + csinh(arg) * onebody_matrix_j @ out.coefficients[j]
-            arg = W2*S2*(2*h_list[2] - 2*h_list[3] - 2) + A1 - h_list[0]*W
-            out.coefficients[k] = ccosh(arg) * out.coefficients[k] + csinh(arg) * onebody_matrix_k @ out.coefficients[k]
+            arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
+            arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
+            arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
+            out.coefficients[i] = ccosh(arg_i) * out.coefficients[i] + csinh(arg_i) * onebody_matrix_i @ out.coefficients[i]
+            out.coefficients[j] = ccosh(arg_j) * out.coefficients[j] + csinh(arg_j) * onebody_matrix_j @ out.coefficients[j]
+            out.coefficients[k] = ccosh(arg_k) * out.coefficients[k] + csinh(arg_k) * onebody_matrix_k @ out.coefficients[k]
             return out.scale_all(prefactor)
 
     def factors_sigma(self, coupling: Coupling, aux: list):
@@ -1508,6 +1522,17 @@ class ProductPropagatorRBM(Propagator):
             out.append( norm_op )
         return out    
 
+    def factors_sigma_3b(self, coupling: ThreeBodyCoupling, aux: list):
+        out = []
+        idx = 0
+        for i,j,k in self._3b_idx:
+            for a in self._xyz:
+                for b in self._xyz:
+                    for c in self._xyz:
+                        z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
+                        out.append( self.threebody_sample(z, aux[idx], i, j, k, self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
+                        idx += 1
+        return out
 
 
     
@@ -1658,6 +1683,7 @@ class Integrator:
               tau=False, 
               coulomb=False, 
               spinorbit=False,
+              sigma_3b=False,
               parallel=True,
               n_processes=None):
         
@@ -1744,7 +1770,7 @@ class Integrator:
     
     
     
-    class Integrator_3body:
+class Integrator_3body:
     def __init__(self, potential: ThreeBodyCoupling, propagator, isospin=True):
         self.n_particles = potential.n_particles
         self.potential = potential
