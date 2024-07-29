@@ -6,7 +6,7 @@ def gfmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, p
 
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder)).to_manybody_basis()
     bra = ket.copy().dagger()
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
     pot.sigmatau.generate(1.0, seed=next(seeder))
     pot.tau.generate(1.0, seed=next(seeder))
@@ -52,7 +52,7 @@ def afdmc_avg(n_particles, dt, n_samples, method, controls: dict, balance=True, 
 
     ket = AFDMCSpinIsospinState(n_particles, np.zeros(shape=(n_particles, 4, 1)), ketwise=True).randomize(seed=next(seeder))
     bra = ket.copy().dagger()
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
     pot.sigmatau.generate(1.0, seed=next(seeder))
     pot.tau.generate(1.0, seed=next(seeder))

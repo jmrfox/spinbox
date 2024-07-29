@@ -83,7 +83,7 @@ def test_hs_sigma():
     n_particles = 3
     isospin = True
     dt = 0.01
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
     ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
@@ -112,7 +112,7 @@ def test_rbm_sigma():
     n_particles = 3
     isospin = True
     dt = 0.01
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
     ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()

@@ -193,7 +193,7 @@ def main_new(method):
     ket = AFDMCSpinIsospinState(n_particles, read_from_file("./data/h2/fort.770",complex=True, shape=(2,4,1)))
     bra = ket.copy().dagger()
 
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.read_sigma("./data/h2/fort.7701")
     pot.read_sigmatau("./data/h2/fort.7702")
     pot.read_tau("./data/h2/fort.7703")

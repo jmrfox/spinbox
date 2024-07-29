@@ -1,11 +1,11 @@
 from storage.core_backup import *
-from spinbox.core import ArgonnePotential
+from spinbox.core import NuclearPotential
 
 n_particles = 2
 dt = 0.001
 
 seed = itertools.count(0,1)
-pot = ArgonnePotential(n_particles)
+pot = NuclearPotential(n_particles)
 pot.sigma.generate(1.0, seed=next(seed))
 pot.sigmatau.generate(1.0, seed=next(seed))
 pot.tau.generate(1.0, seed=next(seed))

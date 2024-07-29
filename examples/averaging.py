@@ -29,7 +29,7 @@ def average_1d(n_particles,
         
     bra = ket.copy().dagger()
 
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma[0,0,0,1] = 10.0  # coupling is all zero except the i=0 j=1 a=b=x element
         
     if full_basis:
@@ -150,7 +150,7 @@ def average_argonne(n_particles,
         
     bra = ket.copy().dagger()
 
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.random(10.0, seed=next(seeder))
     pot.sigmatau.random(10.0, seed=next(seeder))
     pot.tau.random(10.0, seed=next(seeder))

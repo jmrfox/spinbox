@@ -942,8 +942,8 @@ class ThreeBodyCoupling(Coupling):
         return self
 
 
-class ArgonnePotential:
-    """data class for Argonne potential
+class NuclearPotential:
+    """container class for Argonne-style NN potential + NNN
     """
     def __init__(self, n_particles):
         self.n_particles = n_particles
@@ -952,6 +952,7 @@ class ArgonnePotential:
         self.tau = TauCoupling(n_particles)
         self.coulomb = CoulombCoupling(n_particles)
         self.spinorbit = SpinOrbitCoupling(n_particles)
+        self.sigma_3b = ThreeBodyCoupling(n_particles)
     
     def read_sigma(self, filename):
         self.sigma.read(filename)
@@ -967,6 +968,9 @@ class ArgonnePotential:
 
     def read_spinorbit(self, filename):
         self.spinorbit.read(filename)
+
+    def read_sigma_3b(self, filename):
+        self.sigma_3b.read(filename)
 
 
 
@@ -987,7 +991,7 @@ class Propagator:
 
 
 class HilbertPropagatorHS(Propagator):
-    """ exp( - z op_i op_j )"""
+    """ the propagator exp( - z op_i op_j ) applied by Hubbard-Stratonovich"""
     def __init__(self, n_particles, dt, isospin=True, include_prefactors=True):
         super().__init__(n_particles, dt, isospin, include_prefactors)
         self._ident = HilbertOperator(self.n_particles, isospin=isospin)
@@ -1014,7 +1018,7 @@ class HilbertPropagatorHS(Propagator):
         gj = self._ident.scale(ccosh(arg)) + operator_j.scale(csinh(arg))
         return gi.multiply_operator(gj).scale(prefactor)
                 
-    def factors_sigma(self, coupling: Coupling, aux: list):
+    def factors_sigma(self, coupling: SigmaCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1025,7 +1029,7 @@ class HilbertPropagatorHS(Propagator):
                     idx += 1
         return out
 
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+    def factors_sigmatau(self, coupling: SigmaTauCoupling,  aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1039,7 +1043,7 @@ class HilbertPropagatorHS(Propagator):
                         idx += 1
         return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
+    def factors_tau(self, coupling: TauCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1048,7 +1052,7 @@ class HilbertPropagatorHS(Propagator):
                     out.append( self.twobody_sample(z, aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
         return out
 
-    def factors_coulomb(self, coupling: Coupling, aux: list):
+    def factors_coulomb(self, coupling: CoulombCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1061,7 +1065,7 @@ class HilbertPropagatorHS(Propagator):
                 idx += 1
         return out
     
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
+    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list):
         out = []
         idx = 0
         for i in self._1b_idx:
@@ -1259,7 +1263,7 @@ class HilbertPropagatorRBM(Propagator):
 ## PRODUCT STATE PROPAGATORS
 
 class ProductPropagatorHS(Propagator):
-    """ exp( - z op_i op_j )"""
+    """ the propagator exp( - z op_i op_j ) """
     def __init__(self, n_particles: int, dt: float, isospin=True, include_prefactors=True):
         super().__init__(n_particles, dt, isospin, include_prefactors)
         
@@ -1297,7 +1301,7 @@ class ProductPropagatorHS(Propagator):
         out.coefficients[j] *= csqrt(prefactor)
         return out
 
-    def factors_sigma(self, coupling: Coupling, aux: list):
+    def factors_sigma(self, coupling: SigmaCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1308,7 +1312,7 @@ class ProductPropagatorHS(Propagator):
                     idx += 1
         return out
 
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+    def factors_sigmatau(self, coupling: SigmaTauCoupling,  aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1320,7 +1324,7 @@ class ProductPropagatorHS(Propagator):
                         idx += 1
         return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
+    def factors_tau(self, coupling: TauCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1329,7 +1333,7 @@ class ProductPropagatorHS(Propagator):
                     out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[a], self._tau[a]) )
         return out
 
-    def factors_coulomb(self, coupling: Coupling, aux: list):
+    def factors_coulomb(self, coupling: CoulombCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1344,7 +1348,7 @@ class ProductPropagatorHS(Propagator):
                 idx += 1
         return out
     
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
+    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list):
         out = []
         idx = 0
         for i in self._1b_idx:
@@ -1383,6 +1387,7 @@ class ProductPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
+        self.n_aux_sigma_3b = 9 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
@@ -1455,7 +1460,7 @@ class ProductPropagatorRBM(Propagator):
             out.coefficients[k] = ccosh(arg_k) * out.coefficients[k] + csinh(arg_k) * onebody_matrix_k @ out.coefficients[k]
             return out.scale_all(prefactor)
 
-    def factors_sigma(self, coupling: Coupling, aux: list):
+    def factors_sigma(self, coupling: SigmaCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1466,7 +1471,7 @@ class ProductPropagatorRBM(Propagator):
                     idx += 1
         return out
 
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+    def factors_sigmatau(self, coupling: SigmaTauCoupling,  aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1478,7 +1483,7 @@ class ProductPropagatorRBM(Propagator):
                         idx += 1
         return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
+    def factors_tau(self, coupling: TauCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1487,7 +1492,7 @@ class ProductPropagatorRBM(Propagator):
                     out.append( self.twobody_sample(z, aux[idx], i, j, self._tau[a], self._tau[a]) )
         return out
 
-    def factors_coulomb(self, coupling: Coupling, aux: list):
+    def factors_coulomb(self, coupling: CoulombCoupling, aux: list):
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1503,7 +1508,7 @@ class ProductPropagatorRBM(Propagator):
         return out
     
     
-    def factors_spinorbit(self, coupling: Coupling, aux: list):
+    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list):
         out = []
         idx = 0
         for i in self._1b_idx:
@@ -1533,8 +1538,6 @@ class ProductPropagatorRBM(Propagator):
                         out.append( self.threebody_sample(z, aux[idx], i, j, k, self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
                         idx += 1
         return out
-
-
     
 
 
@@ -1552,7 +1555,7 @@ class ExactGFMC:
         
         self.linear_spinorbit = False # secret parameter to use the linear approximation of LS instead of the factorization
 
-    def g_pade_sig(self, dt: float, asig: SigmaCoupling, i: int, j: int):
+    def g_pade_sigma(self, dt: float, asig: SigmaCoupling, i: int, j: int):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
@@ -1561,7 +1564,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_pade_sigtau(self, dt: float, asigtau: SigmaTauCoupling, i: int, j: int):
+    def g_pade_sigmatau(self, dt: float, asigtau: SigmaTauCoupling, i: int, j: int):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
@@ -1582,7 +1585,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_pade_coul(self, dt, v, i, j):
+    def g_pade_coulomb(self, dt, v, i, j):
         out = self.ident + self.tau[i][2] + self.tau[j][2] + self.tau[i][2].multiply_operator(self.tau[j][2])
         out = out.scale(-0.125 * v[i, j] * dt)
         return out.exp()
@@ -1595,7 +1598,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_ls_linear(self, gls, i):
+    def g_spinorbit_linear(self, gls, i):
         # linear approx to LS
         out = HilbertOperator(self.n_particles)
         for a in range(3):
@@ -1603,19 +1606,19 @@ class ExactGFMC:
         return out
     
 
-    def g_ls_onebody(self, gls, i, a):
+    def g_spinorbit_onebody(self, gls, i, a):
         # one-body part of the LS propagator factorization
         out = self.sig[i][a].scale(- 1.j * gls[a,i])
         return out.exp()
 
 
-    def g_ls_twobody(self, gls, i, j, a, b):
+    def g_spinorbit_twobody(self, gls, i, j, a, b):
         # two-body part of the LS propagator factorization
         out = self.sig[i][a].multiply_operator(self.sig[j][b]).scale(0.5 * gls[a,i] * gls[b,j])
         return out.exp()
 
 
-    def g_pade_sig_3b(self, dt, asig3b, i, j, k):
+    def g_pade_sigma_3b(self, dt, asig3b, i, j, k):
         # 3-body sigma
         out = HilbertOperator(self.n_particles).zero()
         for a in range(3):
@@ -1627,42 +1630,47 @@ class ExactGFMC:
 
 
     def make_g_exact(self, dt, potential,
-                     sigma,
-                     sigmatau,
-                     tau,
-                     coulomb,
-                     spinorbit):
+                     sigma=False,
+                     sigmatau=False,
+                     tau=False,
+                     coulomb=False,
+                     spinorbit=False,
+                     sigma_3b=False):
         # compute exact bracket
         g_exact = self.ident.copy()
         pairs_ij = interaction_indices(self.n_particles)
+        triples_ijk = interaction_indices(self.n_particles, 3)
         for i,j in pairs_ij:
             if sigma:
-                g_exact = self.g_pade_sig(dt, potential.sigma, i, j).multiply_operator(g_exact)
+                g_exact = self.g_pade_sigma(dt, potential.sigma, i, j).multiply_operator(g_exact)
             if sigmatau:
-                g_exact = self.g_pade_sigtau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
+                g_exact = self.g_pade_sigmatau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
             if tau:
                 g_exact = self.g_pade_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
             if coulomb:
-                g_exact = self.g_pade_coul(dt, potential.coulomb, i, j).multiply_operator(g_exact)
+                g_exact = self.g_pade_coulomb(dt, potential.coulomb, i, j).multiply_operator(g_exact)
         if spinorbit:
             if self.linear_spinorbit:
                 for i in range(self.n_particles):
-                    g_exact = self.g_ls_linear(potential.spinorbit, i) * g_exact
+                    g_exact = self.g_spinorbit_linear(potential.spinorbit, i) * g_exact
             else:
                 for i in range(self.n_particles):
                     for a in range(3):
-                        g_exact = self.g_ls_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
+                        g_exact = self.g_spinorbit_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
                 for i in range(self.n_particles):
                     for j in range(self.n_particles):
                         for a in range(3):
                             for b in range(3):
-                                g_exact = self.g_ls_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
+                                g_exact = self.g_spinorbit_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
+        if sigma_3b:
+            for i,j,k in triples_ijk:
+                g_exact = self.g_pade_sigma_3b(dt, potential.sigma_3b, i, j, k).multiply_operator(g_exact)
         return g_exact
     
 
 
 class Integrator:
-    def __init__(self, potential: ArgonnePotential, propagator, isospin=True):
+    def __init__(self, potential: NuclearPotential, propagator, isospin=True):
         if type(propagator) in [HilbertPropagatorHS, ProductPropagatorHS]:
             self.method = 'HS'
         elif type(propagator) in [HilbertPropagatorRBM, ProductPropagatorRBM]:
@@ -1698,12 +1706,15 @@ class Integrator:
             n_aux += self.propagator.n_aux_coulomb
         if spinorbit:
             n_aux += self.propagator.n_aux_spinorbit
+        if sigma_3b:
+            n_aux += self.propagator.n_aux_sigma_3b
 
         self.sigma = sigma
         self.sigmatau = sigmatau
         self.tau = tau
         self.coulomb = coulomb
         self.spinorbit = spinorbit
+        self.sigma_3b = sigma_3b
         self.mix = mix
         self.parallel = parallel
         self.n_processes = n_processes
@@ -1738,6 +1749,9 @@ class Integrator:
         if self.spinorbit:
             self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
             idx += self.propagator.n_aux_spinorbit
+        if self.sigma_3b:
+            self.prop_list.extend( self.propagator.factors_sigma_3b(self.potential.sigma_3b, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
+            idx += self.propagator.n_aux_sigma_3b
         if self.mix:
             self.rng.shuffle(self.prop_list)
         for p in self.prop_list:
@@ -1764,110 +1778,9 @@ class Integrator:
                                   self.sigmatau,
                                   self.tau,
                                   self.coulomb,
-                                  self.spinorbit)
+                                  self.spinorbit,
+                                  self.sigma_3b)
         b_exact = bra.inner(g_exact.multiply_state(ket))
         return b_exact
     
     
-    
-class Integrator_3body:
-    def __init__(self, potential: ThreeBodyCoupling, propagator, isospin=True):
-        self.n_particles = potential.n_particles
-        self.potential = potential
-        self.propagator = propagator
-        self.isospin = isospin
-        self.is_ready = False
-
-    def setup(self, 
-              n_samples, 
-              seed=0, 
-              mix=True,
-              flip_aux=False,
-              sigma=False, 
-              sigmatau=False, 
-              tau=False, 
-              coulomb=False, 
-              spinorbit=False,
-              parallel=True,
-              n_processes=None):
-        
-        n_aux = 0
-        if sigma:
-            n_aux += self.propagator.n_aux_sigma
-        if sigmatau:
-            n_aux += self.propagator.n_aux_sigmatau
-        if tau:
-            n_aux += self.propagator.n_aux_tau
-        if coulomb:
-            n_aux += self.propagator.n_aux_coulomb
-        if spinorbit:
-            n_aux += self.propagator.n_aux_spinorbit
-
-        self.sigma = sigma
-        self.sigmatau = sigmatau
-        self.tau = tau
-        self.coulomb = coulomb
-        self.spinorbit = spinorbit
-        self.mix = mix
-        self.parallel = parallel
-        self.n_processes = n_processes
-
-        self.rng = np.random.default_rng(seed=seed)
-        if self.method=='HS':
-            self.aux_fields_samples = self.rng.standard_normal(size=(n_samples,n_aux))
-            if flip_aux:
-                self.aux_fields_samples = - self.aux_fields_samples
-        elif self.method=='RBM':
-            self.aux_fields_samples = self.rng.integers(0,2,size=(n_samples,n_aux))
-            if flip_aux:
-                self.aux_fields_samples = np.ones_like(self.aux_fields_samples) - self.aux_fields_samples
-        self.is_ready = True
-
-    def bracket(self, bra, ket, aux_fields):
-        ket_prop = ket.copy()
-        idx = 0
-        self.prop_list = []
-        if self.sigma:
-            self.prop_list.extend( self.propagator.factors_sigma(self.potential.sigma, aux_fields[idx : idx + self.propagator.n_aux_sigma] ) )
-            idx += self.propagator.n_aux_sigma
-        if self.sigmatau:
-            self.prop_list.extend( self.propagator.factors_sigmatau(self.potential.sigmatau, aux_fields[idx : idx + self.propagator.n_aux_sigmatau] ) )
-            idx += self.propagator.n_aux_sigmatau
-        if self.tau:
-            self.prop_list.extend( self.propagator.factors_tau(self.potential.tau, aux_fields[idx : idx + self.propagator.n_aux_tau] ) )
-            idx += self.propagator.n_aux_tau
-        if self.coulomb:
-            self.prop_list.extend( self.propagator.factors_coulomb(self.potential.coulomb, aux_fields[idx : idx + self.propagator.n_aux_coulomb] ) )
-            idx += self.propagator.n_aux_coulomb
-        if self.spinorbit:
-            self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
-            idx += self.propagator.n_aux_spinorbit
-        if self.mix:
-            self.rng.shuffle(self.prop_list)
-        for p in self.prop_list:
-            ket_prop = p.multiply_state(ket_prop)
-        return bra.inner(ket_prop)
-
-    def run(self, bra, ket):
-        if not self.is_ready:
-            raise ValueError("Integrator is not ready. Did you run .setup() ?")
-        assert (ket.ketwise) and (not bra.ketwise)
-        if self.parallel:
-            with Pool(processes=self.n_processes) as pool:
-                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields], leave=True)).get()
-        else:
-            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields])))
-        b_array = np.array(b_array).flatten()
-        return b_array
-            
-    def exact(self, bra, ket):
-        ex = ExactGFMC(self.n_particles, isospin=self.isospin)
-        g_exact = ex.make_g_exact(self.propagator.dt, 
-                                  self.potential,
-                                  self.sigma,
-                                  self.sigmatau,
-                                  self.tau,
-                                  self.coulomb,
-                                  self.spinorbit)
-        b_exact = bra.inner(g_exact.multiply_state(ket))
-        return b_exact

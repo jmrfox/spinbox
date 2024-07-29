@@ -103,7 +103,7 @@ def gfmc_3bprop(n_particles, dt, seed):
     
     ket_prop = ket.copy()
     for i,j,k in idx_3b:
-        ket_prop = g_exact.g_pade_sig_3b(dt, asig3b, i, j, k) * ket_prop
+        ket_prop = g_exact.g_pade_sigma_3b(dt, asig3b, i, j, k) * ket_prop
 
     b_exact = bra * ket_prop 
 

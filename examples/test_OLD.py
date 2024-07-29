@@ -138,7 +138,7 @@ def test_hilbert_prop(n_particles, dt, isospin):
     ket = ProductState(n_particles, isospin=isospin).randomize(seed=next(seeder)).to_manybody_basis()
     bra = ket.copy().dagger()
     
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
     pot.sigmatau.generate(1.0, seed=next(seeder))
     pot.tau.generate(1.0, seed=next(seeder))
@@ -163,7 +163,7 @@ def test_product_prop(n_particles, dt, isospin):
     ket = ProductState(n_particles, isospin=isospin).randomize(seed=next(seeder))
     bra = ket.copy().dagger()
     
-    pot = ArgonnePotential(n_particles)
+    pot = NuclearPotential(n_particles)
     pot.sigma.generate(1.0, seed=next(seeder))
     pot.sigmatau.generate(1.0, seed=next(seeder))
     pot.tau.generate(1.0, seed=next(seeder))

@@ -4,7 +4,7 @@ n_particles = 3
 dt = 0.001
 
 seed = itertools.count(0,1)
-pot = ArgonnePotential(n_particles)
+pot = NuclearPotential(n_particles)
 pot.sigma.random(1.0, seed=next(seed))
 pot.sigmatau.random(1.0, seed=next(seed))
 pot.tau.random(1.0, seed=next(seed))
