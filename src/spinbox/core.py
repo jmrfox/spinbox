@@ -1097,7 +1097,7 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
-        self.n_aux_sigma_3b = 9 * self._n3
+        self.n_aux_sigma_3b = 27 * 4 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
@@ -1255,8 +1255,8 @@ class HilbertPropagatorRBM(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
-                        out.append( self.threebody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
-                        idx += 1
+                        out.append( self.threebody_sample(z, aux[idx:idx+4], self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
+                        idx += 4
         return out
 
 
@@ -1387,7 +1387,7 @@ class ProductPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
-        self.n_aux_sigma_3b = 9 * self._n3
+        self.n_aux_sigma_3b = 27 * 4 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
@@ -1535,8 +1535,8 @@ class ProductPropagatorRBM(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
-                        out.append( self.threebody_sample(z, aux[idx], i, j, k, self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
-                        idx += 1
+                        out.append( self.threebody_sample(z, aux[idx:idx+4], i, j, k, self._sig[i][a], self._sig[j][b], self._sig[k][c]) )
+                        idx += 4
         return out
     
 
@@ -1750,7 +1750,7 @@ class Integrator:
             self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
             idx += self.propagator.n_aux_spinorbit
         if self.sigma_3b:
-            self.prop_list.extend( self.propagator.factors_sigma_3b(self.potential.sigma_3b, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
+            self.prop_list.extend( self.propagator.factors_sigma_3b(self.potential.sigma_3b, aux_fields[idx : idx + self.propagator.n_aux_sigma_3b] ) )
             idx += self.propagator.n_aux_sigma_3b
         if self.mix:
             self.rng.shuffle(self.prop_list)
