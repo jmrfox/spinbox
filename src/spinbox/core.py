@@ -1102,7 +1102,7 @@ class HilbertPropagatorRBM(Propagator):
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
-        s = z/abs(z)
+        s = np.sign(z)
         return n, w, s
     
     def _a3b_factors(self, a3):
@@ -1175,7 +1175,7 @@ class HilbertPropagatorRBM(Propagator):
                 prefactor = 1.0
             # one-body factors
             W2 = carctanh(csqrt(ctanh(abs(A2))))
-            S2 = A2/abs(A2)
+            S2 = np.sign(A2)
             arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
             arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
             arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -1392,12 +1392,12 @@ class ProductPropagatorRBM(Propagator):
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
-        s = z/abs(z)
+        s = np.sign(z)
         return n, w, s
 
     def _a3b_factors(self, a3):
         log = lambda x: np.log(x, dtype=complex)
-        if a3>0:
+        if a3>=0:
             x = csqrt(cexp(8*a3) - 1)
             x = csqrt( 2*cexp(4*a3)*( cexp(4*a3)*x + cexp(8*a3) - 1  ) - x)
             x = x + cexp(6*a3) + cexp(2*a3)*csqrt(cexp(8*a3) - 1)
@@ -1451,7 +1451,7 @@ class ProductPropagatorRBM(Propagator):
                 prefactor = 1.0
             out = ProductOperator(self.n_particles, self.isospin)
             W2 = carctanh(csqrt(ctanh(abs(A2))))
-            S2 = A2/abs(A2)
+            S2 = np.sign(A2)
             arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
             arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
             arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -1720,11 +1720,11 @@ class Integrator:
         self.n_processes = n_processes
 
         self.rng = np.random.default_rng(seed=seed)
-        if self.method=='HS':
+        if self.method.lower() == 'hs':
             self.aux_fields_samples = self.rng.standard_normal(size=(n_samples,n_aux))
             if flip_aux:
                 self.aux_fields_samples = - self.aux_fields_samples
-        elif self.method=='RBM':
+        elif self.method.lower() == 'rbm':
             self.aux_fields_samples = self.rng.integers(0,2,size=(n_samples,n_aux))
             if flip_aux:
                 self.aux_fields_samples = np.ones_like(self.aux_fields_samples) - self.aux_fields_samples
@@ -1764,9 +1764,9 @@ class Integrator:
         assert (ket.ketwise) and (not bra.ketwise)
         if self.parallel:
             with Pool(processes=self.n_processes) as pool:
-                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields], leave=True)).get()
+                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields_samples], leave=True)).get()
         else:
-            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields])))
+            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields_samples])))
         b_array = np.array(b_array).flatten()
         return b_array
             
