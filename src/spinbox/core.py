@@ -1089,12 +1089,12 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
-        self.n_aux_sigma_3b = 9 * self._n3
+        self.n_aux_sigma_3b = 27 * 4 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
-        s = z/abs(z)
+        s = np.sign(z)
         return n, w, s
     
     def _a3b_factors(self, a3):
@@ -1167,7 +1167,7 @@ class HilbertPropagatorRBM(Propagator):
                 prefactor = 1.0
             # one-body factors
             W2 = carctanh(csqrt(ctanh(abs(A2))))
-            S2 = A2/abs(A2)
+            S2 = np.sign(A2)
             arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
             arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
             arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -1247,8 +1247,8 @@ class HilbertPropagatorRBM(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
-                        out.append( self.threebody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
-                        idx += 1
+                        out.append( self.threebody_sample(z, aux[idx:idx+4], self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
+                        idx += 4
         return out
 
 
@@ -1379,17 +1379,17 @@ class ProductPropagatorRBM(Propagator):
         self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = 1 * self._n2
         self.n_aux_spinorbit = 9 * self._n2
-        self.n_aux_sigma_3b = 9 * self._n3
+        self.n_aux_sigma_3b = 27 * 4 * self._n3
 
     def _a2b_factors(self, z):
         n = cexp(-abs(z))
         w = carctanh(csqrt(ctanh(abs(z))))
-        s = z/abs(z)
+        s = np.sign(z)
         return n, w, s
 
     def _a3b_factors(self, a3):
         log = lambda x: np.log(x, dtype=complex)
-        if a3>0:
+        if a3>=0:
             x = csqrt(cexp(8*a3) - 1)
             x = csqrt( 2*cexp(4*a3)*( cexp(4*a3)*x + cexp(8*a3) - 1  ) - x)
             x = x + cexp(6*a3) + cexp(2*a3)*csqrt(cexp(8*a3) - 1)
@@ -1443,7 +1443,7 @@ class ProductPropagatorRBM(Propagator):
                 prefactor = 1.0
             out = ProductOperator(self.n_particles, self.isospin)
             W2 = carctanh(csqrt(ctanh(abs(A2))))
-            S2 = A2/abs(A2)
+            S2 = np.sign(A2)
             arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
             arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
             arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -1527,8 +1527,8 @@ class ProductPropagatorRBM(Propagator):
                 for b in self._xyz:
                     for c in self._xyz:
                         z = 0.5 * self.dt * coupling[a,i,b,j,c,k]
-                        out.append( self.threebody_sample(z, aux[idx], i, j, k, self._sig_op[i][a], self._sig_op[j][b], self._sig_op[k][c]) )
-                        idx += 1
+                        out.append( self.threebody_sample(z, aux[idx:idx+4], i, j, k, self._sig[i][a], self._sig[j][b], self._sig[k][c]) )
+                        idx += 4
         return out
     
 
@@ -1712,11 +1712,11 @@ class Integrator:
         self.n_processes = n_processes
 
         self.rng = np.random.default_rng(seed=seed)
-        if self.method=='HS':
+        if self.method.lower() == 'hs':
             self.aux_fields_samples = self.rng.standard_normal(size=(n_samples,n_aux))
             if flip_aux:
                 self.aux_fields_samples = - self.aux_fields_samples
-        elif self.method=='RBM':
+        elif self.method.lower() == 'rbm':
             self.aux_fields_samples = self.rng.integers(0,2,size=(n_samples,n_aux))
             if flip_aux:
                 self.aux_fields_samples = np.ones_like(self.aux_fields_samples) - self.aux_fields_samples
@@ -1742,7 +1742,7 @@ class Integrator:
             self.prop_list.extend( self.propagator.factors_spinorbit(self.potential.spinorbit, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
             idx += self.propagator.n_aux_spinorbit
         if self.sigma_3b:
-            self.prop_list.extend( self.propagator.factors_sigma_3b(self.potential.sigma_3b, aux_fields[idx : idx + self.propagator.n_aux_spinorbit] ) )
+            self.prop_list.extend( self.propagator.factors_sigma_3b(self.potential.sigma_3b, aux_fields[idx : idx + self.propagator.n_aux_sigma_3b] ) )
             idx += self.propagator.n_aux_sigma_3b
         if self.mix:
             self.rng.shuffle(self.prop_list)
@@ -1756,9 +1756,9 @@ class Integrator:
         assert (ket.ketwise) and (not bra.ketwise)
         if self.parallel:
             with Pool(processes=self.n_processes) as pool:
-                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields], leave=True)).get()
+                b_array = pool.starmap_async(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields_samples], leave=True)).get()
         else:
-            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields])))
+            b_array = list(itertools.starmap(self.bracket, tqdm([(bra, ket, aux) for aux in self.aux_fields_samples])))
         b_array = np.array(b_array).flatten()
         return b_array
             
