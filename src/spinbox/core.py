@@ -18,6 +18,9 @@ __version__ = '0.1.0'
 #   if the user wants to alias those, they are free to do so
 # *** introduced SAFE mode for doing assert checks and stuff
 #
+# 7/31 
+# *** three-body forces implemented in RBM and integrator
+# *** SAFE mode only includes asserts, does not restrict methods
 
 
 # imports
@@ -31,8 +34,9 @@ import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
-# safe mode
+# safe mode: include asserts to check for consistencies
 SAFE = False
+# you may want this on if something isn't working as expected, but for larger calculations turn it off
 
 ###
 
@@ -204,13 +208,15 @@ class HilbertState:
         return HilbertState(n_particles=self.n_particles, coefficients=self.coefficients.copy(), ketwise=self.ketwise, isospin=self.isospin)
     
     def __add__(self, other):
-        if SAFE: assert type(other) == type(self)
+        if SAFE: 
+            assert isinstance(other, HilbertState)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
     def __sub__(self, other):
-        if SAFE: assert type(other) == type(self)
+        if SAFE:
+            assert isinstance(other, HilbertState)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
@@ -223,13 +229,13 @@ class HilbertState:
 
     def inner(self, other):
         if SAFE:
-            assert type(other) == type(self)
+            assert isinstance(other, HilbertState)
             assert not self.ketwise and other.ketwise
         return np.dot(self.coefficients, other.coefficients)
         
     def outer(self, other):
         if SAFE:
-            assert type(other) == type(self)
+            assert isinstance(other, HilbertState)
             assert self.ketwise and not other.ketwise
         out = HilbertOperator(n_particles=self.n_particles, isospin=self.isospin)
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex')
@@ -317,23 +323,20 @@ class HilbertState:
         return fit
     
     def __mul__(self, other):
-        if SAFE:
-            raise NotImplementedError("You cannot multiply with * in SAFE mode.")
-        else:
-            if np.isscalar(other): # |s> * scalar
-                return self.copy().scale(other)
-            elif isinstance(other, HilbertState):
-                if self.ketwise and not other.ketwise: # |s><s'|
-                    return self.outer(other)
-                elif not self.ketwise and other.ketwise: # <s|s'>
-                    return self.inner(other)
-                else:
-                    raise ValueError("Improper multiplication.")
-            elif isinstance(other, HilbertOperator):
-                if not self.ketwise:
-                    return self.multiply_operator(other)
+        if np.isscalar(other): # |s> * scalar
+            return self.copy().scale(other)
+        elif isinstance(other, HilbertState):
+            if self.ketwise and not other.ketwise: # |s><s'|
+                return self.outer(other)
+            elif not self.ketwise and other.ketwise: # <s|s'>
+                return self.inner(other)
             else:
-                raise NotImplementedError("Unsupported multiply.")
+                raise ValueError("Improper multiplication.")
+        elif isinstance(other, HilbertOperator):
+            if not self.ketwise:
+                return self.multiply_operator(other)
+        else:
+            raise NotImplementedError("Unsupported multiply.")
 
     def attach_coordinates(self, coordinates):
         assert coordinates.shape == (self.n_particles, 3)
@@ -357,13 +360,13 @@ class HilbertOperator:
         return out
     
     def __add__(self, other):
-        if SAFE: assert type(other) == type(self)
+        if SAFE: assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
     def __sub__(self, other):
-        if SAFE: assert type(other) == type(self)
+        if SAFE: assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
@@ -375,7 +378,7 @@ class HilbertOperator:
         return out
         
     def multiply_operator(self, other):
-        if SAFE: assert isinstance(other, type(self))
+        if SAFE: assert isinstance(other, HilbertOperator)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
@@ -404,8 +407,8 @@ class HilbertOperator:
                 isospin_matrix = np.identity(2, dtype=complex)
             else:
                 if SAFE:
-                    assert type(spin_matrix) == np.ndarray
-                    assert spin_matrix.shape == (2,2)        
+                    assert type(isospin_matrix) == np.ndarray
+                    assert isospin_matrix.shape == (2,2)        
             op = repeated_kronecker_product([isospin_matrix, spin_matrix])
         else:
             op = spin_matrix
@@ -440,20 +443,17 @@ class HilbertOperator:
         return out
 
     def __mul__(self, other):
-        if SAFE:
-            raise NotImplementedError("You cannot multiply with * in SAFE mode.")
-        else:
-            if np.isscalar(other): # scalar * op
-                return self.copy().scale(other)
-            elif isinstance(other, HilbertState):
-                if other.ketwise: # op |s>
-                    return self.multiply_state(other)
-                else:
-                    raise ValueError("Improper multiplication.")
-            elif isinstance(other, HilbertOperator):
-                return self.multiply_operator(other)
+        if np.isscalar(other): # scalar * op
+            return self.copy().scale(other)
+        elif isinstance(other, HilbertState):
+            if other.ketwise: # op |s>
+                return self.multiply_state(other)
             else:
-                raise NotImplementedError("Unsupported multiply.")
+                raise ValueError("Improper multiplication.")
+        elif isinstance(other, HilbertOperator):
+            return self.multiply_operator(other)
+        else:
+            raise NotImplementedError("Unsupported multiply.")
 
 
 
@@ -507,15 +507,13 @@ class ProductState:
 
     def inner(self, other):
         if SAFE:
-            if isinstance(other, type(self)):
-                assert (not self.ketwise) and other.ketwise
-            else:
-                raise TypeError("Bad multiply.")
+            assert isinstance(other, ProductState)
+            assert (not self.ketwise) and other.ketwise
         return np.prod([np.dot(self.coefficients[i], other.coefficients[i]) for i in range(self.n_particles)])
         
     def outer(self, other):
         if SAFE:
-            assert type(other) == type(self)
+            assert isinstance(other, ProductState)
             assert (self.ketwise) and (not other.ketwise)
         out = ProductOperator(n_particles=self.n_particles, isospin=self.isospin)
         for i in range(self.n_particles):
@@ -586,24 +584,21 @@ class ProductState:
         return out
 
     def __mul__(self, other):
-        if SAFE:
-            raise NotImplementedError("You cannot multiply with * in SAFE mode.")
-        else:
-            if np.isscalar(other): # scalar * |s>
-                return self.copy().scale_all(other)
-            elif isinstance(other, ProductState):
-                if self.ketwise and not other.ketwise: # |s><s'|
-                    return self.outer(other)
-                elif not self.ketwise and other.ketwise: # <s|s'>
-                    return self.inner(other)
-                else:
-                    raise ValueError("Improper multiplication.")
-            elif isinstance(other, ProductOperator):
-                if not self.ketwise:
-                    return self.multiply_operator(other)
+        if np.isscalar(other): # scalar * |s>
+            return self.copy().scale_all(other)
+        elif isinstance(other, ProductState):
+            if self.ketwise and not other.ketwise: # |s><s'|
+                return self.outer(other)
+            elif not self.ketwise and other.ketwise: # <s|s'>
+                return self.inner(other)
             else:
-                raise NotImplementedError("Unsupported multiply.")
-            
+                raise ValueError("Improper multiplication.")
+        elif isinstance(other, ProductOperator):
+            if not self.ketwise:
+                return self.multiply_operator(other)
+        else:
+            raise NotImplementedError("Unsupported multiply.")
+        
     def attach_coordinates(self, coordinates):
         assert coordinates.shape == (self.n_particles, 3)
         self.coordinates = coordinates
@@ -701,20 +696,17 @@ class ProductOperator:
         return out
     
     def __mul__(self, other):
-        if SAFE:
-            raise NotImplementedError("You cannot multiply with * in SAFE mode.")
-        else:
-            if np.isscalar(other): # scalar * op
-                return self.copy().scale_all(other)
-            elif isinstance(other, ProductState):
-                if other.ketwise: # op |s>
-                    return self.multiply_state(other)
-                else:
-                    raise ValueError("Improper multiplication.")
-            elif isinstance(other, ProductOperator):
-                return self.multiply_operator(other)
+        if np.isscalar(other): # scalar * op
+            return self.copy().scale_all(other)
+        elif isinstance(other, ProductState):
+            if other.ketwise: # op |s>
+                return self.multiply_state(other)
             else:
-                raise NotImplementedError("Unsupported multiply.")
+                raise ValueError("Improper multiplication.")
+        elif isinstance(other, ProductOperator):
+            return self.multiply_operator(other)
+        else:
+            raise NotImplementedError("Unsupported multiply.")
 
     
 

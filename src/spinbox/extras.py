@@ -2,21 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
 
-# def chistogram(X, filename, title, bins='auto', range=None):
-#     plt.figure(figsize=(7, 5))
-#     n = len(X)
-#     Xre = np.real(X)
-#     Xim = np.imag(X)
-#     mre, sre = np.mean(Xre), np.std(Xre)
-#     mim, sim = np.mean(Xim), np.std(Xim)
-#     plt.hist(Xre, label='Re', alpha=0.5, bins=bins, range=range, color='red')
-#     plt.hist(Xim, label='Im', alpha=0.5, bins=bins, range=range, color='blue')
-#     title += "\n" + rf"Re : $\mu$ = {mre:.6f}, $\sigma$ = {sre:.6f}, $\epsilon$ = {sre/np.sqrt(n):.6f}"
-#     title += "\n" + rf"Im : $\mu$ = {mim:.6f}, $\sigma$ = {sim:.6f}, $\epsilon$ = {sim/np.sqrt(n):.6f}"
-#     plt.title(title)
-#     plt.legend()
-#     plt.tight_layout()
-#     plt.savefig(filename)
+from spinbox import HilbertOperator, ProductOperator
 
 def chistogram(X, filename, title, bins='fd', range=None):
     n = len(X)
@@ -69,3 +55,27 @@ def spinor4(state='up', ketwise=True, seed=None):
         sp = sp.T
     return sp
 
+
+def nuclear_sigma_operators_hilbert(n_particles):
+    """Pauli sigma operators in Hilbert space
+    
+    usage: 
+    sigma = nuclear_sigma_operators_hilbert(n_particles) 
+    sigma[particle_index][dimension_index]
+    """
+    return [[HilbertOperator(n_particles, isospin=True).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+
+def nuclear_tau_operators_hilbert(n_particles):
+    """Pauli tau operators in Hilbert space
+    
+    usage: 
+    tau = nuclear_tau_operators_hilbert(n_particles) 
+    tau[particle_index][dimension_index]
+    """
+    return[[HilbertOperator(n_particles, isospin=True).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+
+def nuclear_sigma_matrices_product(n_particles):
+    return
+
+def nuclear_tau_matrices_product(n_particles):
+    return
