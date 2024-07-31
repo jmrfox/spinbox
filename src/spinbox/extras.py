@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from numpy.random import default_rng
 
-from spinbox import HilbertOperator, ProductOperator
 
 def chistogram(X, filename, title, bins='fd', range=None):
     n = len(X)
@@ -56,26 +55,30 @@ def spinor4(state='up', ketwise=True, seed=None):
     return sp
 
 
-def nuclear_sigma_operators_hilbert(n_particles):
-    """Pauli sigma operators in Hilbert space
+def sigma_tau_operators_hilbert(n_particles):
+    """Pauli sigma and tau operators in Hilbert space
     
     usage: 
-    sigma = nuclear_sigma_operators_hilbert(n_particles) 
+    sigma, tau = sigma_tau_operators_hilbert(n_particles) 
     sigma[particle_index][dimension_index]
     """
-    return [[HilbertOperator(n_particles, isospin=True).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+    from .core import HilbertOperator
+    sigma = [[HilbertOperator(n_particles, isospin=True).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+    tau = [[HilbertOperator(n_particles, isospin=True).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+    return sigma, tau
 
-def nuclear_tau_operators_hilbert(n_particles):
-    """Pauli tau operators in Hilbert space
+def sigma_tau_matrices_product(n_particles):
+    """Pauli sigma and tau matrices in product basis
     
     usage: 
-    tau = nuclear_tau_operators_hilbert(n_particles) 
-    tau[particle_index][dimension_index]
+    sigma, tau = sigma_tau_matrices_product(n_particles) 
+    sigma[particle_index][dimension_index]
+
+    note that I am not using the ProductOperator class here. This is done for memory efficiency.
+    In the case of Hilbert space calculations, it makes sense to compute the operator matrices beforehand and store them.
+    In the tensor-product basis, this would result in most of our memory being taken up by identity matrices.
     """
-    return[[HilbertOperator(n_particles, isospin=True).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-
-def nuclear_sigma_matrices_product(n_particles):
-    return
-
-def nuclear_tau_matrices_product(n_particles):
-    return
+    from .core import repeated_kronecker_product, pauli
+    sigma = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+    tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+    return sigma, tau

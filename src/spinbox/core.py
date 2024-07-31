@@ -264,7 +264,7 @@ class HilbertState:
         out += [str(self.coefficients)]
         return "\n".join(out)
 
-    def randomize(self, seed=0):
+    def randomize(self, seed=None):
         """ randomize """
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
@@ -288,7 +288,7 @@ class HilbertState:
         out = [HilbertState(self.n_particles, coefficients=c, ketwise=True, isospsin=self.isospin) for c in coeffs_list]
         return out
     
-    def nearby_product_state(self, seed: int, maxiter=100):
+    def nearby_product_state(self, seed=None, maxiter=100):
         """returns a ProductState |prod> for which <self|prod> is large"""
         from scipy.optimize import minimize, NonlinearConstraint
         fit = ProductState(self.n_particles, isospin=self.isospin).randomize(seed)
@@ -565,7 +565,7 @@ class ProductState:
         out.coefficients *= b ** (1 / out.n_particles)
         return out
 
-    def randomize(self, seed=0):
+    def randomize(self, seed=None):
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
         out.coefficients = rng.standard_normal(size=out.coefficients.shape) + 1.j*rng.standard_normal(size=out.coefficients.shape)
