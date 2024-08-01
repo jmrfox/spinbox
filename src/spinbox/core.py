@@ -87,26 +87,37 @@ def carctanh(x):
     return np.arctanh(x, dtype=complex)
     
 
-def interaction_indices(n, m = 2):
+def interaction_indices(n: int, m = 2) -> list:
     """ returns a list of all possible m-plets of n objects (labelled 0 to n-1)
     default: m=2, giving all possible pairs
     for m=1, returns a range(0, n-1)
-    """
+    :param n: number of items
+    :type n: int
+    :param m: size of tuplet, defaults to 2
+    :type m: int, optional
+    :return: list of possible m-plets of n items
+    :rtype: list
+    """    # """
     if m==1:
         return np.arange(n)
     else:
         return np.array(list(itertools.combinations(range(n), m)))
 
 
-def read_from_file(filename, complex=False, shape=None, order='F'):
-    """Reads numbers from a file 
+def read_from_file(filename: str, complex=False, shape=None, order='F') -> np.ndarray:
+    """Read numbers from a text file
 
-    Args:
-        filename (str): name of file to load
-
-    Returns:
-        numpy.array 
-    """
+    :param filename: input file name
+    :type filename: str
+    :param complex: complex entries, defaults to False
+    :type complex: bool, optional
+    :param shape: shape of output array, defaults to None
+    :type shape: tuple, optional
+    :param order: 'F' for columns first, otherwise use 'C', defaults to 'F'
+    :type order: str, optional
+    :return: Numpy array
+    :rtype: numpy.ndarray
+    """    
     def tuple_to_complex(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
@@ -123,8 +134,15 @@ def read_from_file(filename, complex=False, shape=None, order='F'):
     return sp
 
 
-def pauli(arg):
-    """returns pauli matrix numpy array"""
+def pauli(arg) -> np.ndarray:
+    """Pauli matrix x, y, z, or a list of all three
+
+    :param arg: 0 or 'x' for Pauli x, 1 or 'y' for Pauli y, 2 or 'z' for Pauli z, 'list' for a list of x, y ,z 
+    :type arg: int or str
+    :raises ValueError: option not found
+    :return: Pauli matrix or list
+    :rtype: np.ndarray
+    """    
     if arg in [0, 'x']:
         out = np.array([[0, 1], [1, 0]], dtype=complex)
     elif arg in [1, 'y']:
@@ -141,11 +159,13 @@ def pauli(arg):
 
 
 
-def repeated_kronecker_product(matrices: list):
+def repeated_kronecker_product(matrices: list) -> np.ndarray:
     """
     returns the tensor/kronecker product of a list of arrays
-    :param matrices:
-    :return:
+    :param matrices: list of matrix factors
+    :type matrices: list
+    :return: Kronecker product of input list
+    "rtype: np.ndarray
     """
     return np.array(reduce(np.kron, matrices), dtype=complex)
 

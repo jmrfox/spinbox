@@ -4,13 +4,13 @@
    contain the root `toctree` directive.
 
 Welcome to spinbox's documentation!
-================================
+===================================
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
+   modules
 
 Indices and tables
 ==================
@@ -18,3 +18,11 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
+
+spinbox core module
+===================
+
+.. automodule:: spinbox
+    :members:
+    :undoc-members:
+    :show-inheritance:
