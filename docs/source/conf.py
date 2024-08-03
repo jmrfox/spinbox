@@ -28,8 +28,11 @@ exclude_patterns = []
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
 
-html_theme = 'classic'
-html_static_path = []
+html_theme = "sphinxdoc" #'classic'
+# html_theme_options = {
+#     "sidebarwidth": "20%"
+#}
+# html_static_path = []
 
 
 # linkcode

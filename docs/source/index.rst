@@ -18,11 +18,3 @@ Indices and tables
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
-spinbox core module
-===================
-
-.. automodule:: spinbox
-    :members:
-    :undoc-members:
-    :show-inheritance:
