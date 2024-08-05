@@ -1932,7 +1932,7 @@ class ExactGFMC:
         
         self.linear_spinorbit = False # secret parameter to use the linear approximation of LS instead of the factorization
 
-    def g_pade_sigma(self, dt: float, asig: SigmaCoupling, i: int, j: int):
+    def propagator_sigma(self, dt: float, asig: SigmaCoupling, i: int, j: int):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
@@ -1941,7 +1941,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_pade_sigmatau(self, dt: float, asigtau: SigmaTauCoupling, i: int, j: int):
+    def propagator_sigmatau(self, dt: float, asigtau: SigmaTauCoupling, i: int, j: int):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
@@ -1954,7 +1954,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_pade_tau(self, dt, atau, i, j):
+    def propagator_tau(self, dt, atau, i, j):
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for c in range(3):
             out += self.tau[i][c].multiply_operator(self.tau[j][c]).scale(atau[i, j])
@@ -1962,20 +1962,20 @@ class ExactGFMC:
         return out.exp()
 
 
-    def g_pade_coulomb(self, dt, v, i, j):
+    def propagator_coulomb(self, dt, v, i, j):
         out = self.ident + self.tau[i][2] + self.tau[j][2] + self.tau[i][2].multiply_operator(self.tau[j][2])
         out = out.scale(-0.125 * v[i, j] * dt)
         return out.exp()
 
 
-    def g_coulomb_onebody(self, dt, v, i):
+    def propagator_coulomb_onebody(self, dt, v, i):
         """just the one-body part of the expanded coulomb propagator
         for use along with auxiliary field propagators"""
         out =  self.tau[i][2].scale(- 0.125 * v * dt)
         return out.exp()
 
 
-    def g_spinorbit_linear(self, gls, i):
+    def propagator_spinorbit_linear(self, gls, i):
         # linear approx to LS
         out = HilbertOperator(self.n_particles)
         for a in range(3):
@@ -1983,19 +1983,19 @@ class ExactGFMC:
         return out
     
 
-    def g_spinorbit_onebody(self, gls, i, a):
+    def propagator_spinorbit_onebody(self, gls, i, a):
         # one-body part of the LS propagator factorization
         out = self.sig[i][a].scale(- 1.j * gls[a,i])
         return out.exp()
 
 
-    def g_spinorbit_twobody(self, gls, i, j, a, b):
+    def propagator_spinorbit_twobody(self, gls, i, j, a, b):
         # two-body part of the LS propagator factorization
         out = self.sig[i][a].multiply_operator(self.sig[j][b]).scale(0.5 * gls[a,i] * gls[b,j])
         return out.exp()
 
 
-    def g_pade_sigma_3b(self, dt, asig3b, i, j, k):
+    def propagator_sigma_3b(self, dt, asig3b, i, j, k):
         # 3-body sigma
         out = HilbertOperator(self.n_particles).zero()
         for a in range(3):
@@ -2006,7 +2006,7 @@ class ExactGFMC:
         return out.exp()
 
 
-    def make_g_exact(self, dt, potential,
+    def propagator(self, dt, potential,
                      sigma=False,
                      sigmatau=False,
                      tau=False,
@@ -2019,29 +2019,29 @@ class ExactGFMC:
         triples_ijk = interaction_indices(self.n_particles, 3)
         for i,j in pairs_ij:
             if sigma:
-                g_exact = self.g_pade_sigma(dt, potential.sigma, i, j).multiply_operator(g_exact)
+                g_exact = self.propagator_sigma(dt, potential.sigma, i, j).multiply_operator(g_exact)
             if sigmatau:
-                g_exact = self.g_pade_sigmatau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
+                g_exact = self.propagator_sigmatau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
             if tau:
-                g_exact = self.g_pade_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
+                g_exact = self.propagator_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
             if coulomb:
-                g_exact = self.g_pade_coulomb(dt, potential.coulomb, i, j).multiply_operator(g_exact)
+                g_exact = self.propagator_coulomb(dt, potential.coulomb, i, j).multiply_operator(g_exact)
         if spinorbit:
             if self.linear_spinorbit:
                 for i in range(self.n_particles):
-                    g_exact = self.g_spinorbit_linear(potential.spinorbit, i) * g_exact
+                    g_exact = self.propagator_spinorbit_linear(potential.spinorbit, i) * g_exact
             else:
                 for i in range(self.n_particles):
                     for a in range(3):
-                        g_exact = self.g_spinorbit_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
+                        g_exact = self.propagator_spinorbit_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
                 for i in range(self.n_particles):
                     for j in range(self.n_particles):
                         for a in range(3):
                             for b in range(3):
-                                g_exact = self.g_spinorbit_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
+                                g_exact = self.propagator_spinorbit_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
         if sigma_3b:
             for i,j,k in triples_ijk:
-                g_exact = self.g_pade_sigma_3b(dt, potential.sigma_3b, i, j, k).multiply_operator(g_exact)
+                g_exact = self.propagator_sigma_3b(dt, potential.sigma_3b, i, j, k).multiply_operator(g_exact)
         return g_exact
     
 
@@ -2149,7 +2149,7 @@ class Integrator:
             
     def exact(self, bra, ket):
         ex = ExactGFMC(self.n_particles, isospin=self.isospin)
-        g_exact = ex.make_g_exact(self.propagator.dt, 
+        g_exact = ex.propagator(self.propagator.dt, 
                                   self.potential,
                                   self.sigma,
                                   self.sigmatau,

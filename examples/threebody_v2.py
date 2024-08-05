@@ -140,13 +140,13 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
-        b_array = np.zeros(n_samples*2, dtype=complex)
-        for _i,h in tqdm(enumerate(h_list)):
+        b_array = []
+        for h in tqdm(h_list):
             ket_temp = prop.threebody_sample(0.5 * dt * a3, h, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array[_i*2:i*2+1] = bra * ket_temp
+            b_array.append(bra * ket_temp)
             h_flip = 1-h
             ket_temp = prop.threebody_sample(0.5 * dt * a3, h_flip, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array[_i*2+1:i*2+2] = bra * ket_temp
+            b_array.append(bra * ket_temp)
         b_rbm = np.mean(b_array)
     return b_exact, b_rbm
 
