@@ -4,6 +4,19 @@ from numpy.random import default_rng
 
 
 def chistogram(X, filename, title, bins='fd', range=None):
+    """Complex histogram
+
+    :param X: Set of complex numbers
+    :type X: iterable 
+    :param filename: filename of plot, including suffix (.pdf)
+    :type filename: str
+    :param title: Plot title
+    :type title: str
+    :param bins: binning algorithm (see matplotlib.pyplot.hist), defaults to 'fd' (Freedman-Diaconis)
+    :type bins: str, optional
+    :param range: fixed range to plot, defaults to None
+    :type range: tuple, optional
+    """    
     n = len(X)
     Xre = np.real(X)
     Xim = np.imag(X)
@@ -18,8 +31,51 @@ def chistogram(X, filename, title, bins='fd', range=None):
     plt.tight_layout()
     plt.savefig(filename)
 
+def pmat(x, heatmap=False, lims=None, print_zeros=False):
+    """Print or plot a complex-valued matrix
+
+    :param x: matrix to be plotted
+    :type x: numpy.ndarray
+    :param heatmap: True if plotting a heatmap, defaults to False
+    :type heatmap: bool, optional
+    :param lims: if heatmap, limits for colorbar, defaults to None
+    :type lims: tuple, optional
+    :param print_zeros: True if printing a part if it is all zeros, defaults to False
+    :type print_zeros: bool, optional
+    """    
+    n, m = x.shape
+    re = np.real(x)
+    im = np.imag(x)
+    if (re != np.zeros_like(re)).any() and not print_zeros:
+        print('Real part:')
+        for i in range(n):
+            print([float(f'{re[i, j]:8.8}') for j in range(m)])
+    if (im != np.zeros_like(im)).any() and not print_zeros:
+        print('Imaginary part:')
+        for i in range(n):
+            print([float(f'{im[i, j]:8.8}') for j in range(m)])
+    if heatmap:
+        fig, (ax1, ax2) = plt.subplots(1, 2)
+        if lims is None:
+            ax1.imshow(re)
+            ax2.imshow(im)
+        else:
+            ax1.imshow(re, vmin=lims[0], vmax=lims[1])
+            ax2.imshow(im, vmin=lims[0], vmax=lims[1])
+        plt.show()
+        
 def spinor2(state='up', ketwise=True, seed=None):
-    """returns spin coefficients, numpy array"""
+    """Convenience function for making 2-dimensional spin state vectors
+
+    :param state: can be one of ['up', 'down', 'random', 'max'], defaults to 'up'.
+    :type state: str, optional
+    :param ketwise: True for column vector, False for row vector, defaults to True
+    :type ketwise: bool, optional
+    :param seed: rng seed, defaults to None
+    :type seed: int, optional
+    :return: your vector
+    :rtype: numpy.ndarray
+    """    
     assert state in ['up', 'down', 'random', 'max']
     if state == 'up':
         sp = np.array([1, 0], dtype=complex)
@@ -37,7 +93,17 @@ def spinor2(state='up', ketwise=True, seed=None):
     return sp
 
 def spinor4(state='up', ketwise=True, seed=None):
-    """returns spin-isospin coefficients, numpy array"""
+    """Convenience function for making 4-dimensional spin-isospin state vectors
+
+    :param state: can be one of ['up', 'down', 'random', 'max'], defaults to 'up'.
+    :type state: str, optional
+    :param ketwise: True for column vector, False for row vector, defaults to True
+    :type ketwise: bool, optional
+    :param seed: rng seed, defaults to None
+    :type seed: int, optional
+    :return: your vector
+    :rtype: numpy.ndarray
+    """   
     assert state in ['up', 'down', 'random', 'max']
     if state == 'up':
         sp = np.array([1, 0, 1, 0], dtype=complex)
@@ -58,6 +124,11 @@ def spinor4(state='up', ketwise=True, seed=None):
 def sigma_tau_operators_hilbert(n_particles):
     """Pauli sigma and tau operators in Hilbert space
     
+    :param n_particles: number of particles
+    :type n_particles: int
+    :return: (sigma operators, tau operators)
+    :rtype: tuple of lists of lists
+    
     usage: 
     sigma, tau = sigma_tau_operators_hilbert(n_particles) 
     sigma[particle_index][dimension_index]
@@ -70,9 +141,14 @@ def sigma_tau_operators_hilbert(n_particles):
 def sigma_tau_matrices_product(n_particles):
     """Pauli sigma and tau matrices in product basis
     
+    :param n_particles: number of particles
+    :type n_particles: int
+    :return: (sigma matrices, tau matrices)
+    :rtype: tuple of lists
+    
     usage: 
     sigma, tau = sigma_tau_matrices_product(n_particles) 
-    sigma[particle_index][dimension_index]
+    sigma[dimension_index]
 
     note that I am not using the ProductOperator class here. This is done for memory efficiency.
     In the case of Hilbert space calculations, it makes sense to compute the operator matrices beforehand and store them.

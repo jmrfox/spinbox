@@ -87,26 +87,37 @@ def carctanh(x):
     return np.arctanh(x, dtype=complex)
     
 
-def interaction_indices(n, m = 2):
+def interaction_indices(n: int, m = 2) -> list:
     """ returns a list of all possible m-plets of n objects (labelled 0 to n-1)
     default: m=2, giving all possible pairs
     for m=1, returns a range(0, n-1)
-    """
+    :param n: number of items
+    :type n: int
+    :param m: size of tuplet, defaults to 2
+    :type m: int, optional
+    :return: list of possible m-plets of n items
+    :rtype: list
+    """    # """
     if m==1:
         return np.arange(n)
     else:
         return np.array(list(itertools.combinations(range(n), m)))
 
 
-def read_from_file(filename, complex=False, shape=None, order='F'):
-    """Reads numbers from a file 
+def read_from_file(filename: str, complex=False, shape=None, order='F') -> np.ndarray:
+    """Read numbers from a text file
 
-    Args:
-        filename (str): name of file to load
-
-    Returns:
-        numpy.array 
-    """
+    :param filename: input file name
+    :type filename: str
+    :param complex: complex entries, defaults to False
+    :type complex: bool, optional
+    :param shape: shape of output array, defaults to None
+    :type shape: tuple, optional
+    :param order: 'F' for columns first, otherwise use 'C', defaults to 'F'
+    :type order: str, optional
+    :return: Numpy array
+    :rtype: numpy.ndarray
+    """    
     def tuple_to_complex(x):
         y = float(x[0]) + 1j * float(x[1])
         return y
@@ -123,8 +134,15 @@ def read_from_file(filename, complex=False, shape=None, order='F'):
     return sp
 
 
-def pauli(arg):
-    """returns pauli matrix numpy array"""
+def pauli(arg) -> np.ndarray:
+    """Pauli matrix x, y, z, or a list of all three
+
+    :param arg: 0 or 'x' for Pauli x, 1 or 'y' for Pauli y, 2 or 'z' for Pauli z, 'list' for a list of x, y ,z 
+    :type arg: int or str
+    :raises ValueError: option not found
+    :return: Pauli matrix or list
+    :rtype: np.ndarray
+    """    
     if arg in [0, 'x']:
         out = np.array([[0, 1], [1, 0]], dtype=complex)
     elif arg in [1, 'y']:
@@ -141,46 +159,40 @@ def pauli(arg):
 
 
 
-def repeated_kronecker_product(matrices: list):
+def repeated_kronecker_product(matrices: list) -> np.ndarray:
     """
     returns the tensor/kronecker product of a list of arrays
-    :param matrices:
-    :return:
+    :param matrices: list of matrix factors
+    :type matrices: list
+    :return: Kronecker product of input list
+    "rtype: np.ndarray
     """
     return np.array(reduce(np.kron, matrices), dtype=complex)
-
-
-def pmat(x, heatmap=False, lims=None, print_zeros=False):
-    """print and/or plot a complex matrix
-    heatmat: plot a heatmap
-    lims: if plotting, limits on colorbar
-    print_zeros: whether to print Re/Im parts if all zero"""
-    n, m = x.shape
-    re = np.real(x)
-    im = np.imag(x)
-    if (re != np.zeros_like(re)).any() and not print_zeros:
-        print('Real part:')
-        for i in range(n):
-            print([float(f'{re[i, j]:8.8}') for j in range(m)])
-    if (im != np.zeros_like(im)).any() and not print_zeros:
-        print('Imaginary part:')
-        for i in range(n):
-            print([float(f'{im[i, j]:8.8}') for j in range(m)])
-    if heatmap:
-        fig, (ax1, ax2) = plt.subplots(1, 2)
-        if lims is None:
-            ax1.imshow(re)
-            ax2.imshow(im)
-        else:
-            ax1.imshow(re, vmin=lims[0], vmax=lims[1])
-            ax2.imshow(im, vmin=lims[0], vmax=lims[1])
-        plt.show()
 
 
 # Hilbert BASIS CLASSES
 
 class HilbertState:
+    """A spin state in the "Hilbert" basis, a linear combination of tensor product states.
+    
+    States must be defined with a number of particles. 
+    If ``isospin`` is False, then the one-body basis is only spin up/down. If True, then it is (spin up/down x isospin up/down).
+    ``ketwise`` detemines if it is a bra or a ket.
+     
+    """    
     def __init__(self, n_particles: int, coefficients=None, ketwise=True, isospin=True):
+        """Instances a new ``HilbertState``
+
+        :param n_particles: number of particles
+        :type n_particles: int
+        :param coefficients: an optional array of coefficients, defaults to None
+        :type coefficients: numpy.ndarray, optional
+        :param ketwise: True for column vector, False for row vector, defaults to True
+        :type ketwise: bool, optional
+        :param isospin: True for spin-isospin state, False for spin only, defaults to True
+        :type isospin: bool, optional
+        :raises ValueError: inconsistency in chosen options
+        """        
         self.n_particles = n_particles
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
@@ -205,35 +217,77 @@ class HilbertState:
                 self.coefficients = coefficients.astype('complex')
 
     def copy(self):
+        """Copies the ``HilbertState``.
+
+        :return: a new instance of ``HilbertState`` with all the same properties.
+        :rtype: HilbertState
+        """        
         return HilbertState(n_particles=self.n_particles, coefficients=self.coefficients.copy(), ketwise=self.ketwise, isospin=self.isospin)
     
-    def __add__(self, other):
+    def __add__(self, other: 'HilbertState') -> 'HilbertState':
+        """Sums two states. Orientations must be the same.
+
+        :param other: Other ``HilbertState`` to be added.
+        :type other: HilbertState
+        :return: A new ``HilbertState`` with coefficients given by self + other
+        :rtype: HilbertState
+        """        
         if SAFE: 
             assert isinstance(other, HilbertState)
+            assert self.ketwise == other.ketwise
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other):
+    def __sub__(self, other: 'HilbertState') -> 'HilbertState':
+        """Subtracts one ``HilbertState`` from another. Orientations must be the same.
+
+        :param other: ``HilbertState`` to be subtracted.
+        :type other: HilbertState
+        :return: A new ``HilbertState`` with coefficients given by self - other
+        :rtype: HilbertState
+        """        
         if SAFE:
             assert isinstance(other, HilbertState)
+            assert self.ketwise == other.ketwise
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
-    def scale(self, other):
+    def scale(self, other: complex) -> 'HilbertState':
+        """Scalar multiple of a ``HilbertState``.
+
+        :param other: Scalar number to multiply by.
+        :type other: complex
+        :return: other * self
+        :rtype: HilbertState
+        """        
         if SAFE: assert np.isscalar(other)
         out = self.copy()
         out.coefficients *= other
         return out
 
-    def inner(self, other):
+    def inner(self, other: 'HilbertState') -> complex:
+        """Inner product of two HilbertState instances. Orientations must be correct.
+
+        :param other: The ket of the inner product.
+        :type other: HilbertState
+        :return: inner product of self (bra) with other (ket)
+        :rtype: complex
+        """        
         if SAFE:
             assert isinstance(other, HilbertState)
             assert not self.ketwise and other.ketwise
         return np.dot(self.coefficients, other.coefficients)
         
-    def outer(self, other):
+    def outer(self, other: 'HilbertState') -> 'HilbertOperator':
+        """Outer product of two HilbertState instances, producting a HilbertOperator instance. Orientations must be correct.
+
+        :param other: bra part of the outer product
+        :type other: HilbertState
+        :return: Outer product of self (ket) with other (bra)
+        :rtype: HilbertOperator
+        """        
         if SAFE:
             assert isinstance(other, HilbertState)
             assert self.ketwise and not other.ketwise
@@ -241,7 +295,14 @@ class HilbertState:
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex')
         return out 
     
-    def multiply_operator(self, other):
+    def multiply_operator(self, other: 'HilbertOperator') -> 'HilbertState':
+        """Multiplies a (bra) ``HilbertState`` on a ``HilbertOperator``.
+
+        :param other: The operator.
+        :type other: HilbertOperator
+        :return: < self| O(other) 
+        :rtype: HilbertState
+        """        
         if SAFE:
             assert isinstance(other, self.friendly_operator)
             assert not self.ketwise
@@ -249,8 +310,12 @@ class HilbertState:
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
         return out
     
-    def dagger(self):
-        """ copy-based conjugate transpose """
+    def dagger(self) -> 'HilbertState':
+        """Hermitian conjugate.
+
+        :return: The dual ``HilbertState``
+        :rtype: HilbertState
+        """        
         out = self.copy()
         out.coefficients = self.coefficients.conj().T
         out.ketwise = not self.ketwise
@@ -264,32 +329,58 @@ class HilbertState:
         out += [str(self.coefficients)]
         return "\n".join(out)
 
-    def randomize(self, seed=None):
-        """ randomize """
+    def randomize(self, seed:int=None) -> 'HilbertState':
+        """Randomize coefficients.
+
+        :param seed: RNG seed, defaults to None
+        :type seed: int, optional
+        :return: A copy of the ``HilbertState`` with random complex coefficients, normalized.
+        :rtype: HilbertState
+        """        
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
         out.coefficients = rng.standard_normal(size=out.coefficients.shape) + 1.j*rng.standard_normal(size=out.coefficients.shape)
         out.coefficients /= np.linalg.norm(out.coefficients)
         return out
     
-    def zero(self):
-        """ zero """
+    def zero(self) -> 'HilbertState':
+        """Set all coefficients to zero.
+
+        :return: A copy of ``HilbertState`` with all coefficients set to zero.
+        :rtype: HilbertState
+        """        
         out = self.copy()
         out.coefficients = np.zeros_like(self.coefficients)
         return out
     
-    def entropy(self):
-        """ Von Neumann entropy"""
+    def entropy(self) -> complex:
+        """Von Neumann entropy, a measure of entanglement.
+
+        :return: VN entropy of the ``HilbertState``
+        :rtype: complex
+        """
         return - np.sum(self.coefficients * np.log(self.coefficients))
      
-    def generate_basis_states(self):
-        """returns a list of basis states"""
+    def generate_basis_states(self) -> list:
+        """Makes a list of corresponding basis vectors.
+
+        :return: A list of tensor product states that span the Hilbert space.
+        :rtype: list
+        """        
         coeffs_list = list(np.eye(self.n_basis**self.n_particles))
         out = [HilbertState(self.n_particles, coefficients=c, ketwise=True, isospsin=self.isospin) for c in coeffs_list]
         return out
     
-    def nearby_product_state(self, seed=None, maxiter=100):
-        """returns a ProductState |prod> for which <self|prod> is large"""
+    def nearby_product_state(self, seed:int=None, maxiter=100):
+        """Finds a ``ProductState`` that has a large overlap with the ``HilbertState``.
+
+        :param seed: RNG seed, defaults to None
+        :type seed: int, optional
+        :param maxiter: maximum iterations to do in optimization, defaults to 100
+        :type maxiter: int, optional
+        :return: a tuple: (fitted ``ProductState``, optimization result)
+        :rtype: (ProductState, scipy.OptimizeResult)
+        """        
         from scipy.optimize import minimize, NonlinearConstraint
         fit = ProductState(self.n_particles, isospin=self.isospin).randomize(seed)
         shape = fit.coefficients.shape
@@ -311,8 +402,16 @@ class HilbertState:
         fit.coefficients = x_to_coef(result.x)
         return fit, result
     
-    def nearest_product_state(self, seeds: list, maxiter=100):
-        """does self.nearby_product_state for seed in seeds and returns the |prod> with maximal <self|prod>"""
+    def nearest_product_state(self, seeds: list[int], maxiter=100):
+        """ Does ``self.nearby_product_state`` for a list of seeds and returns the result maximizing overlap
+        
+        :param seed: RNG seed, defaults to None
+        :type seed: int, optional
+        :param maxiter: maximum iterations to do in optimization, defaults to 100
+        :type maxiter: int, optional
+        :return: fitted ``ProductState``
+        :rtype: ProductState
+        """
         overlap = 0.
         for seed in seeds:
             this_fit, _ = self.nearby_product_state(seed, maxiter=maxiter)
@@ -323,6 +422,8 @@ class HilbertState:
         return fit
     
     def __mul__(self, other):
+        """Defines the ``*`` multiplication operator to be used in place of ``.inner`` , ``.outer``, ``.multiply_operator``, and ``.scale``.
+        """        
         if np.isscalar(other): # |s> * scalar
             return self.copy().scale(other)
         elif isinstance(other, HilbertState):
@@ -338,14 +439,28 @@ class HilbertState:
         else:
             raise NotImplementedError("Unsupported multiply.")
 
-    def attach_coordinates(self, coordinates):
+    def attach_coordinates(self, coordinates: np.ndarray):
+        """Adds a new ``.coordinates`` attribute to the ``HilbertState``
+
+        :param coordinates: A Numpy array with shape ``(n_particles , 3)`` (e.g. x, y, z)
+        :type coordinates: np.ndarray
+        """        
         assert coordinates.shape == (self.n_particles, 3)
         self.coordinates = coordinates
 
     
 
 class HilbertOperator:
+    """An operator in the "Hilbert basis.
+    """
     def __init__(self, n_particles: int, isospin=True):
+        """Instantiates a ``HilbertOperator``.
+
+        :param n_particles: Number of particles
+        :type n_particles: int
+        :param isospin: True for spin-isospin states, False for spin only, defaults to True
+        :type isospin: bool, optional
+        """
         self.n_particles = n_particles
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
@@ -354,37 +469,76 @@ class HilbertOperator:
         self.coefficients = np.identity(self.dim, dtype=complex)
         self.friendly_state = HilbertState
 
-    def copy(self):
+    def copy(self) -> 'HilbertOperator':
+        """Copies the ``HilbertOperator``.
+
+        :return: a new instance of ``HilbertOperator`` with all the same properties as self.
+        :rtype: HilbertOperator
+        """  
         out = HilbertOperator(n_particles=self.n_particles, isospin=self.isospin)
         out.coefficients = self.coefficients.copy()
         return out
     
-    def __add__(self, other):
+    def __add__(self, other: 'HilbertOperator') -> 'HilbertOperator':
+        """Sums operator matrices.
+
+        :param other: Other ``HilbertOperator`` to be added.
+        :type other: HilbertOperator
+        :return: A new ``HilbertOperator`` with coefficients given by self + other
+        :rtype: HilbertOperator
+        """    
         if SAFE: assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
 
-    def __sub__(self, other):
+    def __sub__(self, other: 'HilbertOperator') -> 'HilbertOperator':
+        """Subtracts one ``HilbertOperator`` from another. 
+        
+        :param other: ``HilbertOperator`` to be subtracted.
+        :type other: HilbertOperator
+        :return: A new ``HilbertOperator`` with coefficients given by self - other
+        :rtype: HilbertOperator
+        """ 
         if SAFE: assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
 
-    def multiply_state(self, other):
+    def multiply_state(self, other: 'HilbertState') -> 'HilbertState':
+        """Apply the operator to a ``HilbertState`` ket.
+
+        :param other: The state, ketwise.
+        :type other: HilbertState
+        :return: The new state, ketwise.
+        :rtype: HilbertState
+        """               
         if SAFE: assert isinstance(other, self.friendly_state)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
         
-    def multiply_operator(self, other):
+    def multiply_operator(self, other: 'HilbertOperator') -> 'HilbertOperator':
+        """Multiply two ``HilbertOperator`` instances together to get a new one.
+
+        :param other: The other ``HilbertOperator``
+        :type other: HilbertOperator
+        :return: The product of the two.
+        :rtype: HilbertOperator
+        """
         if SAFE: assert isinstance(other, HilbertOperator)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
         
-    def scale(self, other):
-        """ c * operator """
+    def scale(self, other: complex) -> 'HilbertOperator':
+        """Scalar multiplication.
+
+        :param other: A scalar.
+        :type other: complex
+        :return: The resulting scaled operator.
+        :rtype: HilbertOperator
+        """
         if SAFE: assert np.isscalar(other)
         out = self.copy()
         out.coefficients *= other
@@ -397,7 +551,22 @@ class HilbertOperator:
         out += "Re=\n" + re + "\nIm:\n" + im
         return out
 
-    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix=None):
+    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix:np.ndarray=None):
+        r"""Applies a one-body / single-particle operator to the ``HilbertOperator``.
+        This accounts for the spin-isospin kronecker product, if isospin is used.
+
+        .. math::
+            O' = \sigma_{\alpha i} \tau_{\beta i} O
+
+        :param particle_index: Index of particle to apply onebody operator to, starting from 0.
+        :type particle_index: int
+        :param spin_matrix: The spin part of the operator, a 2x2 matrix
+        :type spin_matrix: np.ndarray
+        :param isospin_matrix: The isospin part of the operator, a 2x2 matrix, defaults to None
+        :type isospin_matrix: numpy.ndarray, optional
+        :return: A copy of the ``HilbertOperator`` with the one-body operator applied.
+        :rtype: HilbertOperator
+        """
         if SAFE:
             assert type(spin_matrix) == np.ndarray
             assert spin_matrix.shape == (2,2)
@@ -420,29 +589,63 @@ class HilbertOperator:
         out.coefficients = np.matmul(obo, out.coefficients, dtype=complex)
         return out
         
-    def apply_sigma(self, particle_index: int, dimension: int):
+    def apply_sigma(self, particle_index: int, dimension: int) -> 'HilbertOperator':
+        """ Applies a one-body sigma spin operator.
+
+        :param particle_index: Index of particle, staring from 0.
+        :type particle_index: int
+        :param dimension: Dimension of sigma operator: 0, 1, 2 = x, y, z
+        :type dimension: int
+        :return: The resulting ``HilbertOperator``.
+        :rtype: HilbertOperator
+        """        
         return self.apply_onebody_operator(particle_index=particle_index, spin_matrix=pauli(dimension), isospin_matrix=np.identity(2, dtype=complex) )
 
     def apply_tau(self, particle_index: int, dimension: int):
+        """ Applies a one-body tau isospin operator.
+
+        :param particle_index: Index of particle, staring from 0.
+        :type particle_index: int
+        :param dimension: Dimension of tau operator: 0, 1, 2 = x, y, z
+        :type dimension: int
+        :return: The resulting ``HilbertOperator``.
+        :rtype: HilbertOperator
+        """        
         return self.apply_onebody_operator(particle_index=particle_index, spin_matrix=np.identity(2, dtype=complex), isospin_matrix=pauli(dimension) )
                 
-    def exp(self):
+    def exp(self) -> 'HilbertOperator':
+        """Computes the exponential by Pade approximant.
+
+        :return: Exponentiated operator.
+        :rtype: HilbertOperator
+        """
         out = self.copy()
         out.coefficients = expm(out.coefficients)
         return out
 
-    def zero(self):
+    def zero(self) -> 'HilbertOperator':
+        """Multiplies by zero.
+
+        :return: A copy of the ``HilbertOperator`` with all zero coefficients.
+        :rtype: HilbertOperator
+        """
         out = self.copy()
         out.coefficients = np.zeros_like(out.coefficients)
         return out
         
-    def dagger(self):
-        """ copy-based conj transpose"""
+    def dagger(self) -> 'HilbertOperator':
+        """Hermitian conjugate.
+
+        :return: The Hermitian conjugate of the original ``HilbertOperator``.
+        :rtype: HilbertOperator
+        """
         out = self.copy()
         out.coefficients = self.coefficients.conj().T
         return out
 
     def __mul__(self, other):
+        """Defines the ``*`` multiplication operator to be used in place of  ``.multiply_state``, ``.multiply_operator``, and ``.scale``.
+        """ 
         if np.isscalar(other): # scalar * op
             return self.copy().scale(other)
         elif isinstance(other, HilbertState):
@@ -461,22 +664,30 @@ class HilbertOperator:
         
 
 class ProductState:
+    """A spin state in the "Product" basis, a single tensor product of one-body vectors.
+    
+    States must be defined with a number of particles. 
+    If ``isospin`` is False, then the one-body basis is only spin up/down. If True, then it is (spin up/down x isospin up/down).
+    ``ketwise`` detemines if it is a bra or a ket.
+     
+    Tensor product states do not form a proper vector space (e.g. the sum of two is not guaranteed to be a tensor product)
+    so methods with ``ProductState`` are restricted. Namely operations + and - do not exist.
+    
+    The coefficients of the ``ProductState`` are kept in the one-body form and can be projected to the Hilbert basis using the ``to_manybody_basis`` method.
+    """  
     def __init__(self, n_particles: int, coefficients=None, ketwise=True, isospin=True):
-        """an array of single particle spinors
+        """Instances a new ``ProductState``
 
-        Orientation must be consistent with array shape!
-        The shape of a bra is (A, n_basis, 1)
-        The shape of a ket is (A, 1, n_basis)
-        n_basis = 2 for spin, 4 for spin-isospin
-
-        Args:
-            n_particles (int): number of single particle states
-            coefficients (np.ndarray): array of complex numbers
-            ketwise (bool): True for ket, False for bra
-
-        Raises:
-            ValueError: _description_
-        """
+        :param n_particles: number of particles
+        :type n_particles: int
+        :param coefficients: an optional array of coefficients, defaults to None
+        :type coefficients: numpy.ndarray, optional
+        :param ketwise: True for column vector, False for row vector, defaults to True
+        :type ketwise: bool, optional
+        :param isospin: True for spin-isospin state, False for spin only, defaults to True
+        :type isospin: bool, optional
+        :raises ValueError: inconsistency in chosen options
+        """   
         self.n_particles = n_particles
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
@@ -500,18 +711,41 @@ class ProductState:
                 self.coefficients = coefficients.astype('complex')
 
     def copy(self):
+        """Copies the ``ProductState``.
+
+        :return: a new instance of ``ProductState`` with all the same properties.
+        :rtype: ProductState
+        """      
         return ProductState(n_particles=self.n_particles, coefficients=self.coefficients.copy(), ketwise=self.ketwise, isospin=self.isospin)
 
-    def to_list(self):
+    def to_list(self) -> list:
+        """
+        :return: A list of one-body vectors
+        :rtype: list[numpy.ndarray]
+        """
         return [self.coefficients[i] for i in range(self.n_particles)]
 
-    def inner(self, other):
+    def inner(self, other: 'ProductState') -> complex:
+        """Inner product of two ProductState instances. Orientations must be correct.
+
+        :param other: The ket of the inner product.
+        :type other: ProductState
+        :return: inner product of self (bra) with other (ket)
+        :rtype: complex
+        """    
         if SAFE:
             assert isinstance(other, ProductState)
             assert (not self.ketwise) and other.ketwise
         return np.prod([np.dot(self.coefficients[i], other.coefficients[i]) for i in range(self.n_particles)])
         
-    def outer(self, other):
+    def outer(self, other: 'ProductState') -> 'ProductState':
+        """Outer product of two ProductState instances, producting a ProductOperator instance. Orientations must be correct.
+
+        :param other: bra part of the outer product
+        :type other: ProductState
+        :return: Outer product of self (ket) with other (bra)
+        :rtype: ProductOperator
+        """    
         if SAFE:
             assert isinstance(other, ProductState)
             assert (self.ketwise) and (not other.ketwise)
@@ -520,8 +754,12 @@ class ProductState:
             out.coefficients[i] = np.matmul(self.coefficients[i], other.coefficients[i], dtype=complex)
         return out
 
-    def dagger(self):
-        """ copy_based conj transpose"""
+    def dagger(self) -> 'ProductState':
+        """Hermitian conjugate.
+
+        :return: The dual ``ProductState``
+        :rtype: ProductState
+        """  
         out = self.copy()
         out.coefficients = np.transpose(self.coefficients, axes=(0,2,1)).conj()
         out.ketwise = not self.ketwise
@@ -537,8 +775,12 @@ class ProductState:
             out += str(ci) + "\n"
         return out
 
-    def to_manybody_basis(self):
-        """project the NxA TP state into the full N^A MB basis"""
+    def to_manybody_basis(self) -> 'HilbertState':
+        """Projects to the many-body basis.
+        
+        :return: The Kronecker product of the ``ProductState``. 
+        :rtype: HilbertState
+        """
         new_coeffs = repeated_kronecker_product(self.to_list())
         if self.ketwise:
             new_coeffs = new_coeffs.reshape(self.n_basis ** self.n_particles, 1)
@@ -546,26 +788,54 @@ class ProductState:
             new_coeffs = new_coeffs.reshape(1, self.n_basis ** self.n_particles)
         return HilbertState(n_particles=self.n_particles, coefficients=new_coeffs, ketwise=self.ketwise, isospin=self.isospin)
 
-    def normalize(self):
+    def normalize(self) -> 'ProductState':
+        """Normalize so that the inner product of the state with itself is 1.
+
+        :return: The normalized state.
+        :rtype: ProductState
+        """
         out = self.copy()
         for i in range(out.n_particles):
             n = np.linalg.norm(out.coefficients[i])
             out.coefficients[i] /= n
         return out
 
-    def scale_one(self, particle_index: int, b):
+    def scale_one(self, particle_index: int, b: complex) -> 'ProductState':
+        """Multiplies a single particle vector by a number.
+
+        :param particle_index: Index of particle, starting from 0.
+        :type particle_index: int
+        :param b: Scalar
+        :type b: complex
+        :return: A copy of the ``ProductState`` with the one particle scaled.
+        :rtype: ProductState
+        """
         if SAFE: assert np.isscalar(b)
         out = self.copy()
         out.coefficients[particle_index] *= b
         return out
 
-    def scale_all(self, b):
+    def scale_all(self, b: complex) -> 'ProductState':
+        """Scales an A-body state by ``b`` by multiplying each one-body vector by the Ath root of ``b``.
+
+        :param b: scalar
+        :type b: complex
+        :return: The scaled state
+        :rtype: ProductState
+        """
         if SAFE: assert np.isscalar(b)
         out = self.copy()
         out.coefficients *= b ** (1 / out.n_particles)
         return out
 
-    def randomize(self, seed=None):
+    def randomize(self, seed:int=None) -> 'ProductState':
+        """Randomize coefficients.
+
+        :param seed: RNG seed, defaults to None
+        :type seed: int, optional
+        :return: A copy of the ``ProductState`` with random complex coefficients, normalized.
+        :rtype: ProductState
+        """        
         rng = np.random.default_rng(seed=seed)
         out = self.copy()
         out.coefficients = rng.standard_normal(size=out.coefficients.shape) + 1.j*rng.standard_normal(size=out.coefficients.shape)
@@ -573,17 +843,29 @@ class ProductState:
             out.coefficients[i] /= np.linalg.norm(out.coefficients[i])
         return out
 
-    def zero(self):
+    def zero(self) -> 'ProductState':
+        """Set all coefficients to zero.
+
+        :return: A copy of ``ProductState`` with all coefficients set to zero.
+        :rtype: ProductState
+        """        
         out = self.copy()
         out.coefficients = np.zeros_like(out.coefficients)
         return out
 
-    def generate_basis_states(self):
+    def generate_basis_states(self) -> list['ProductState']:
+        """Makes a list of corresponding basis vectors.
+
+        :return: A list of tensor product states that span the Hilbert space.
+        :rtype: list[ProductState]
+        """       
         coeffs_list = [np.concatenate(x).reshape(self.n_particles,self.n_basis,1) for x in itertools.product(list(np.eye(self.n_basis)), repeat=self.n_particles)]
         out = [ProductState(self.n_particles, coefficients=c, ketwise=True, isospsin=self.isospin) for c in coeffs_list]
         return out
 
     def __mul__(self, other):
+        """Defines the ``*`` multiplication operator to be used in place of ``.inner`` , ``.outer``, ``.multiply_operator``, and ``.scale``.
+        """    
         if np.isscalar(other): # scalar * |s>
             return self.copy().scale_all(other)
         elif isinstance(other, ProductState):
@@ -599,37 +881,76 @@ class ProductState:
         else:
             raise NotImplementedError("Unsupported multiply.")
         
-    def attach_coordinates(self, coordinates):
+    def attach_coordinates(self, coordinates: np.ndarray):
+        """Adds a new ``.coordinates`` attribute to the ``ProductState``
+
+        :param coordinates: A Numpy array with shape ``(n_particles , 3)`` (e.g. x, y, z)
+        :type coordinates: np.ndarray
+        """   
         assert coordinates.shape == (self.n_particles, 3)
         self.coordinates = coordinates
 
 
 
 class ProductOperator:
+    """An operator that is a tensor product of one-body operators.
+    
+    As with ``ProductState`` instances, ``ProductOperator`` instances cannot be added or subtracted.
+    """
     def __init__(self, n_particles: int, isospin=True):
+        """Instantiates a ``ProductOperator``.
+
+        :param n_particles: Number of particles
+        :type n_particles: int
+        :param isospin: True for spin-isospin states, False for spin only, defaults to True
+        :type isospin: bool, optional
+        """
         self.n_particles = n_particles
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
         self.coefficients = np.stack(self.n_particles*[np.identity(self.n_basis)], dtype=complex)
         self.friendly_state = ProductState
 
-    def copy(self):
+    def copy(self) -> 'ProductOperator':
+        """Copies the ``ProductOperator``.
+
+        :return: a new instance of ``ProductOperator`` with all the same properties as self.
+        :rtype: ProductOperator
+        """ 
         out = ProductOperator(n_particles=self.n_particles, isospin=self.isospin)
         for i in range(self.n_particles):
             out.coefficients[i] = self.coefficients[i]
         return out
 
-    def to_list(self):
+    def to_list(self) -> list[np.ndarray]:
+        """
+        :return: A list of one-body operator matrices
+        :rtype: list[numpy.ndarray]
+        """
         return [self.coefficients[i] for i in range(self.n_particles)]
         
-    def multiply_state(self, other):
+    def multiply_state(self, other: ProductState) -> ProductState:
+        """Apply the operator to a ``ProductState`` ket.
+
+        :param other: The state, ketwise.
+        :type other: ProductState
+        :return: The new state, ketwise.
+        :rtype: ProductState
+        """                    
         if SAFE: assert isinstance(other, self.friendly_state)
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
         return out
         
-    def multiply_operator(self, other):
+    def multiply_operator(self, other: 'ProductOperator') -> 'ProductOperator':
+        """Multiply two ``ProductOperator`` instances together to get a new one.
+
+        :param other: The other ``ProductOperator``
+        :type other: ProductOperator
+        :return: The product of the two.
+        :rtype: ProductOperator
+        """
         if SAFE: assert isinstance(other, type(self))
         out = other.copy()
         for i in range(self.n_particles):
@@ -644,7 +965,22 @@ class ProductOperator:
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
-    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix=None):
+    def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix:np.ndarray=None) -> 'ProductOperator':
+        r"""Applies a one-body / single-particle operator to the ``ProductOperator``.
+        This accounts for the spin-isospin kronecker product, if isospin is used.
+
+        .. math::
+            O' = \sigma_{\alpha i} \tau_{\beta i} O
+
+        :param particle_index: Index of particle to apply onebody operator to, starting from 0.
+        :type particle_index: int
+        :param spin_matrix: The spin part of the operator, a 2x2 matrix
+        :type spin_matrix: np.ndarray
+        :param isospin_matrix: The isospin part of the operator, a 2x2 matrix, defaults to None
+        :type isospin_matrix: numpy.ndarray, optional
+        :return: A copy of the ``ProductOperator`` with the one-body operator applied.
+        :rtype: ProductOperator
+        """
         if self.isospin:
             if isospin_matrix is None:
                 isospin_matrix = np.identity(2, dtype=complex)
@@ -655,47 +991,96 @@ class ProductOperator:
         out.coefficients[particle_index] = np.matmul(onebody_matrix, out.coefficients[particle_index], dtype=complex)
         return out
 
-    def apply_sigma(self, particle_index, dimension):
+    def apply_sigma(self, particle_index: int, dimension: int) -> 'ProductOperator':
+        """ Applies a one-body sigma spin operator.
+
+        :param particle_index: Index of particle, staring from 0.
+        :type particle_index: int
+        :param dimension: Dimension of sigma operator: 0, 1, 2 = x, y, z
+        :type dimension: int
+        :return: The resulting ``ProductOperator``.
+        :rtype: ProductOperator
+        """
         return self.apply_onebody_operator(particle_index=particle_index,
                                           isospin_matrix=np.identity(2, dtype=complex),
                                           spin_matrix=pauli(dimension))
 
-    def apply_tau(self, particle_index, dimension):
+    def apply_tau(self, particle_index: int, dimension: int) -> 'ProductOperator':
+        """ Applies a one-body tau isospin operator.
+
+        :param particle_index: Index of particle, staring from 0.
+        :type particle_index: int
+        :param dimension: Dimension of tau operator: 0, 1, 2 = x, y, z
+        :type dimension: int
+        :return: The resulting ``ProductOperator``.
+        :rtype: ProductOperator
+        """        
         return self.apply_onebody_operator(particle_index=particle_index,
                                           isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
 
-    def scale_one(self, particle_index: int, b):
+    def scale_one(self, particle_index: int, b: complex) -> 'ProductOperator':
+        """Multiplies a single particle operator matrix by a number.
+
+        :param particle_index: Index of particle, starting from 0.
+        :type particle_index: int
+        :param b: Scalar
+        :type b: complex
+        :return: A copy of the ``ProductOperator`` with the one-body matrix scaled.
+        :rtype: ProductOperator
+        """
         if SAFE: assert np.isscalar(b)
         out = self.copy()
         out.coefficients[particle_index] *= b
         return out
         
-    def scale_all(self, b):
+    def scale_all(self, b) -> 'ProductOperator':
+        """Scales an A-body operator by ``b`` by multiplying each one-body matrix by the Ath root of ``b``.
+
+        :param b: scalar
+        :type b: complex
+        :return: The scaled state
+        :rtype: ProductOperator
+        """
         if SAFE: assert np.isscalar(b)
         out = self.copy()
         out.coefficients *= b ** (1 / out.n_particles)
         return out
 
-    def zero(self):
+    def zero(self) -> 'ProductOperator':
+        """Set all coefficients to zero.
+
+        :return: A copy of ``ProductOperator`` with all coefficients set to zero.
+        :rtype: ProductOperator
+        """  
         out = self.copy()
         out.coefficients = np.zeros_like(out.coefficients)
         return out
 
     def dagger(self):
-        """ conj transpose"""
+        """Hermitian conjugate.
+
+        :return: The dual ``ProductOperator``
+        :rtype: ProductOperator
+        """  
         out = self.copy()
         out.coefficients = np.transpose(self.coefficients, axes=(0,2,1)).conj()
         return out        
         
     def to_manybody_basis(self):
-        """project the product operator into the full many-body configuration basis"""
+        """Projects to the many-body basis.
+        
+        :return: The Kronecker product of the ``ProductOperator``. 
+        :rtype: HilbertOperator
+        """
         new_coeffs = repeated_kronecker_product(self.to_list())
         out = HilbertOperator(n_particles=self.n_particles,isospin=self.isospin)
         out.coefficients = new_coeffs
         return out
     
     def __mul__(self, other):
+        """Defines the ``*`` multiplication operator to be used in place of  ``.multiply_state``, ``.multiply_operator``, and ``.scale``.
+        """ 
         if np.isscalar(other): # scalar * op
             return self.copy().scale_all(other)
         elif isinstance(other, ProductState):
@@ -1415,7 +1800,7 @@ class ProductPropagatorRBM(Propagator):
         return n, c, w, a1, a2
 
     def onebody(self, z: complex, i: int, onebody_matrix: np.ndarray):
-        """exp (- z opi) * |ket> """
+        """exp (- z opi) """
         out = ProductOperator(self.n_particles)
         out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
