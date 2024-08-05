@@ -140,13 +140,13 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
-        b_array = []
-        for h in h_list:
+        b_array = np.zeros(n_samples*2, dtype=complex)
+        for _i,h in tqdm(enumerate(h_list)):
             ket_temp = prop.threebody_sample(0.5 * dt * a3, h, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
+            b_array[_i*2:i*2+1] = bra * ket_temp
             h_flip = 1-h
             ket_temp = prop.threebody_sample(0.5 * dt * a3, h_flip, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
+            b_array[_i*2+1:i*2+2] = bra * ket_temp
         b_rbm = np.mean(b_array)
     return b_exact, b_rbm
 
@@ -226,14 +226,14 @@ def compare():
     a3 = 1.0
     seed = 1
 
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=4)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=5)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)
     print("error = ", abs((b_exact - b_rbm)/b_exact) )
     
     print("--------------")
-    b_rbm = afdmc_3b_1d(n_particles, dt, a3, mode=4)
+    b_rbm = afdmc_3b_1d(n_particles, dt, a3, mode=5)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)
