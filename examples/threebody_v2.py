@@ -55,9 +55,9 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
     ket = ket.to_manybody_basis()
     bra = bra.to_manybody_basis()
 
-    op_i = sig[i][a] 
-    op_j = sig[j][b]
-    op_k = sig[k][c]
+    op_i = sig[i][a] * tau[i][a]
+    op_j = sig[j][b] * tau[j][b]
+    op_k = sig[k][c] * tau[k][c]
 
     # exact
     ket_prop = ket.copy()
@@ -158,9 +158,9 @@ def afdmc_3b_1d(n_particles, dt, a3, mode=1):
     ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
     bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
     
-    op_i = sig[a] 
-    op_j = sig[b]
-    op_k = sig[c]
+    op_i = sig[a] @ tau[a]
+    op_j = sig[b] @ tau[b]
+    op_k = sig[c] @ tau[c]
 
     
     if mode==3:
@@ -208,8 +208,21 @@ def afdmc_3b_1d(n_particles, dt, a3, mode=1):
             ket_temp = prop.threebody_sample(0.5 * dt * a3, h_flip, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
             b_array.append(bra * ket_temp)
         b_rbm = np.mean(b_array)
-    return b_rbm
 
+    elif mode==6: # sample using propagator class and propagator factors method 
+        n_samples = 10000
+        prop = ProductPropagatorRBM(n_particles, dt, isospin)
+        rng = np.random.default_rng(seed=0)
+        h_list = rng.integers(0,2,size=(n_samples, 4))
+        b_array = []
+        for h in h_list:
+            ket_temp = prop.threebody_sample(0.5 * dt * a3, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
+            b_array.append(bra * ket_temp)
+            h_flip = 1-h
+            ket_temp = prop.threebody_sample(0.5 * dt * a3, h_flip, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
+            b_array.append(bra * ket_temp)
+        b_rbm = np.mean(b_array)
+    return b_rbm
 
 
 def three_body_comms():

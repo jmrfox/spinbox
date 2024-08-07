@@ -171,7 +171,7 @@ def gfmc_3bprop(n_particles, dt, seed):
     bra = ket.copy().dagger()
     
     asig3b = ThreeBodyCoupling(n_particles).generate(scale=100, seed=next(seeder))
-    g_exact = ExactGFMC(n_particles)
+    g_exact = ExactPropagator(n_particles)
     idx_3b = interaction_indices(n_particles, 3)
     
     ket_prop = ket.copy()

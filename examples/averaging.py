@@ -258,9 +258,9 @@ def main_1d():
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,
-    "method": "rbm",
+    "method": "hs",
     "balance": True,
-    "plot":True
+    "plot":False
     }
 
     out = average_1d(**args)
@@ -335,8 +335,8 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    # main_1d()
-    main()
+    main_1d()
+    # main()
     # experiment()
     
     # plot_from_pickle(".\\examples\\outputs\\averaging_1718939734.pkl", ".\\examples\\outputs\\test.pdf", "test")

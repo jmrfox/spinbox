@@ -22,7 +22,7 @@ def hilbert_bracket(controls):
 
     integ = Integrator(pot, prop)
     integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed)) # use the integrator class to produce one sample of the aux field
-    print(integ.aux_fields_samples)
+
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
 
@@ -36,7 +36,7 @@ def product_bracket(controls):
 
     integ = Integrator(pot, prop)
     integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed))
-    print(integ.aux_fields_samples)
+
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
 

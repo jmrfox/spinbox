@@ -1918,131 +1918,141 @@ class ProductPropagatorRBM(Propagator):
     
 
 
-class ExactGFMC:
-    """the "exact" propagator calculation must be done in the complete many-body basis
-    we use Pade approximants for matrix exponentials
-    the LS term can be represented using a linear approximation or the factorization procedure described in Stefano's thesis
-    """
+class ExactPropagator:   
+    r"""The "exact" propagator.
+
+    .. math::
+        \exp \left( - \sum_n  g_n \hat{v}_n  \right)
+
+    where :math:`g_n` is the entire scalar factor (e.g. :math:`\frac{\delta\tau}{2} A^{\sigma}_{i \alpha j \beta}`, note the phase convention)
+    and :math:`\hat{v}_n`
+    is the 2- or 3-body interaction operator.    
+
+    Note, this calculation must be done in the complete many-body basis; it cannot be restricted to product states.
+    
+    We use a Pade approximant for the matrix exponential. 
+    The LS term can be represented using a linear approximation or the factorization procedure described in Stefano's thesis.
+    
+    :return: The exact propagator.
+    :rtype: HilbertOperator
+    """ 
     def __init__(self, n_particles, isospin=True):
         self.n_particles = n_particles
         self.isospin = isospin
-        self.ident = HilbertOperator(n_particles, self.isospin)
-        self.sig = [[HilbertOperator(n_particles, self.isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-        self.tau = [[HilbertOperator(n_particles, self.isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-        
-        self.linear_spinorbit = False # secret parameter to use the linear approximation of LS instead of the factorization
+        self._ident = HilbertOperator(n_particles, self.isospin)
+        self._sig = [[HilbertOperator(n_particles, self.isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        self._tau = [[HilbertOperator(n_particles, self.isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
+        self._dt_factor = 0.5
+        self._linear_spinorbit = False # secret parameter to use the linear approximation of LS instead of the factorization
 
-    def propagator_sigma(self, dt: float, asig: SigmaCoupling, i: int, j: int):
+    def force_sigma(self, coupling: SigmaCoupling, i: int, j: int) -> HilbertOperator:
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
-                out += self.sig[i][a].multiply_operator(self.sig[j][b]).scale(asig[a, i, b, j])
-        out = out.scale(-0.5 * dt)
-        return out.exp()
+                out += self._sig[i][a].multiply_operator(self._sig[j][b]).scale(coupling[a, i, b, j])
+        return out
 
-
-    def propagator_sigmatau(self, dt: float, asigtau: SigmaTauCoupling, i: int, j: int):
+    def force_sigmatau(self, coupling: SigmaTauCoupling, i: int, j: int) -> HilbertOperator:
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for a in range(3):
             for b in range(3):
                 for c in range(3):
                     op = HilbertOperator(self.n_particles, self.isospin)
-                    op = op.multiply_operator(self.sig[i][a]).multiply_operator(self.tau[i][c])
-                    op = op.multiply_operator(self.sig[j][b]).multiply_operator(self.tau[j][c])
-                    out += op.scale(asigtau[a, i, b, j])
-        out = out.scale(-0.5 * dt)
-        return out.exp()
+                    op = op.multiply_operator(self._sig[i][a]).multiply_operator(self._tau[i][c])
+                    op = op.multiply_operator(self._sig[j][b]).multiply_operator(self._tau[j][c])
+                    out += op.scale(coupling[a, i, b, j])
+        return out
 
-
-    def propagator_tau(self, dt, atau, i, j):
+    def force_tau(self, coupling:TauCoupling, i:int, j:int) -> HilbertOperator:
         out = HilbertOperator(self.n_particles, self.isospin).zero()
         for c in range(3):
-            out += self.tau[i][c].multiply_operator(self.tau[j][c]).scale(atau[i, j])
-        out = out.scale(-0.5 * dt)
-        return out.exp()
+            out += self._tau[i][c].multiply_operator(self._tau[j][c]).scale(coupling[i, j])
+        return out
+    
+    def force_coulomb(self, coupling: CoulombCoupling, i:int, j:int) -> HilbertOperator:
+        out = self._ident + self._tau[i][2] + self._tau[j][2] + self._tau[i][2].multiply_operator(self._tau[j][2])
+        out = out.scale(coupling[i, j])
+        return out
 
-
-    def propagator_coulomb(self, dt, v, i, j):
-        out = self.ident + self.tau[i][2] + self.tau[j][2] + self.tau[i][2].multiply_operator(self.tau[j][2])
-        out = out.scale(-0.125 * v[i, j] * dt)
-        return out.exp()
-
-
-    def propagator_coulomb_onebody(self, dt, v, i):
+    def force_coulomb_onebody(self, coupling: complex, i: int) -> HilbertOperator:
         """just the one-body part of the expanded coulomb propagator
         for use along with auxiliary field propagators"""
-        out =  self.tau[i][2].scale(- 0.125 * v * dt)
-        return out.exp()
+        out =  self._tau[i][2].scale(coupling)
+        return out
 
-
-    def propagator_spinorbit_linear(self, gls, i):
+    def propagator_spinorbit_linear(self, coupling:SpinOrbitCoupling, i: int) -> HilbertOperator:
         # linear approx to LS
         out = HilbertOperator(self.n_particles)
         for a in range(3):
-            out = (self.ident - self.sig[i][a].scale(1.j * gls[a, i])).multiply_operator(out) 
+            out = (self._ident - self._sig[i][a].scale(1.j * coupling[a, i])).multiply_operator(out) 
         return out
     
-
-    def propagator_spinorbit_onebody(self, gls, i, a):
-        # one-body part of the LS propagator factorization
-        out = self.sig[i][a].scale(- 1.j * gls[a,i])
+    def propagator_spinorbit_onebody(self, g: SpinOrbitCoupling, i:int) -> HilbertOperator:
+        # one-body part of the LS factorization
+        out = HilbertOperator(self.n_particles).zero()
+        for a in range(3):
+            out += self._sig[i][a].scale(- 1.j * g[a,i])
+        return out.exp()
+    
+    def propagator_spinorbit_twobody(self, g: SpinOrbitCoupling, i:int, j:int) -> HilbertOperator:
+        # two-body part of the LS factorization
+        out = HilbertOperator(self.n_particles).zero()
+        for a in range(3):
+            for b in range(3):
+                out += self._sig[i][a].multiply_operator(self._sig[j][b]).scale(0.5 * g[a,i] * g[b,j])
         return out.exp()
 
-
-    def propagator_spinorbit_twobody(self, gls, i, j, a, b):
-        # two-body part of the LS propagator factorization
-        out = self.sig[i][a].multiply_operator(self.sig[j][b]).scale(0.5 * gls[a,i] * gls[b,j])
-        return out.exp()
-
-
-    def propagator_sigma_3b(self, dt, asig3b, i, j, k):
+    def force_sigma_3b(self, g:ThreeBodyCoupling, i:int, j:int, k:int) -> HilbertOperator:
         # 3-body sigma
         out = HilbertOperator(self.n_particles).zero()
         for a in range(3):
             for b in range(3):
                 for c in range(3):
-                    out += self.sig[i][a].multiply_operator(self.sig[j][b]).multiply_operator(self.sig[k][c]).scale(asig3b[a, i, b, j, c, k])
-        out = out.scale(-0.5 * dt)
-        return out.exp()
+                    out += self._sig[i][a].multiply_operator(self._sig[j][b]).multiply_operator(self._sig[k][c]).scale(-g[a, i, b, j, c, k])
+        return out
 
-
-    def propagator(self, dt, potential,
-                     sigma=False,
-                     sigmatau=False,
-                     tau=False,
-                     coulomb=False,
-                     spinorbit=False,
-                     sigma_3b=False):
-        # compute exact bracket
-        g_exact = self.ident.copy()
+    def propagator_combined(self, 
+                            dt, 
+                            potential,
+                            sigma=False,
+                            sigmatau=False,
+                            tau=False,
+                            coulomb=False,
+                            spinorbit=False,
+                            sigma_3b=False):
         pairs_ij = interaction_indices(self.n_particles)
         triples_ijk = interaction_indices(self.n_particles, 3)
-        for i,j in pairs_ij:
-            if sigma:
-                g_exact = self.propagator_sigma(dt, potential.sigma, i, j).multiply_operator(g_exact)
-            if sigmatau:
-                g_exact = self.propagator_sigmatau(dt, potential.sigmatau, i, j).multiply_operator(g_exact)
-            if tau:
-                g_exact = self.propagator_tau(dt, potential.tau, i, j).multiply_operator(g_exact)
-            if coulomb:
-                g_exact = self.propagator_coulomb(dt, potential.coulomb, i, j).multiply_operator(g_exact)
-        if spinorbit:
-            if self.linear_spinorbit:
-                for i in range(self.n_particles):
-                    g_exact = self.propagator_spinorbit_linear(potential.spinorbit, i) * g_exact
-            else:
-                for i in range(self.n_particles):
-                    for a in range(3):
-                        g_exact = self.propagator_spinorbit_onebody(potential.spinorbit, i, a).multiply_operator(g_exact)
-                for i in range(self.n_particles):
-                    for j in range(self.n_particles):
-                        for a in range(3):
-                            for b in range(3):
-                                g_exact = self.propagator_spinorbit_twobody(potential.spinorbit, i, j, a, b).multiply_operator(g_exact)
+
+        force = HilbertOperator(self.n_particles).zero()
+        if sigma:
+            for i,j in pairs_ij:
+                force += self.force_sigma(potential.sigma, i, j)
+        if sigmatau:
+            for i,j in pairs_ij:
+                force += self.force_sigmatau(potential.sigmatau, i, j)
+        if tau:
+            for i,j in pairs_ij:
+                force += self.force_tau(potential.tau, i, j)
+        if coulomb:
+            for i,j in pairs_ij:
+                force += self.force_coulomb(potential.coulomb, i, j)
         if sigma_3b:
             for i,j,k in triples_ijk:
-                g_exact = self.propagator_sigma_3b(dt, potential.sigma_3b, i, j, k).multiply_operator(g_exact)
-        return g_exact
+                force += self.force_sigma_3b(potential.sigma_3b, i, j, k)
+        
+        prop = force.scale(- dt * self._dt_factor).exp()
+
+        if spinorbit:
+            if self._linear_spinorbit:
+                for i in range(self.n_particles):
+                    prop = self.propagator_spinorbit_linear(potential.spinorbit, i).multiply_operator(prop)
+            else:
+                for i in range(self.n_particles):
+                    prop = self.propagator_spinorbit_onebody(potential.spinorbit, i).multiply_operator(prop)
+                    for j in range(self.n_particles):
+                        prop = self.propagator_spinorbit_twobody(potential.spinorbit, i, j).multiply_operator(prop)
+        
+        return prop
     
 
 
@@ -2148,8 +2158,8 @@ class Integrator:
         return b_array
             
     def exact(self, bra, ket):
-        ex = ExactGFMC(self.n_particles, isospin=self.isospin)
-        g_exact = ex.propagator(self.propagator.dt, 
+        ex = ExactPropagator(self.n_particles, isospin=self.isospin)
+        g_exact = ex.propagator_combined(self.propagator.dt, 
                                   self.potential,
                                   self.sigma,
                                   self.sigmatau,
