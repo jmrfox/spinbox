@@ -865,6 +865,7 @@ class ProductState:
 
     def __mul__(self, other):
         """Defines the ``*`` multiplication operator to be used in place of ``.inner`` , ``.outer``, ``.multiply_operator``, and ``.scale``.
+        
         """    
         if np.isscalar(other): # scalar * |s>
             return self.copy().scale_all(other)
@@ -1098,7 +1099,29 @@ class ProductOperator:
 # COUPLINGS / POTENTIALS
 
 class Coupling:
-    def __init__(self, n_particles, shape, file=None):
+    r"""Base class for coupling arrays.
+    
+    Set and get are defined like numpy.ndarray objects.
+    
+    The simplest example would be something like :math:`g_{\alpha i}` for :math:`\alpha=x,y,z` and :math:`i=0 \dots A-1`.
+    
+    .. code-block:: python
+    
+        A = 2
+        g = Coupling(n_particles=A, shape=(3,A))    #initialize to zeros
+        g[0,0] = 1.0  # set an entry by hand 
+    
+    """    
+    def __init__(self, n_particles: int, shape: tuple[int], file=None):
+        r"""Base class for coupling arrays.
+
+        :param n_particles: number of particles
+        :type n_particles: int
+        :param shape: the dimensions of the array, e.g. :math:`A^\sigma_{\alpha i \beta j}` has shape (3,A,3,A)
+        :type shape: tuple[int]
+        :param file: name of text file to read array from, defaults to None
+        :type file: str, optional
+        """        
         self.n_particles = n_particles
         self.shape = shape
         self.coefficients = np.zeros(shape=self.shape)
@@ -1112,6 +1135,13 @@ class Coupling:
         return out
 
     def __mul__(self, other):
+        """Scalar multiplication.
+
+        :param other: _description_
+        :type other: _type_
+        :return: _description_
+        :rtype: _type_
+        """        
         if SAFE: assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
@@ -1136,12 +1166,15 @@ class Coupling:
         
         
         
-# I wrote my own classes for the sigma, sigmatau, tau, coulomb, LS coupling arrays, but its is not necessary to use these.
-# These exist A) for convenience, and B) to easily generate random couplings with good symmetries.
-# In general one should instantiate a Coupling, set the shape, then either set the coefficients attribute or use the read() method. 
+# I wrote classes for the sigma, sigma-tau, tau, coulomb, spin-orbit coupling arrays, but these are not strictly required for the other parts of spinbox.
+# These exist for convenience, and mainly so we can easily generate random couplings with good symmetries (e.g. i=j entries are zero).
+# Also, the NuclearPotential class provides a container for "Argonne-like" nuclear interactions, containing an instance of each of these as attributes.  
+# In general though, one can instantiate a Coupling, set the shape, then either set the coefficients using an array or use the read() method to read from file. 
+# That should be sufficient to use the Propagator and Integrator classes.
 
 class SigmaCoupling(Coupling):
-    """container class for couplings A^sigma (a,i,b,j)
+    r"""The coupling matrix :math:`A^\sigma_{\alpha i \beta j}`
+    
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
     """
