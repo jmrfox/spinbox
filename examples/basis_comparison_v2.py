@@ -51,13 +51,13 @@ def product_bracket(method, controls):
 
 
 if __name__ == "__main__":
-    method = 'hs'
+    method = 'rbm'
     
     controls = {"sigma": True,
-                "sigmatau": False,
-                "tau": False,
-                "coulomb": False,
-                "spinorbit": False,
+                "sigmatau": True,
+                "tau": True,
+                "coulomb": True,
+                "spinorbit": True,
                 }
     b_hilbert = hilbert_bracket(method, controls)
     print('hilbert = ', b_hilbert)
