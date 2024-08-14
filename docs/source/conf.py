@@ -20,13 +20,13 @@ release = '0.1'
 
 extensions = ['sphinx.ext.autodoc', 
               'sphinx.ext.linkcode',
-              'sphinx.ext.imgmath',
+              'sphinx.ext.mathjax',
               ]
 
 templates_path = ['_templates']
 exclude_patterns = []
-
-
+imgmath_font_size = 14
+mathjax_font_size = 14
 
 # -- Options for HTML output -------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output

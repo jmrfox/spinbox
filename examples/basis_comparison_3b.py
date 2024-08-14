@@ -1,7 +1,7 @@
 from spinbox import *
 
 n_particles = 3
-dt = 0.001
+dt = 0.001j
 
 seed = itertools.count(0,1)
 pot = NuclearPotential(n_particles)
@@ -36,7 +36,7 @@ def product_bracket(controls):
 
     integ = Integrator(pot, prop)
     integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed))
-
+    
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
 

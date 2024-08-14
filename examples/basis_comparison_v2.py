@@ -51,10 +51,10 @@ def product_bracket(method, controls):
 
 
 if __name__ == "__main__":
-    method = 'rbm'
+    method = 'hs'
     
-    controls = {"sigma": True,
-                "sigmatau": True,
+    controls = {"sigma": False,
+                "sigmatau": False,
                 "tau": False,
                 "coulomb": False,
                 "spinorbit": False,

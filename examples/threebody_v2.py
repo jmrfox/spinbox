@@ -10,6 +10,8 @@ isospin = True
 i,j,k = 0,1,2
 a,b,c = 0,0,0
 
+seed = 1
+
 def a3b_factors(a3):
     if a3>0:
         x = csqrt(cexp(8*a3) - 1)
@@ -209,19 +211,6 @@ def afdmc_3b_1d(n_particles, dt, a3, mode=1):
             b_array.append(bra * ket_temp)
         b_rbm = np.mean(b_array)
 
-    elif mode==6: # sample using propagator class and propagator factors method 
-        n_samples = 10000
-        prop = ProductPropagatorRBM(n_particles, dt, isospin)
-        rng = np.random.default_rng(seed=0)
-        h_list = rng.integers(0,2,size=(n_samples, 4))
-        b_array = []
-        for h in h_list:
-            ket_temp = prop.threebody_sample(0.5 * dt * a3, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
-            h_flip = 1-h
-            ket_temp = prop.threebody_sample(0.5 * dt * a3, h_flip, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
-        b_rbm = np.mean(b_array)
     return b_rbm
 
 
@@ -237,7 +226,6 @@ def compare():
     n_particles = 3
     dt = 0.001
     a3 = 1.0
-    seed = 1
 
     b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, a3, mode=5)
     print("rbm = ", b_rbm)
