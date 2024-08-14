@@ -53,7 +53,7 @@ def product_bracket(method, controls):
 if __name__ == "__main__":
     method = 'hs'
     
-    controls = {"sigma": False,
+    controls = {"sigma": True,
                 "sigmatau": False,
                 "tau": False,
                 "coulomb": False,

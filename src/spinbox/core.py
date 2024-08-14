@@ -1392,7 +1392,7 @@ class Propagator:
     def __init__(self, n_particles, dt: float, isospin=True, include_prefactors=True):
         self.n_particles = n_particles
         self.dt = dt
-        self.deltatau = dt * 1.0j
+        self.deltatau = dt * 1j
         self.symmetry_factor = 0.5
         self.include_prefactors = include_prefactors
         self.isospin = isospin
@@ -1403,13 +1403,13 @@ class Propagator:
         self._n2 = len(self._2b_idx)
         self._n3 = len(self._3b_idx)
         
-        if not np.imag(self.dt)==0.0:
-            raise ValueError('Looks like you entered a complex value for dt, which should be real: delta tau = i * dt ')
+        # if not np.imag(self.dt)==0.0:
+        #     raise ValueError('Looks like you entered a complex value for dt, which should be real: delta tau = i * dt ')
 
 
 
 class HilbertPropagatorHS(Propagator):
-    r""" The two-body propagator applied by Hubbard-Stratonovich
+    r""" The two-body propagator applied by Hubbard-Stratonovich transform in the full Hilbert basis
     
     .. math::
             e^{-z \hat{o}_i \hat{o}_j} = e^z\int dx \left[ \frac{1}{\sqrt{2\pi}}e^{-x^2/2} \right] e^{x \sqrt{-z} (\hat{o}_i + \hat{o}_j)}
@@ -1425,7 +1425,7 @@ class HilbertPropagatorHS(Propagator):
         :type dt: float
         :param isospin: if True include isospin, defaults to True
         :type isospin: bool, optional
-        :param include_prefactors: wether to include the constant scaling part of the propagator (e.g. if done in another part of the calculation), defaults to True
+        :param include_prefactors: whether to include the constant scaling part of the propagator (e.g. if done in another part of the calculation), defaults to True
         :type include_prefactors: bool, optional
         """        
         super().__init__(n_particles, dt, isospin, include_prefactors)
@@ -1434,12 +1434,12 @@ class HilbertPropagatorHS(Propagator):
         self._tau_op = [[HilbertOperator(self.n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2, 3]] for i in range(self.n_particles)]
         self.n_aux_sigma = 9 * self._n2
         self.n_aux_sigmatau = 27 * self._n2
-        self.n_aux_tau = self._n2
+        self.n_aux_tau = 3 * self._n2
         self.n_aux_coulomb = self._n2
         self.n_aux_spinorbit = 9 * self._n2
         
     def onebody(self, coupling: float, operator: HilbertOperator) -> HilbertOperator:
-        r"""A one-body propagator 
+        r"""One-body propagator 
         
         .. math::
             \exp \left[ - z \hat{o} \right]
@@ -1453,7 +1453,8 @@ class HilbertPropagatorHS(Propagator):
         :return: The one-body propagator
         :rtype: HilbertOperator
         """
-        return operator.scale(- self.deltatau * self.symmetry_factor * coupling).exp()        
+        z = self.deltatau * self.symmetry_factor * coupling
+        return operator.scale(-z).exp()        
 
     def twobody_sample(self, coupling:float, x: float, operator_i: HilbertOperator, operator_j: HilbertOperator) -> HilbertOperator:
         r"""A sample of the two-body propagator in the integrand of the Hubbard-Stratonovich transform.
@@ -1490,7 +1491,7 @@ class HilbertPropagatorHS(Propagator):
 
         :param coupling: force coupling array (e.g. :math:`A^\sigma_{\alpha i \beta j}`)
         :type coupling: Coupling
-        :param aux: values of auxiliary field, length equal to the number of pairs*3*3
+        :param aux: values of auxiliary field, length equal to the number of pairs*9
         :type aux: list
         :return: The list of propagator terms
         :rtype: list[HilbertOperator]
@@ -1511,7 +1512,7 @@ class HilbertPropagatorHS(Propagator):
 
         :param coupling: force coupling array (e.g. :math:`A^{\sigma\tau}_{\alpha i \beta j}`)
         :type coupling: Coupling
-        :param aux: values of auxiliary field, length equal to the number of pairs*3*3*3
+        :param aux: values of auxiliary field, length equal to the number of pairs*27
         :type aux: list
         :return: The list of propagator terms
         :rtype: list[HilbertOperator]
@@ -1583,7 +1584,7 @@ class HilbertPropagatorHS(Propagator):
 
         :param coupling: force coupling array (e.g. :math:`g^\text{LS}_{\alpha i}`)
         :type coupling: Coupling
-        :param aux: values of auxiliary field, length equal to the number of pairs
+        :param aux: values of auxiliary field, length equal to the number of pairs*9
         :type aux: list
         :return: The list of propagator terms
         :rtype: list[HilbertOperator]
@@ -1624,7 +1625,7 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_sigma = 9 * self._n2
         self.n_aux_sigmatau = 27 * self._n2
         self.n_aux_tau = 3 * self._n2
-        self.n_aux_coulomb = 1 * self._n2
+        self.n_aux_coulomb = self._n2
         self.n_aux_spinorbit = 9 * self._n2
         self.n_aux_sigma_3b = 27 * 4 * self._n3
 
@@ -1745,19 +1746,19 @@ class HilbertPropagatorRBM(Propagator):
     #         return out.scale(prefactor)
 
     def threebody_sample(self, coupling: float, h_list: list, onebody_matrix_i:np.ndarray, onebody_matrix_j:np.ndarray, onebody_matrix_k:np.ndarray) -> HilbertOperator:
-        """_summary_
+        """A sample of the three-body propagator in the integrand of the RBM transform.
 
-        :param coupling: _description_
+        :param coupling: scalar
         :type coupling: float
-        :param h_list: _description_
+        :param h_list: auxiliary field values 
         :type h_list: list
-        :param onebody_matrix_i: _description_
+        :param onebody_matrix_i: matrix representation of operator on particle i
         :type onebody_matrix_i: np.ndarray
-        :param onebody_matrix_j: _description_
+        :param onebody_matrix_j: matrix representation of operator on particle i
         :type onebody_matrix_j: np.ndarray
-        :param onebody_matrix_k: _description_
+        :param onebody_matrix_k: matrix representation of operator on particle i
         :type onebody_matrix_k: np.ndarray
-        :return: _description_
+        :return: The sample of the three-body RBM propagator
         :rtype: HilbertOperator
         """        
         N, C, W, A1, A2 = self._a3b_factors(coupling)
@@ -1774,7 +1775,17 @@ class HilbertPropagatorRBM(Propagator):
         out = onebody_matrix_i.scale(arg_i).exp() * onebody_matrix_j.scale(arg_j).exp() * onebody_matrix_k.scale(arg_k).exp()
         return out.scale(prefactor)
 
-    def factors_sigma(self, coupling: Coupling, aux: list):
+    def factors_sigma(self, coupling: Coupling, aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the :math:`A^\sigma_{\alpha i \beta j} \sigma_{i \alpha} \sigma_{j \beta}` propagator. 
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`A^\sigma_{\alpha i \beta j}`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs*9
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1784,7 +1795,17 @@ class HilbertPropagatorRBM(Propagator):
                     idx += 1
         return out
 
-    def factors_sigmatau(self, coupling: Coupling,  aux: list):
+    def factors_sigmatau(self, coupling: Coupling,  aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the :math:`A^{\sigma\tau}_{\alpha i \beta j} \sigma_{i \alpha} \sigma_{j \beta}\tau_{i\gamma}\tau_{j\gamma}` propagator. 
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`A^{\sigma\tau}_{\alpha i \beta j}`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs*27
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """  
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1797,7 +1818,17 @@ class HilbertPropagatorRBM(Propagator):
                         idx += 1
         return out
     
-    def factors_tau(self, coupling: Coupling, aux: list):
+    def factors_tau(self, coupling: Coupling, aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the :math:`\tau_{i\gamma}\tau_{j\gamma}` propagator. 
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`A^{\tau}_{ij}`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs*3
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1805,7 +1836,21 @@ class HilbertPropagatorRBM(Propagator):
                     out.append( self.twobody_sample(coupling[i,j], aux[idx], self._tau_op[i][a], self._tau_op[j][a]) )
         return out
 
-    def factors_coulomb(self, coupling: Coupling, aux: list):
+    def factors_coulomb(self, coupling: Coupling, aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the Coulomb propagator. 
+        
+        .. math::
+            \exp \left[ -\frac{\delta\tau}{2} \frac{v_{ij}}{4} (1+\tau_{iz}+ \tau_{jz} + \tau_{iz}\tau_{jz} ) \right] 
+        
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`v_C(r_{ij})`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """
         out = []
         idx = 0
         for i,j in self._2b_idx:
@@ -1818,7 +1863,21 @@ class HilbertPropagatorRBM(Propagator):
                 idx += 1
         return out
     
-    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list):
+    def factors_spinorbit(self, coupling: SpinOrbitCoupling, aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the spin-orbit propagator. 
+        
+        .. math::
+            \exp \left[ - \frac{\delta\tau}{2} v_{LS}(r_{ij}) \mathbf{L}\cdot\mathbf{S} \right]
+        
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`g^\text{LS}_{\alpha i}`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs*9
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """ 
         out = []
         idx = 0
         for i in self._1b_idx:
@@ -1836,7 +1895,17 @@ class HilbertPropagatorRBM(Propagator):
             out.append( HilbertOperator(self.n_particles, self.isospin).scale(prefactor) )
         return out
 
-    def factors_sigma_3b(self, coupling: ThreeBodyCoupling, aux: list):
+    def factors_sigma_3b(self, coupling: ThreeBodyCoupling, aux: list) -> list[HilbertOperator]:
+        r"""Creates factors of the :math:`A^\sigma_{\alpha i \beta j \gamma k} \sigma_{i \alpha} \sigma_{j \beta} \sigma_{k \gamma}` propagator. 
+        The result is a list of (noncommuting) terms so they may be shuffled.
+
+        :param coupling: force coupling array (e.g. :math:`A^\sigma_{\alpha i \beta j \gamma k}`)
+        :type coupling: Coupling
+        :param aux: values of auxiliary field, length equal to the number of pairs*108
+        :type aux: list
+        :return: The list of propagator terms
+        :rtype: list[HilbertOperator]
+        """
         out = []
         idx = 0
         for i,j,k in self._3b_idx:
@@ -1851,10 +1920,27 @@ class HilbertPropagatorRBM(Propagator):
 ## PRODUCT STATE PROPAGATORS
 
 class ProductPropagatorHS(Propagator):
-    """ the propagator exp( - i z op_i op_j ) """
-    def __init__(self, n_particles: int, dt: float, isospin=True, include_prefactors=True):
-        super().__init__(n_particles, dt, isospin, include_prefactors)
+    r""" The two-body propagator applied by Hubbard-Stratonovich transform in the product state basis
+    
+    .. math::
+            e^{-z \hat{o}_i \hat{o}_j} = e^z\int dx \left[ \frac{1}{\sqrt{2\pi}}e^{-x^2/2} \right] e^{x \sqrt{-z} (\hat{o}_i + \hat{o}_j)}
         
+        
+    """
+
+    def __init__(self, n_particles: int, dt: float, isospin=True, include_prefactors=True):
+        """The two-body propagator applied by Hubbard-Stratonovich in the product state basis
+
+        :param n_particles: number of particles
+        :type n_particles: int
+        :param dt: time step (real)
+        :type dt: float
+        :param isospin: if True include isospin, defaults to True
+        :type isospin: bool, optional
+        :param include_prefactors: whether to include the constant scaling part of the propagator (e.g. if done in another part of the calculation), defaults to True
+        :type include_prefactors: bool, optional
+        """  
+        super().__init__(n_particles, dt, isospin, include_prefactors)
         if isospin:
             self._ident = np.identity(4)
             self._sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2, 3]]
@@ -1866,12 +1952,28 @@ class ProductPropagatorHS(Propagator):
         self.n_aux_sigma = 9 * self._n2
         self.n_aux_sigmatau = 27 * self._n2
         self.n_aux_tau = 3 * self._n2
-        self.n_aux_coulomb = 1 * self._n2
+        self.n_aux_coulomb = self._n2
         self.n_aux_spinorbit = 9 * self._n2
 
-    def onebody(self, z: complex, i: int, onebody_matrix: np.ndarray):
-        """exp (- z opi)  """
+    def onebody(self, coupling: float, i: int, onebody_matrix: np.ndarray):
+        """One-body propagator 
+        
+        .. math::
+            \exp \left[ - z \hat{o} \right]
+
+        where :math:`z=\frac{\delta\tau}{2} \times \text{coupling}`
+
+        :param coupling: _description_
+        :type coupling: float
+        :param i: _description_
+        :type i: int
+        :param onebody_matrix: _description_
+        :type onebody_matrix: np.ndarray
+        :return: _description_
+        :rtype: _type_
+        """        
         out = ProductOperator(self.n_particles, self.isospin)
+        z = self.deltatau * self.symmetry_factor * coupling
         out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
     
