@@ -1,7 +1,7 @@
 from spinbox import *
 
 n_particles = 3
-dt = 0.001j
+dt = 0.001
 
 seed = itertools.count(0,1)
 pot = NuclearPotential(n_particles)
