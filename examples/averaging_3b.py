@@ -135,7 +135,7 @@ def average_nuclear(n_particles,
     pot.tau.random(10.0, seed=next(seeder))
     pot.coulomb.random(1.0, seed=next(seeder))
     pot.spinorbit.random(dt, seed=next(seeder))
-    pot.sigma_3b.random(dt, seed=next(seeder))
+    pot.sigma_3b.random(1.0, seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -237,7 +237,7 @@ def average_nuclear(n_particles,
 def main_1d():
     args = {
     "n_particles": 3,
-    "n_samples": 1000000,
+    "n_samples": 10000,
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,
@@ -252,11 +252,11 @@ def main_1d():
 def main():
     args = {
     "n_particles": 2,
-    "n_samples": 10000,
+    "n_samples": 1000000,
     "dt": 0.001,
-    "full_basis": False,
-    "seed": 0,
-    "method": "rbm",
+    "full_basis": True,
+    "seed": 4,
+    "method": "hs",
     "balance": True,
     "mix": True,
     "sigma": True,
