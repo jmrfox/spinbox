@@ -1344,7 +1344,7 @@ class ThreeBodyCoupling(CouplingArray):
 
     def random(self, scale, seed=0):
         rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        self.coefficients = - scale*rng.standard_normal(size=self.shape)
         for i in range(self.n_particles):
             for j in range(self.n_particles):
                 self.coefficients[:,i,:,i,:,i] = 0.0
