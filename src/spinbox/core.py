@@ -34,6 +34,10 @@ import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
+# from numba import int8, int32, float64, boolean
+# from numba import types, typed
+# from numba.experimental import jitclass
+
 # safe mode: include asserts to check for consistencies
 SAFE = False
 # you may want this on if something isn't working as expected, but for larger calculations turn it off
@@ -174,6 +178,15 @@ def repeated_kronecker_product(matrices: list) -> np.ndarray:
 
 # Hilbert BASIS CLASSES
 
+# numbaspec_hilbertstate = [
+#     ('n_particles', int32),
+#     ('isospin', boolean),
+#     ('n_basis', int8),
+#     ('dimension', int32),
+#     ('ketwise', boolean),
+#     ('coefficients', float64[:,:])
+# ]
+# @jitclass(numbaspec_hilbertstate)
 class HilbertState:
     """A spin state in the "Hilbert" basis, a linear combination of tensor product states.
     
@@ -199,19 +212,17 @@ class HilbertState:
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
         self.dimension = self.n_basis ** self.n_particles
-        self.dim = self.dimension
         self.ketwise = ketwise
-        self.friendly_operator = HilbertOperator
         
         if coefficients is None:
             if ketwise:
-                self.coefficients = np.zeros(shape=(self.dim, 1))
+                self.coefficients = np.zeros(shape=(self.dimension, 1))
             else:
-                self.coefficients = np.zeros(shape=(1, self.dim))
+                self.coefficients = np.zeros(shape=(1, self.dimension))
         else: 
             # assert type(coefficients)==np.ndarray
-            ket_condition = (coefficients.shape == (self.dim, 1)) and ketwise
-            bra_condition = (coefficients.shape == (1, self.dim)) and not ketwise
+            ket_condition = (coefficients.shape == (self.dimension, 1)) and ketwise
+            bra_condition = (coefficients.shape == (1, self.dimension)) and not ketwise
             if not ket_condition and not bra_condition:
                 raise ValueError("Inconsistent initialization of state vector. \n\
                                 Did you get the shape right?")
@@ -306,7 +317,7 @@ class HilbertState:
         :rtype: HilbertState
         """        
         if SAFE:
-            assert isinstance(other, self.friendly_operator)
+            assert isinstance(other, HilbertOperator)
             assert not self.ketwise
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
@@ -451,7 +462,15 @@ class HilbertState:
         self.coordinates = coordinates
 
     
-
+# numbaspec_hilbertoperator = [
+#     ('n_particles', int32),
+#     ('isospin', boolean),
+#     ('n_basis', int8),
+#     ('dimension', int32),
+#     ('ketwise', boolean),
+#     ('coefficients', float64[:,:])
+# ]
+# @jitclass(numbaspec_hilbertoperator)
 class HilbertOperator:
     """An operator in the "Hilbert basis.
     """
@@ -467,9 +486,7 @@ class HilbertOperator:
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
         self.dimension = self.n_basis ** self.n_particles
-        self.dim = self.dimension
-        self.coefficients = np.identity(self.dim, dtype=complex)
-        self.friendly_state = HilbertState
+        self.coefficients = np.identity(self.dimension, dtype=complex)
 
     def copy(self) -> 'HilbertOperator':
         """Copies the ``HilbertOperator``.
@@ -515,7 +532,7 @@ class HilbertOperator:
         :return: The new state, ketwise.
         :rtype: HilbertState
         """               
-        if SAFE: assert isinstance(other, self.friendly_state)
+        if SAFE: assert isinstance(other, HilbertState)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
@@ -664,7 +681,15 @@ class HilbertOperator:
 
 # ONE-BODY BASIS CLASSES
         
-
+# numbaspec_productstate = [
+#     ('n_particles', int32),
+#     ('isospin', boolean),
+#     ('n_basis', int8),
+#     ('dimension', int32),
+#     ('ketwise', boolean),
+#     ('coefficients', float64[:,:])
+# ]
+# @jitclass(numbaspec_productstate)
 class ProductState:
     """A spin state in the "Product" basis, a single tensor product of one-body vectors.
     
@@ -694,7 +719,6 @@ class ProductState:
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
         self.ketwise = ketwise
-        self.friendly_operator = ProductOperator
         
         if coefficients is None:
             if ketwise:
@@ -894,7 +918,14 @@ class ProductState:
         self.coordinates = coordinates
 
 
-
+# numbaspec_productoperator = [
+#     ('n_particles', int32),
+#     ('isospin', boolean),
+#     ('n_basis', int8),
+#     ('dimension', int32),
+#     ('coefficients', float64[:,:])
+# ]
+# @jitclass(numbaspec_productoperator)
 class ProductOperator:
     """An operator that is a tensor product of one-body operators.
     
@@ -912,7 +943,6 @@ class ProductOperator:
         self.isospin = isospin
         self.n_basis = 2 + 2*isospin
         self.coefficients = np.stack(self.n_particles*[np.identity(self.n_basis)], dtype=complex)
-        self.friendly_state = ProductState
 
     def copy(self) -> 'ProductOperator':
         """Copies the ``ProductOperator``.
@@ -940,7 +970,7 @@ class ProductOperator:
         :return: The new state, ketwise.
         :rtype: ProductState
         """                    
-        if SAFE: assert isinstance(other, self.friendly_state)
+        if SAFE: assert isinstance(other, ProductState)
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)

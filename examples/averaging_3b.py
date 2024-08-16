@@ -233,7 +233,6 @@ def average_nuclear(n_particles,
     return out
 
 
-
 def main_1d():
     args = {
     "n_particles": 3,
@@ -288,6 +287,7 @@ def list_from_dict(input_dict):
     """ produces a list of dicts from a dict of lists """
     keys, values = zip(*input_dict.items())
     return [dict(zip(keys, v)) for v in itertools.product(*values)]
+
 
 def experiment():
     
