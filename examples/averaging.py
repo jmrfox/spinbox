@@ -27,10 +27,11 @@ def average_1d(n_particles,
     else:
         ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
         
+    print(ket)
     bra = ket.copy().dagger()
 
     pot = NuclearPotential(n_particles)
-    pot.sigma[0,0,0,1] = 10.0  # coupling is all zero except the i=0 j=1 a=b=x element
+    pot.sigma[0,0,0,1] = 10.  # coupling is all zero except the i=0 j=1 a=b=x element
         
     if full_basis:
         if method=='hs':
@@ -256,9 +257,9 @@ def main_1d():
     "n_particles": 2,
     "n_samples": 10000,
     "dt": 0.001,
-    "full_basis": False,
+    "full_basis": True,
     "seed": 0,
-    "method": "rbm",
+    "method": "hs",
     "balance": True,
     "plot":False
     }

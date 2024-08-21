@@ -1654,7 +1654,7 @@ class HilbertPropagatorHS(Propagator):
         :return: One sample of the two-body propagator
         :rtype: HilbertOperator
         """        
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = - self.deltatau * self.symmetry_factor * coupling
         arg = csqrt(-z)*x
         if self.include_prefactors:
             prefactor = cexp(z)
