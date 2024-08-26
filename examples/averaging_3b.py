@@ -103,7 +103,7 @@ def average_1d(n_particles,
     return out
 
 
-def average_argonne(n_particles, 
+def average_nuclear(n_particles, 
             dt = 0.001, 
             full_basis = False,
             isospin=True,
@@ -114,6 +114,7 @@ def average_argonne(n_particles,
             tau=False, 
             coulomb=False, 
             spinorbit=False, 
+            sigma_3b=False, 
             mix=True,
             balance=True, 
             plot=False, 
@@ -134,6 +135,7 @@ def average_argonne(n_particles,
     pot.tau.random(10.0, seed=next(seeder))
     pot.coulomb.random(1.0, seed=next(seeder))
     pot.spinorbit.random(dt, seed=next(seeder))
+    pot.sigma_3b.random(1.0, seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -158,6 +160,7 @@ def average_argonne(n_particles,
                 tau=tau, 
                 coulomb=coulomb, 
                 spinorbit=spinorbit,
+                sigma_3b=sigma_3b,
                 parallel=parallel,
                 n_processes=n_processes)
     b_plus = integ.run(bra, ket)
@@ -171,6 +174,7 @@ def average_argonne(n_particles,
                 tau=tau, 
                 coulomb=coulomb, 
                 spinorbit=spinorbit,
+                sigma_3b=sigma_3b,
                 parallel=parallel,
                 n_processes=n_processes)
         b_minus = integ.run(bra, ket)
@@ -214,6 +218,7 @@ def average_argonne(n_particles,
            "tau": tau,
            "coulomb": coulomb,
            "spinorbit": spinorbit,
+           "sigma_3b":sigma_3b,
            "mix": mix,
            "b_array": b_array,
            "b_m": b_m,
@@ -226,7 +231,6 @@ def average_argonne(n_particles,
            "time": time.time()-t0,
            }
     return out
-
 
 
 def main_1d():
@@ -247,22 +251,23 @@ def main_1d():
 def main():
     args = {
     "n_particles": 2,
-    "n_samples": 100,
+    "n_samples": 100000,
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,
     "method": "rbm",
     "balance": True,
     "mix": True,
-    "sigma": False,
+    "sigma": True,
     "sigmatau": False,
-    "tau": True,
+    "tau": False,
     "coulomb": False,
     "spinorbit": False,
+    "sigma_3b": False,
     "plot":True
     }
 
-    out = average_argonne(**args)
+    out = average_nuclear(**args)
     print_dict(out)
     
     tag = int(time.time())
@@ -282,6 +287,7 @@ def list_from_dict(input_dict):
     """ produces a list of dicts from a dict of lists """
     keys, values = zip(*input_dict.items())
     return [dict(zip(keys, v)) for v in itertools.product(*values)]
+
 
 def experiment():
     
@@ -305,15 +311,15 @@ def experiment():
     args_list = list_from_dict(input_dict)
     out = []
     for args in args_list:
-        out.append(average_argonne(**args))
+        out.append(average_nuclear(**args))
         
     tag = int(time.time())
     with open(f"examples/outputs/experiment_{tag}.pkl","wb") as f:
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    main_1d()
-    # main()
+    # main_1d()
+    main()
     # experiment()
     
     # plot_from_pickle(".\\examples\\outputs\\averaging_1718939734.pkl", ".\\examples\\outputs\\test.pdf", "test")

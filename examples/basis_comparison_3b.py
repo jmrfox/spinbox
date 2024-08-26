@@ -5,13 +5,12 @@ dt = 0.001
 
 seed = itertools.count(0,1)
 pot = NuclearPotential(n_particles)
-pot.sigma.random(1.0, seed=next(seed))
-pot.sigmatau.random(1.0, seed=next(seed))
-pot.tau.random(1.0, seed=next(seed))
-pot.coulomb.random(0.1, seed=next(seed))
+pot.sigma.random(10.0, seed=next(seed))
+pot.sigmatau.random(10.0, seed=next(seed))
+pot.tau.random(10.0, seed=next(seed))
+pot.coulomb.random(1.0, seed=next(seed))
 pot.spinorbit.random(dt, seed=next(seed))
-pot.sigma_3b.random(1.0, seed=next(seed))
-pot.sigma_3b[0,0,0,1,0,2] = 10.0
+pot.sigma_3b.random(10.0, seed=next(seed))
 
 def hilbert_bracket(controls):
     seed = itertools.count(0,1)
