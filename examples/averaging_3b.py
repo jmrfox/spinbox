@@ -232,7 +232,7 @@ def average_argonne(n_particles,
 def main_1d():
     args = {
     "n_particles": 3,
-    "n_samples": 1000000,
+    "n_samples": 10000,
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,

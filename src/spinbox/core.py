@@ -24,8 +24,9 @@ __version__ = '0.1.0'
 
 
 # imports
+import sys
 import numpy as np
-np.set_printoptions(linewidth=200)
+np.set_printoptions(linewidth=200, threshold=sys.maxsize)
 import matplotlib.pyplot as plt
 from scipy.linalg import expm
 from functools import reduce
