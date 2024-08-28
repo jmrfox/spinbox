@@ -37,7 +37,7 @@ def test_overlaps_2():
     
 def test_2Pij_minus_1():
     n_particles = 3
-    isospin = True
+    isospin = False
     s0 = ProductState(n_particles, isospin=isospin).randomize(100)
     s1 = ProductState(n_particles, isospin=isospin).randomize(101)
     s0_exch = s0.copy()
