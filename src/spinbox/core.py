@@ -165,6 +165,18 @@ def pauli(arg) -> np.ndarray:
     return out
 
 
+def rlprod(factors:list):
+    """Multiplies a list of factors right to left
+
+    Args:
+        factors (list): things to be multiplied
+
+    """    
+    out = factors[-1]
+    for x in reversed(factors[:-1]):
+        out = x * out
+    return out
+
 
 def repeated_kronecker_product(matrices: list) -> np.ndarray:
     """
@@ -175,6 +187,7 @@ def repeated_kronecker_product(matrices: list) -> np.ndarray:
     "rtype: np.ndarray
     """
     return np.array(reduce(np.kron, matrices), dtype=complex)
+
 
 
 # Hilbert BASIS CLASSES
@@ -320,7 +333,7 @@ class HilbertState:
         if SAFE:
             assert isinstance(other, HilbertOperator)
             assert not self.ketwise
-        out = other.copy()
+        out = self.copy()
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
         return out
     
@@ -1197,6 +1210,11 @@ class CouplingArray:
     def __str__(self):
         return str(self.coefficients)
         
+    def generate_random(self,shape,scale=1.0,mean=0.0,seed=0):
+        rng = np.random.default_rng(seed=seed)
+        coefficients = scale*rng.standard_normal(size=shape)
+        coefficients += mean*np.ones_like(coefficients)
+        return coefficients
         
         
 # I wrote classes for the sigma, sigma-tau, tau, coulomb, spin-orbit coupling arrays, but these are not strictly required for the other parts of spinbox.
@@ -1205,8 +1223,8 @@ class CouplingArray:
 # In general though, one can instantiate a Coupling, set the shape, then either set the coefficients using an array or use the read() method to read from file. 
 # That should be sufficient to use the Propagator and Integrator classes.
 
-class SigmaCoupling(CouplingArray):
-    r"""The coupling matrix :math:`A^\sigma_{\alpha i \beta j}`
+class TwoBodyCoupling(CouplingArray):
+    r"""The coupling matrix :math:`A_{\alpha i \beta j}`
     
     for i, j = 0 .. n_particles - 1
     and a, b = 0, 1, 2  (x, y, z)
@@ -1215,134 +1233,53 @@ class SigmaCoupling(CouplingArray):
         shape = (3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
 
-        if SAFE and (file is not None):
-            self.validate()
-
-    def validate(self):
-        assert self.coefficients.shape==self.shape
-        for i in range(self.n_particles):
-            for j in range(self.n_particles):
-                for a in range(3):
-                    for b in range(3):
-                        assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
-    
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
-        for i in range(self.n_particles):
-            self.coefficients[:,i,:,i] = 0.0
-            for j in range(i):
-                for a in range(3):
-                    for b in range(3):
-                        self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]     
-        return self
-    
-class SigmaTauCoupling(CouplingArray):
-    """container class for couplings A ^ sigma tau (a,i,b,j)
-    for i, j = 0 .. n_particles - 1
-    and a, b = 0, 1, 2  (x, y, z)
-    
-    Note that there are no dimensional indices for tau because the tau factor is a dot product, and thus the couplings are the same over dimensions.
-    """
-    def __init__(self, n_particles, file=None):
-        shape = (3, n_particles, 3, n_particles)
-        super().__init__(n_particles, shape, file)
-        if SAFE and (file is not None):
-            self.validate()
-        
-    def validate(self):
-        assert self.coefficients.shape==self.shape
+    def symmetrize(self):
         for i in range(self.n_particles):
             self.coefficients[:,i,:,i] = 0.0
             for j in range(self.n_particles):
-                for a in range(3):
-                    for b in range(3):
-                        assert self.coefficients[a,i,b,j]==self.coefficients[a,j,b,i]
-        
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
-        for i in range(self.n_particles):
-            for j in range(i):
                 for a in range(3):
                     for b in range(3):
                         self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
+    
+    def random(self, scale, mean, seed=0):
+        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.symmetrize()
         return self
     
 
-class TauCoupling(CouplingArray):
-    """container class for couplings A^tau (i,j)
+class TwoBodyCouplingIsotropic(CouplingArray):
+    """container class for couplings A(i,j) that have no dimensionful dependence
     for i, j = 0 .. n_particles - 1
     """
     def __init__(self, n_particles, file=None):
         shape = (n_particles, n_particles)
         super().__init__(n_particles, shape, file)
-        if SAFE and (file is not None):
-            self.validate()
-
-    def validate(self):
-        assert self.coefficients.shape==self.shape
+        
+    def symmetrize(self):
         for i in range(self.n_particles):
             for j in range(self.n_particles):
-                assert self.coefficients[i,j]==self.coefficients[j,i]
+                self.coefficients[i,j]=self.coefficients[j,i]
 
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
-        for i in range(self.n_particles):
-            self.coefficients[i,i] = 0.0
-            for j in range(i):
-                self.coefficients[i,j]=self.coefficients[j,i]    
+    def random(self, scale, mean, seed=0):
+        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.symmetrize()
         return self
+    
 
-
-class CoulombCoupling(CouplingArray):
-    """container class for couplings V^coul (i,j)
-    for i, j = 0 .. n_particles - 1
-    """
-    def __init__(self, n_particles, file=None):
-        shape = (n_particles, n_particles)
-        super().__init__(n_particles, shape, file)
-        if SAFE and (file is not None):
-            self.validate()
-
-    def validate(self):
-        assert self.coefficients.shape==self.shape
-        for i in range(self.n_particles):
-            for j in range(self.n_particles):
-                assert self.coefficients[i,j]==self.coefficients[j,i]
-
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
-        for i in range(self.n_particles):
-            self.coefficients[i,i] = 0.0
-            for j in range(i):
-                self.coefficients[i,j]=self.coefficients[j,i]    
-        return self
-
-
-
-class SpinOrbitCoupling(CouplingArray):
-    """container class for couplings g_LS (a,i)
+class OneBodyCoupling(CouplingArray):
+    """container class for couplings A(a,i)
     for i = 0 .. n_particles - 1
     and a = 0, 1, 2  (x, y, z)
     """
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles)
         super().__init__(n_particles, shape, file)
-        if SAFE and (file is not None):
-            self.validate()
-
-    def validate(self):
-        assert self.coefficients.shape==self.shape
-        # gLS is a vector. no symmetry to validate.   
-
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = scale*rng.standard_normal(size=self.shape)
+        
+def random(self, scale, mean, seed=0):
+        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.symmetrize()
         return self
-
+    
 
 class ThreeBodyCoupling(CouplingArray):
     """container class for couplings A(a,i,b,j,c,k)
@@ -1352,36 +1289,27 @@ class ThreeBodyCoupling(CouplingArray):
     def __init__(self, n_particles, file=None):
         shape = (3, n_particles, 3, n_particles, 3, n_particles)
         super().__init__(n_particles, shape, file)
-        if SAFE and (file is not None):
-            self.validate()
-
-    def validate(self):
-        assert self.coefficients.shape==self.shape
+        
+    def symmetrize(self):
         for i in range(self.n_particles):
             for j in range(self.n_particles):
                 for k in range(self.n_particles):
                     for a in range(3):
                         for b in range(3):
                             for c in range(3):
-                                assert self.coefficients[a,i,b,i,c,i]==0.0
-                                assert self.coefficients[a,i,b,i,c,k]==0.0
-                                assert self.coefficients[a,i,b,j,c,i]==0.0
-                                assert self.coefficients[a,i,b,j,c,j]==0.0
-                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,i,b,k,c,j]
-                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,i,c,k]
-                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,j,b,k,c,i]
-                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,i,c,j]
-                                assert self.coefficients[a,i,b,j,c,k]==self.coefficients[a,k,b,j,c,i]
+                                self.coefficients[a,i,b,i,c,i]=0.0
+                                self.coefficients[a,i,b,i,c,k]=0.0
+                                self.coefficients[a,i,b,j,c,i]=0.0
+                                self.coefficients[a,i,b,j,c,j]=0.0
+                                self.coefficients[a,i,b,j,c,k]=self.coefficients[a,i,b,k,c,j]
+                                self.coefficients[a,i,b,j,c,k]=self.coefficients[a,j,b,i,c,k]
+                                self.coefficients[a,i,b,j,c,k]=self.coefficients[a,j,b,k,c,i]
+                                self.coefficients[a,i,b,j,c,k]=self.coefficients[a,k,b,i,c,j]
+                                self.coefficients[a,i,b,j,c,k]=self.coefficients[a,k,b,j,c,i]
 
-    def random(self, scale, seed=0):
-        rng = np.random.default_rng(seed=seed)
-        self.coefficients = - scale*rng.standard_normal(size=self.shape)
-        for i in range(self.n_particles):
-            for j in range(self.n_particles):
-                self.coefficients[:,i,:,i,:,i] = 0.0
-                self.coefficients[:,i,:,i,:,j] = 0.0
-                self.coefficients[:,i,:,j,:,i] = 0.0    
-                self.coefficients[:,i,:,j,:,j] = 0.0    
+def random(self, scale, mean, seed=0):
+        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.symmetrize()
         return self
 
 
@@ -1390,11 +1318,11 @@ class NuclearPotential:
     """
     def __init__(self, n_particles):
         self.n_particles = n_particles
-        self.sigma = SigmaCoupling(n_particles)
-        self.sigmatau = SigmaTauCoupling(n_particles)
-        self.tau = TauCoupling(n_particles)
-        self.coulomb = CoulombCoupling(n_particles)
-        self.spinorbit = SpinOrbitCoupling(n_particles)
+        self.sigma = TwoBodyCoupling(n_particles)
+        self.sigmatau = TwoBodyCoupling(n_particles)
+        self.tau = TwoBodyCouplingIsotropic(n_particles)
+        self.coulomb = TwoBodyCouplingIsotropic(n_particles)
+        self.spinorbit = OneBodyCoupling(n_particles)
         self.sigma_3b = ThreeBodyCoupling(n_particles)
     
     def read_sigma(self, filename):
