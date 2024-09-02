@@ -429,7 +429,7 @@ class HilbertState:
         fit.coefficients = x_to_coef(result.x)
         return fit, result
     
-    def nearest_product_state(self, seeds: list[int], maxiter=100):
+    def nearest_product_state(self, seeds: list[int], maxiter=100) -> 'ProductState':
         """ Does ``self.nearby_product_state`` for a list of seeds and returns the result maximizing overlap
         
         :param seed: RNG seed, defaults to None
@@ -466,7 +466,7 @@ class HilbertState:
         else:
             raise NotImplementedError("Unsupported multiply.")
 
-    def attach_coordinates(self, coordinates: np.ndarray):
+    def attach_coordinates(self, coordinates: np.ndarray) -> None:
         """Adds a new ``.coordinates`` attribute to the ``HilbertState``
 
         :param coordinates: A Numpy array with shape ``(n_particles , 3)`` (e.g. x, y, z)
@@ -474,6 +474,24 @@ class HilbertState:
         """        
         assert coordinates.shape == (self.n_particles, 3)
         self.coordinates = coordinates
+        
+    def exchange(self, i:int, j:int) -> 'HilbertState':
+        """Exchanges two particles.
+
+        :param i: Index of particle one
+        :type i: int
+        :param j: Index of particle two
+        :type j: int
+        :return: A copy of the state with particles i and j swapped
+        :rtype: HilbertState
+        """        
+        P_1 = HilbertOperator(n_particles=self.n_particles)
+        P_x = P_1.copy().sigma(i, 'x').sigma(j, 'x')
+        P_y = P_1.copy().sigma(i, 'y').sigma(j, 'y')
+        P_z = P_1.copy().sigma(i, 'z').sigma(j, 'z')
+        P = (P_x + P_y + P_z + P_1)
+        out = 0.5 * P * self.copy()
+        return out
 
     
 # numbaspec_hilbertoperator = [
@@ -794,6 +812,21 @@ class ProductState:
             out.coefficients[i] = np.matmul(self.coefficients[i], other.coefficients[i], dtype=complex)
         return out
 
+    def multiply_operator(self, other: 'ProductOperator') -> 'ProductState':
+        """Multiplies a (bra) ``ProductState`` on a ``ProductOperator``.
+
+        :param other: The operator to multiply onto
+        :type other: ProductOperator
+        :return: < self | O(other) 
+        :rtype: ProductState
+        """        
+        if SAFE:
+            assert isinstance(other, HilbertOperator)
+            assert not self.ketwise
+        out = self.copy()
+        out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
+        return out
+    
     def dagger(self) -> 'ProductState':
         """Hermitian conjugate.
 
@@ -930,7 +963,22 @@ class ProductState:
         """   
         assert coordinates.shape == (self.n_particles, 3)
         self.coordinates = coordinates
+        
+    def exchange(self, i:int, j:int) -> 'ProductState':
+        """Returns a copy of the state with particles i and j swapped.
 
+        :param i: Index of particle one
+        :type i: int
+        :param j: Index of particle two
+        :type j: int
+        :return: A copy of the state with particles i and j swapped
+        :rtype: ProductState
+        """        
+        out = self.copy()
+        temp = self.coefficients[j].copy()
+        out.coefficients[j] = self.coefficients[i].copy()
+        out.coefficients[i] = temp
+        return out
 
 # numbaspec_productoperator = [
 #     ('n_particles', int32),
