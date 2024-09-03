@@ -1,6 +1,18 @@
 import numpy as np
-from math import sqrt, exp, log, tanh
 
+def exp(x):
+    return np.exp(x,dtype=complex)
+
+def sqrt(x):
+    return np.sqrt(x,dtype=complex)
+
+def log(x):
+    return np.log(x,dtype=complex)
+
+def cabs(x):
+    return np.abs(np.real(x)) + 1j*np.abs(np.imag(x))
+
+##
 
 def threebody_prop(sig, a3):
     out = exp( -a3 * sig[0] * sig[1] * sig[2])
@@ -70,7 +82,7 @@ def soln_n_attractive(a3):
 
 
     
-def test(sig, a3):
+def test_real(sig, a3):
     lhs = threebody_prop(sig,a3)
     if a3>0:   # repulsive force
         c = soln_c_repulsive(a3)
@@ -90,12 +102,31 @@ def test(sig, a3):
     print(f"LHS = {lhs}")
     print(f"RHS = {rhs}")
 
+def test_imag(sig, a3):
+    lhs = threebody_prop(sig,a3)
+    if np.imag(a3)>0:   # repulsive force
+        c = soln_c_repulsive(a3)
+        w = c
+        a2 = soln_a2_repulsive(a3)
+        a1 = soln_a1_repulsive(a3)
+        n = soln_n_repulsive(a3)
+        rhs = partition(sig, w, c, n) * correction(sig, a2, a1)
+    else:  # attractive force
+        c = soln_c_attractive(a3)
+        w = -c
+        a2 = soln_a2_attractive(a3)
+        a1 = soln_a1_attractive(a3)
+        n = soln_n_attractive(a3)
+        rhs = partition(sig, w, c, n) * correction(sig, a2, a1)
+    
+    print(f"LHS = {lhs}")
+    print(f"RHS = {rhs}")
 
 
 def main():
     sig = [-1,1,1]
-    a3 = 3.14
-    test(sig, a3)
+    a3 = 3.14j
+    test_imag(sig, a3)
 
 if __name__=="__main__":
     main()

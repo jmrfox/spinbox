@@ -90,6 +90,10 @@ def carctanh(x):
     """Complex incerse hyp. tangent
     """
     return np.arctanh(x, dtype=complex)
+
+def cabs(x):
+    """Weird complex absolute value function needed for the RBM"""
+    return np.abs(np.real(x)) + 1j*np.abs(np.imag(x))
     
 
 def interaction_indices(n: int, m = 2) -> list:
@@ -1631,7 +1635,7 @@ class HilbertPropagatorHS(Propagator):
         :return: One sample of the two-body propagator
         :rtype: HilbertOperator
         """        
-        z = - self.deltatau * self.symmetry_factor * coupling
+        z = self.deltatau * self.symmetry_factor * coupling
         arg = csqrt(-z)*x
         if self.include_prefactors:
             prefactor = cexp(z)
@@ -1793,6 +1797,7 @@ class HilbertPropagatorRBM(Propagator):
         self.n_aux_spinorbit = 9 * self._n2
         self.n_aux_sigma_3b = 27 * 4 * self._n3
 
+    
     def _a2b_factors(self, coupling:float) -> tuple:
         """Computes coefficients for the two-body RBM
 
@@ -1801,10 +1806,10 @@ class HilbertPropagatorRBM(Propagator):
         :return: factors N (normalization), W (weight), and S (sign)
         :rtype: tuple
         """
-        a2 = self.deltatau * self.symmetry_factor * coupling
-        n = cexp(-abs(a2))
-        w = carctanh(csqrt(ctanh(abs(a2))))
-        s = np.sign(coupling)
+        z = self.deltatau * self.symmetry_factor * coupling
+        n = cexp(-cabs(z))
+        w = carctanh(csqrt(ctanh(cabs(z))))
+        s = coupling/cabs(coupling)
         return n, w, s
     
     def _a3b_factors(self, coupling:float) -> tuple:
@@ -1927,11 +1932,11 @@ class HilbertPropagatorRBM(Propagator):
         """        
         N, C, W, A1, A2 = self._a3b_factors(coupling)
         if self.include_prefactors:
-            prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
+            prefactor = N*2*cexp(-3*cabs(A2)-h_list[0]*C)
         else:
             prefactor = 1.0
-        W2 = carctanh(csqrt(ctanh(abs(A2))))
-        S2 = np.sign(A2)
+        W2 = carctanh(csqrt(ctanh(cabs(A2))))
+        S2 = A2/cabs(A2)
         arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
         arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
         arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
