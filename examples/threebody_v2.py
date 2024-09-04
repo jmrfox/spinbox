@@ -141,30 +141,40 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
-            ket_temp = prop.threebody_sample(coupling, h, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
+            b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
         b_rbm = np.sum(b_array) / 16   # correct for sampling normalization 1/2**4
+    
+    elif mode==4.5: 
+        prop = HilbertPropagatorRBM(n_particles, dt, isospin)
+        
+        # h_list = itertools.product([0,1], repeat=4)
+        # h_list = 100*list(h_list)
+        
+        n_samples = 10000
+        h_list = np.random.randint(0,2,size=(n_samples, 4))
+        
+        b_array = []
+        for h in tqdm(h_list):
+            b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
+        b_rbm = np.mean(b_array) 
     
     elif mode==5: # sample using propagator class
         n_samples = 10000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
-        b_array = []
-        for h in tqdm(h_list):
-            ket_temp = prop.threebody_sample(coupling, h, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
-            h_flip = 1-h
-            ket_temp = prop.threebody_sample(coupling, h_flip, op_i, op_j, op_k).multiply_state(ket.copy())
-            b_array.append(bra * ket_temp)
+        b_array = np.zeros(2*n_samples, dtype=complex)
+        for ih,h in enumerate(tqdm(h_list)):
+            b_array[2*ih:2*ih+1] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
+            b_array[2*ih+1:2*ih+2] = bra * prop.threebody_sample(coupling, 1-h, op_i, op_j, op_k) * ket
         b_rbm = np.mean(b_array)
     return b_exact, b_rbm
 
 
 def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
     # exp( - dt/2 sig_1x sig_2x sig_3x)
-    sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-    tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+    sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+    tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
     ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
     bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
     
@@ -206,7 +216,7 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
         b_rbm = np.sum(b_array) / 16   # correct for sampling normalization 1/2**4
     
     elif mode==5: # sample using propagator class
-        n_samples = 10000
+        n_samples = 1000
         prop = ProductPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
@@ -254,7 +264,7 @@ if __name__=="__main__":
     n_particles = 3
     dt = 0.01
     coupling = 3.14
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=5)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=4.5)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)

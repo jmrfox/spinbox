@@ -21,10 +21,9 @@ def average_1d(n_particles,
     
     seeder = itertools.count(seed, 1)
 
+    ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
     if full_basis:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_manybody_basis()
-    else:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
+        ket = ket.to_manybody_basis()
         
     bra = ket.copy().dagger()
 
@@ -130,12 +129,12 @@ def average_nuclear(n_particles,
     bra = ket.copy().dagger()
 
     pot = NuclearPotential(n_particles)
-    pot.sigma.random(10.0, seed=next(seeder))
-    pot.sigmatau.random(10.0, seed=next(seeder))
-    pot.tau.random(10.0, seed=next(seeder))
-    pot.coulomb.random(1.0, seed=next(seeder))
-    pot.spinorbit.random(dt, seed=next(seeder))
-    pot.sigma_3b.random(1.0, seed=next(seeder))
+    pot.sigma.random(5.0, mean=-5., seed=next(seeder))
+    pot.sigmatau.random(5.0, mean=-5., seed=next(seeder))
+    pot.tau.random(5.0, mean=-5., seed=next(seeder))
+    pot.coulomb.random(1.0, mean=1., seed=next(seeder))
+    pot.spinorbit.random(dt, mean=-dt, seed=next(seeder))
+    pot.sigma_3b.random(5.0, mean=-5., seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -237,22 +236,22 @@ def main_1d():
     args = {
     "n_particles": 3,
     "n_samples": 10000,
-    "dt": 0.001,
-    "full_basis": False,
+    "dt": 0.01,
+    "full_basis": True,
     "seed": 0,
     "balance": True,
     "plot":True
     }
 
     out = average_1d(**args)
-    print_dict(out)
+    # print_dict(out)
     return out
 
 def main():
     args = {
     "n_particles": 2,
     "n_samples": 100000,
-    "dt": 0.001,
+    "dt": 0.01,
     "full_basis": False,
     "seed": 0,
     "method": "rbm",

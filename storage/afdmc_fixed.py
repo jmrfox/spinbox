@@ -5,8 +5,8 @@ dt = 0.001
 pairs_ij = interaction_indices(n_particles)
 
 ident = np.identity(4)
-sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
 
 def g_onebody(k, i, opi):
     """exp (- k opi)"""

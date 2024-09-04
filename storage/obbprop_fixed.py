@@ -2,8 +2,8 @@ import nuctest as nt
 from spinbox import *
 
 ident = np.identity(4)
-sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
 
 def load_ket(filename):
     c = read_coeffs(filename)

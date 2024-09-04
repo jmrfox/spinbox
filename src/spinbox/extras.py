@@ -154,7 +154,7 @@ def sigma_tau_matrices_product(n_particles):
     In the case of Hilbert space calculations, it makes sense to compute the operator matrices beforehand and store them.
     In the tensor-product basis, this would result in most of our memory being taken up by identity matrices.
     """
-    from .core import repeated_kronecker_product, pauli
-    sigma = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-    tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+    from .core import kronecker_product, pauli
+    sigma = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+    tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
     return sigma, tau

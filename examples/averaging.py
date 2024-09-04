@@ -152,11 +152,11 @@ def average_argonne(n_particles,
     bra = ket.copy().dagger()
 
     pot = NuclearPotential(n_particles)
-    pot.sigma.random(10.0, seed=next(seeder))
-    pot.sigmatau.random(10.0, seed=next(seeder))
-    pot.tau.random(10.0, seed=next(seeder))
-    pot.coulomb.random(1.0, seed=next(seeder))
-    pot.spinorbit.random(dt, seed=next(seeder))
+    pot.sigma.random(5.0, mean=-5., seed=next(seeder))
+    pot.sigmatau.random(5.0, mean=-5., seed=next(seeder))
+    pot.tau.random(5.0, mean=-5., seed=next(seeder))
+    pot.coulomb.random(1.0, mean=1., seed=next(seeder))
+    pot.spinorbit.random(dt, mean=-dt, seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -270,24 +270,24 @@ def main_1d():
 
 def main():
     args = {
-    "n_particles": 2,
-    "n_samples": 100,
+    "n_particles": 5,
+    "n_samples": 1000000,
     "dt": 0.001,
     "full_basis": False,
     "seed": 0,
     "method": "rbm",
     "balance": True,
     "mix": True,
-    "sigma": False,
+    "sigma": True,
     "sigmatau": False,
-    "tau": True,
+    "tau": False,
     "coulomb": False,
     "spinorbit": False,
-    "plot":True
+    "plot":False
     }
 
     out = average_argonne(**args)
-    print_dict(out)
+    # print_dict(out)
     
     tag = int(time.time())
     with open(f"examples/outputs/averaging_{tag}.pkl","wb") as f:
@@ -336,8 +336,8 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    main_1d()
-    # main()
+    # main_1d()
+    main()
     # experiment()
     
     # plot_from_pickle(".\\examples\\outputs\\averaging_1718939734.pkl", ".\\examples\\outputs\\test.pdf", "test")

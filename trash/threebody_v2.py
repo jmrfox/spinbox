@@ -37,8 +37,8 @@ def afdmc_3b_1d(n_particles, dt, a3):
     sig = pauli('list')
     if isospin:
         ident = np.identity(4)
-        sig = [repeated_kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
-        tau = [repeated_kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
+        sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
+        tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
     ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
     bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
     
