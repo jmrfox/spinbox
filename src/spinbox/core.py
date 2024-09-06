@@ -4,26 +4,6 @@
 
 __version__ = '0.1.0'
 
-# 5/17 changelog
-# 
-# *** classes are now isospin dependent
-#   rather than having one isospinless version and another isospinful version
-#   the class takes isospin as a bool
-# *** NOTHING is done in-place anymore
-#   every method will instatiate a self.copy(), do operations on that, then return that
-#    in-place operations are far too unintuitive and inevitably lead to bugs
-# *** state and operator operations are now relegated to named methods only
-#   the one exception is + and - for the Hilbert classes
-#   but each type of multiplication should have its own method
-#   if the user wants to alias those, they are free to do so
-# *** introduced SAFE mode for doing assert checks and stuff
-#
-# 7/31 
-# *** three-body forces implemented in RBM and integrator
-# *** SAFE mode only includes asserts, does not restrict methods
-
-
-# imports
 import sys
 import numpy as np
 np.set_printoptions(linewidth=200, threshold=sys.maxsize)
@@ -35,13 +15,11 @@ import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
+## i tried to put in numba at one point but couldn't get it working right :/
 # from numba import int8, int32, float64, boolean
 # from numba import types, typed
 # from numba.experimental import jitclass
 
-# safe mode: include asserts to check for consistencies
-SAFE = False
-# you may want this on if something isn't working as expected, but for larger calculations turn it off
 
 ###
 
@@ -262,10 +240,9 @@ class HilbertState:
         :type other: HilbertState
         :return: A new ``HilbertState`` with coefficients given by self + other
         :rtype: HilbertState
-        """        
-        if SAFE: 
-            assert isinstance(other, HilbertState)
-            assert self.ketwise == other.ketwise
+        """
+        assert isinstance(other, HilbertState)
+        assert self.ketwise == other.ketwise
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
@@ -278,9 +255,8 @@ class HilbertState:
         :return: A new ``HilbertState`` with coefficients given by self - other
         :rtype: HilbertState
         """        
-        if SAFE:
-            assert isinstance(other, HilbertState)
-            assert self.ketwise == other.ketwise
+        assert isinstance(other, HilbertState)
+        assert self.ketwise == other.ketwise
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
@@ -293,7 +269,7 @@ class HilbertState:
         :return: other * self
         :rtype: HilbertState
         """        
-        if SAFE: assert np.isscalar(other)
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients *= other
         return out
@@ -306,9 +282,8 @@ class HilbertState:
         :return: inner product of self (bra) with other (ket)
         :rtype: complex
         """        
-        if SAFE:
-            assert isinstance(other, HilbertState)
-            assert not self.ketwise and other.ketwise
+        assert isinstance(other, HilbertState)
+        assert not self.ketwise and other.ketwise
         return np.dot(self.coefficients, other.coefficients)
         
     def outer(self, other: 'HilbertState') -> 'HilbertOperator':
@@ -319,9 +294,8 @@ class HilbertState:
         :return: Outer product of self (ket) with other (bra)
         :rtype: HilbertOperator
         """        
-        if SAFE:
-            assert isinstance(other, HilbertState)
-            assert self.ketwise and not other.ketwise
+        assert isinstance(other, HilbertState)
+        assert self.ketwise and not other.ketwise
         out = HilbertOperator(n_particles=self.n_particles, isospin=self.isospin)
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex')
         return out 
@@ -334,9 +308,8 @@ class HilbertState:
         :return: < self| O(other) 
         :rtype: HilbertState
         """        
-        if SAFE:
-            assert isinstance(other, HilbertOperator)
-            assert not self.ketwise
+        assert isinstance(other, HilbertOperator)
+        assert not self.ketwise
         out = self.copy()
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
         return out
@@ -480,7 +453,7 @@ class HilbertState:
         self.coordinates = coordinates
         
     def exchange(self, i:int, j:int) -> 'HilbertState':
-        """Exchanges two particles.
+        """Exchanges two particles via the 2P-1= dot product rule
 
         :param i: Index of particle one
         :type i: int
@@ -495,6 +468,13 @@ class HilbertState:
         P_z = P_1.copy().sigma(i, 'z').sigma(j, 'z')
         P = (P_x + P_y + P_z + P_1)
         out = 0.5 * P * self.copy()
+        if self.isospin:
+            P_1 = HilbertOperator(n_particles=self.n_particles)
+            P_x = P_1.copy().tau(i, 'x').tau(j, 'x')
+            P_y = P_1.copy().tau(i, 'y').tau(j, 'y')
+            P_z = P_1.copy().tau(i, 'z').tau(j, 'z')
+            P = (P_x + P_y + P_z + P_1)
+            out = 0.5 * P * out
         return out
 
     
@@ -542,7 +522,7 @@ class HilbertOperator:
         :return: A new ``HilbertOperator`` with coefficients given by self + other
         :rtype: HilbertOperator
         """    
-        if SAFE: assert isinstance(other, HilbertOperator)
+        assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients + other.coefficients
         return out
@@ -555,7 +535,7 @@ class HilbertOperator:
         :return: A new ``HilbertOperator`` with coefficients given by self - other
         :rtype: HilbertOperator
         """ 
-        if SAFE: assert isinstance(other, HilbertOperator)
+        assert isinstance(other, HilbertOperator)
         out = self.copy()
         out.coefficients = self.coefficients - other.coefficients
         return out
@@ -568,7 +548,7 @@ class HilbertOperator:
         :return: The new state, ketwise.
         :rtype: HilbertState
         """               
-        if SAFE: assert isinstance(other, HilbertState)
+        assert isinstance(other, HilbertState)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
@@ -581,7 +561,7 @@ class HilbertOperator:
         :return: The product of the two.
         :rtype: HilbertOperator
         """
-        if SAFE: assert isinstance(other, HilbertOperator)
+        assert isinstance(other, HilbertOperator)
         out = other.copy()
         out.coefficients = np.matmul(self.coefficients, out.coefficients, dtype=complex)
         return out
@@ -594,7 +574,7 @@ class HilbertOperator:
         :return: The resulting scaled operator.
         :rtype: HilbertOperator
         """
-        if SAFE: assert np.isscalar(other)
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients *= other
         return out
@@ -622,22 +602,18 @@ class HilbertOperator:
         :return: A copy of the ``HilbertOperator`` with the one-body operator applied.
         :rtype: HilbertOperator
         """
-        if SAFE:
-            assert type(spin_matrix) == np.ndarray
-            assert spin_matrix.shape == (2,2)
+        assert type(spin_matrix) == np.ndarray
+        assert spin_matrix.shape == (2,2)
         obo = [np.identity(self.n_basis, dtype=complex) for _ in range(self.n_particles)]
         if self.isospin:
             if isospin_matrix is None:
                 isospin_matrix = np.identity(2, dtype=complex)
             else:
-                if SAFE:
-                    assert type(isospin_matrix) == np.ndarray
-                    assert isospin_matrix.shape == (2,2)        
+                assert isospin_matrix.shape == (2,2)        
             op = kronecker_product([isospin_matrix, spin_matrix])
         else:
             op = spin_matrix
-        if SAFE:
-            assert op.shape == obo[particle_index].shape
+        assert op.shape == obo[particle_index].shape
         obo[particle_index] = op
         obo = kronecker_product(obo)
         out = self.copy()
@@ -762,8 +738,7 @@ class ProductState:
             else:
                 self.coefficients = np.zeros(shape=(self.n_particles, 1, self.n_basis))
         else:
-            if SAFE:
-                assert type(coefficients)==np.ndarray
+            assert type(coefficients)==np.ndarray
             ket_condition = (coefficients.shape == (n_particles, self.n_basis, 1)) and ketwise
             bra_condition = (coefficients.shape == (n_particles, 1, self.n_basis)) and not ketwise
             if not ket_condition and not bra_condition:
@@ -795,9 +770,8 @@ class ProductState:
         :return: inner product of self (bra) with other (ket)
         :rtype: complex
         """    
-        if SAFE:
-            assert isinstance(other, ProductState)
-            assert (not self.ketwise) and other.ketwise
+        assert isinstance(other, ProductState)
+        assert (not self.ketwise) and other.ketwise
         return np.prod([np.dot(self.coefficients[i], other.coefficients[i]) for i in range(self.n_particles)])
         
     def outer(self, other: 'ProductState') -> 'ProductState':
@@ -808,9 +782,8 @@ class ProductState:
         :return: Outer product of self (ket) with other (bra)
         :rtype: ProductOperator
         """    
-        if SAFE:
-            assert isinstance(other, ProductState)
-            assert (self.ketwise) and (not other.ketwise)
+        assert isinstance(other, ProductState)
+        assert (self.ketwise) and (not other.ketwise)
         out = ProductOperator(n_particles=self.n_particles, isospin=self.isospin)
         for i in range(self.n_particles):
             out.coefficients[i] = np.matmul(self.coefficients[i], other.coefficients[i], dtype=complex)
@@ -824,9 +797,8 @@ class ProductState:
         :return: < self | O(other) 
         :rtype: ProductState
         """        
-        if SAFE:
-            assert isinstance(other, HilbertOperator)
-            assert not self.ketwise
+        assert isinstance(other, HilbertOperator)
+        assert not self.ketwise
         out = self.copy()
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
         return out
@@ -887,7 +859,7 @@ class ProductState:
         :return: A copy of the ``ProductState`` with the one particle scaled.
         :rtype: ProductState
         """
-        if SAFE: assert np.isscalar(b)
+        assert np.isscalar(b)
         out = self.copy()
         out.coefficients[particle_index] *= b
         return out
@@ -900,7 +872,7 @@ class ProductState:
         :return: The scaled state
         :rtype: ProductState
         """
-        if SAFE: assert np.isscalar(b)
+        assert np.isscalar(b)
         out = self.copy()
         out.coefficients *= b ** (1 / out.n_particles)
         return out
@@ -1036,7 +1008,7 @@ class ProductOperator:
         :return: The new state, ketwise.
         :rtype: ProductState
         """                    
-        if SAFE: assert isinstance(other, ProductState)
+        assert isinstance(other, ProductState)
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
@@ -1050,7 +1022,7 @@ class ProductOperator:
         :return: The product of the two.
         :rtype: ProductOperator
         """
-        if SAFE: assert isinstance(other, type(self))
+        assert isinstance(other, type(self))
         out = other.copy()
         for i in range(self.n_particles):
                 out.coefficients[i] = np.matmul(self.coefficients[i], out.coefficients[i], dtype=complex)
@@ -1064,6 +1036,16 @@ class ProductOperator:
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
+    def to_manybody_basis(self) -> 'HilbertOperator':
+        """Projects to the many-body basis.
+        
+        :return: The Kronecker product of the ``ProductOperator``. 
+        :rtype: HilbertOperator
+        """
+        new_coeffs = kronecker_product(self.to_list())
+        new_coeffs = new_coeffs.reshape(self.n_basis ** self.n_particles, self.n_basis ** self.n_particles)
+        return HilbertOperator(n_particles=self.n_particles, coefficients=new_coeffs, isospin=self.isospin)
+    
     def apply_onebody_operator(self, particle_index: int, spin_matrix: np.ndarray, isospin_matrix:np.ndarray=None) -> 'ProductOperator':
         r"""Applies a one-body / single-particle operator to the ``ProductOperator``.
         This accounts for the spin-isospin kronecker product, if isospin is used.
@@ -1117,6 +1099,18 @@ class ProductOperator:
         return self.apply_onebody_operator(particle_index=particle_index,
                                           isospin_matrix=pauli(dimension),
                                           spin_matrix=np.identity(2, dtype=complex))
+        
+    def exp_onebody(self, particle_index: int) -> 'ProductOperator':
+        """ Applies an exponential function to the corresponding one-body operator.
+
+        :param particle_index: Index of particle, staring from 0.
+        :type particle_index: int
+        :return: The resulting operator.
+        :rtype: ProductOperator
+        """
+        out = self.copy()
+        out[particle_index] = expm(out[particle_index])
+        return out
 
     def scale_one(self, particle_index: int, b: complex) -> 'ProductOperator':
         """Multiplies a single particle operator matrix by a number.
@@ -1128,7 +1122,7 @@ class ProductOperator:
         :return: A copy of the ``ProductOperator`` with the one-body matrix scaled.
         :rtype: ProductOperator
         """
-        if SAFE: assert np.isscalar(b)
+        assert np.isscalar(b)
         out = self.copy()
         out.coefficients[particle_index] *= b
         return out
@@ -1141,7 +1135,7 @@ class ProductOperator:
         :return: The scaled state
         :rtype: ProductOperator
         """
-        if SAFE: assert np.isscalar(b)
+        assert np.isscalar(b)
         out = self.copy()
         out.coefficients *= b ** (1 / out.n_particles)
         return out
@@ -1176,6 +1170,8 @@ class ProductOperator:
         out = HilbertOperator(n_particles=self.n_particles,isospin=self.isospin)
         out.coefficients = new_coeffs
         return out
+
+
     
     def __mul__(self, other):
         """Defines the ``*`` multiplication operator to be used in place of  ``.multiply_state``, ``.multiply_operator``, and ``.scale``.
@@ -1227,7 +1223,7 @@ class CouplingArray:
             self.read(file)
 
     def copy(self):
-        if SAFE: assert isinstance(self.coefficients, np.ndarray)
+        assert isinstance(self.coefficients, np.ndarray)
         out = CouplingArray(self.n_particles, self.shape)
         out.coefficients = self.coefficients.copy()
         return out
@@ -1240,7 +1236,7 @@ class CouplingArray:
         :return: _description_
         :rtype: _type_
         """        
-        if SAFE: assert np.isscalar(other)
+        assert np.isscalar(other)
         out = self.copy()
         out.coefficients = other * out.coefficients
         return out
