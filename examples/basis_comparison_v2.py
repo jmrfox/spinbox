@@ -3,18 +3,13 @@ from spinbox import *
 n_particles = 2
 dt = 0.001
 
-seed = itertools.count(0,1)
+global_seed = 1
 pot = NuclearPotential(n_particles)
-pot.sigma.random(1.0, seed=next(seed))
-pot.sigmatau.random(1.0, seed=next(seed))
-pot.tau.random(1.0, seed=next(seed))
-pot.coulomb.random(0.1, seed=next(seed))
-pot.spinorbit.random(dt, seed=next(seed))
-
+pot.random(seed=1729)
 
 def hilbert_bracket(method, controls):
-    seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed)).to_full_basis()
+    seeder = itertools.count(global_seed,1)
+    ket = ProductState(n_particles).random(seed=next(seeder)).to_full_basis()
     bra = ket.copy().dagger()
     
     if method=='hs':
@@ -25,15 +20,15 @@ def hilbert_bracket(method, controls):
         raise ValueError
 
     integ = Integrator(pot, prop) 
-    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed)) # use the integrator class to produce one sample of the aux field
+    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seeder)) # use the integrator class to produce one sample of the aux field
     print(integ.aux_fields_samples.shape)
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
 
 
 def product_bracket(method, controls):
-    seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed))
+    seeder = itertools.count(global_seed,1)
+    ket = ProductState(n_particles).random(seed=next(seeder))
     bra = ket.copy().dagger()
     
     if method=='hs':
@@ -44,7 +39,7 @@ def product_bracket(method, controls):
         raise ValueError
 
     integ = Integrator(pot, prop)
-    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed))
+    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seeder))
     print(integ.aux_fields_samples.shape)
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
@@ -58,7 +53,12 @@ if __name__ == "__main__":
                 "tau": True,
                 "coulomb": True,
                 "spinorbit": True,
+                "sigma_3b": True,
                 }
+    
+    if method=="hs" and controls["sigma_3b"]:
+        raise ValueError("There is no HS transform for the 3-body force")
+
     b_hilbert = hilbert_bracket(method, controls)
     print('hilbert = ', b_hilbert)
     b_product = product_bracket(method, controls)

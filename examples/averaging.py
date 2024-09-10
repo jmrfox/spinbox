@@ -23,9 +23,9 @@ def average_1d(n_particles,
     seeder = itertools.count(seed, 1)
 
     if full_basis:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_full_basis()
+        ket = ProductState(n_particles, ketwise=True, isospin=isospin).random(seed=next(seeder)).to_full_basis()
     else:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
+        ket = ProductState(n_particles, ketwise=True, isospin=isospin).random(seed=next(seeder))
         
     print(ket)
     bra = ket.copy().dagger()
@@ -145,9 +145,9 @@ def average_argonne(n_particles,
     seeder = itertools.count(seed, 1)
 
     if full_basis:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_full_basis()
+        ket = ProductState(n_particles, ketwise=True, isospin=isospin).random(seed=next(seeder)).to_full_basis()
     else:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
+        ket = ProductState(n_particles, ketwise=True, isospin=isospin).random(seed=next(seeder))
         
     bra = ket.copy().dagger()
 

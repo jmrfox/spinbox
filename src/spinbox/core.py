@@ -68,10 +68,6 @@ def carctanh(x):
     """Complex incerse hyp. tangent
     """
     return np.arctanh(x, dtype=complex)
-
-def cabs(x):
-    """Weird complex absolute value function needed for the RBM"""
-    return np.abs(np.real(x)) + 1j*np.abs(np.imag(x))
     
 
 def interaction_indices(n: int, m = 2) -> list:
@@ -333,8 +329,8 @@ class HilbertState:
         out += [str(self.coefficients)]
         return "\n".join(out)
 
-    def randomize(self, seed:int=None) -> 'HilbertState':
-        """Randomize coefficients.
+    def random(self, seed:int=None) -> 'HilbertState':
+        """Random coefficients.
 
         :param seed: RNG seed, defaults to None
         :type seed: int, optional
@@ -368,16 +364,6 @@ class HilbertState:
         else:
             dens = self.dagger().outer(self.copy())
         return dens
-        
-    def entropy(self) -> complex:
-        """Von Neumann entropy, a measure of entanglement.
-
-        :return: VN entropy of the ``HilbertState``
-        :rtype: complex
-        """
-        dens = self.density().coefficients
-        log_dens = logm(dens)
-        return - np.trace(dens @ log_dens)
      
     def generate_basis_states(self) -> list:
         """Makes a list of corresponding basis vectors.
@@ -400,7 +386,7 @@ class HilbertState:
         :rtype: (ProductState, scipy.OptimizeResult)
         """        
         from scipy.optimize import minimize, NonlinearConstraint
-        fit = ProductState(self.n_particles, isospin=self.isospin).randomize(seed)
+        fit = ProductState(self.n_particles, isospin=self.isospin).random(seed)
         shape = fit.coefficients.shape
         n_coeffs = len(fit.coefficients.flatten())
         n_params = 2*n_coeffs
@@ -898,8 +884,8 @@ class ProductState:
         out.coefficients *= b ** (1 / out.n_particles)
         return out
 
-    def randomize(self, seed:int=None) -> 'ProductState':
-        """Randomize coefficients.
+    def random(self, seed:int=None) -> 'ProductState':
+        """Random coefficients.
 
         :param seed: RNG seed, defaults to None
         :type seed: int, optional
@@ -1310,7 +1296,7 @@ class TwoBodyCoupling(CouplingArray):
                     for b in range(3):
                         self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
     
-    def random(self, scale, mean, seed=0):
+    def random(self, mean, scale, seed=0):
         self.coefficients = self.generate_random(self.shape, scale, mean, seed)
         self.symmetrize()
         return self
@@ -1329,7 +1315,7 @@ class TwoBodyCouplingIsotropic(CouplingArray):
             for j in range(self.n_particles):
                 self.coefficients[i,j]=self.coefficients[j,i]
 
-    def random(self, scale, mean, seed=0):
+    def random(self, mean, scale, seed=0):
         self.coefficients = self.generate_random(self.shape, scale, mean, seed)
         self.symmetrize()
         return self
@@ -1344,7 +1330,7 @@ class OneBodyCoupling(CouplingArray):
         shape = (3, n_particles)
         super().__init__(n_particles, shape, file)
         
-    def random(self, scale, mean, seed=0):
+    def random(self, mean, scale, seed=0):
         self.coefficients = self.generate_random(self.shape, scale, mean, seed)
         return self
     
@@ -1375,7 +1361,7 @@ class ThreeBodyCoupling(CouplingArray):
                                 self.coefficients[a,i,b,j,c,k]=self.coefficients[a,k,b,i,c,j]
                                 self.coefficients[a,i,b,j,c,k]=self.coefficients[a,k,b,j,c,i]
 
-    def random(self, scale, mean, seed=0):
+    def random(self, mean, scale, seed=0):
         self.coefficients = self.generate_random(self.shape, scale, mean, seed)
         self.symmetrize()
         return self
@@ -1411,6 +1397,16 @@ class NuclearPotential:
     def read_sigma_3b(self, filename):
         self.sigma_3b.read(filename)
 
+    def random(self,seed):
+        seeder = itertools.count(seed,1)
+        self.sigma.random(mean=-5., scale=5.0, seed=next(seeder))
+        self.sigmatau.random(mean=-5., scale=5.0, seed=next(seeder))
+        self.tau.random(mean=-5., scale=5.0, seed=next(seeder))
+        self.coulomb.random(mean=1., scale=1.0, seed=next(seeder))
+        self.spinorbit.random(mean=-0.1, scale=0.1, seed=next(seeder))
+        self.sigma_3b.random(mean=-2., scale=2.0, seed=next(seeder))
+        return self
+
 
 
 # PROPAGATOR CLASSES
@@ -1419,7 +1415,6 @@ class Propagator:
     def __init__(self, n_particles, dt: float, isospin=True, include_prefactors=True):
         self.n_particles = n_particles
         self.dt = dt
-        self.deltatau = dt * 1j
         self.symmetry_factor = 0.5
         self.include_prefactors = include_prefactors
         self.isospin = isospin
@@ -1429,10 +1424,6 @@ class Propagator:
         self._3b_idx = interaction_indices(n_particles, 3)
         self._n2 = len(self._2b_idx)
         self._n3 = len(self._3b_idx)
-        
-        # if not np.imag(self.dt)==0.0:
-        #     raise ValueError('Looks like you entered a complex value for dt, which should be real: delta tau = i * dt ')
-
 
 
 class ExactPropagator(Propagator):
@@ -1536,7 +1527,7 @@ class ExactPropagator(Propagator):
         for a in range(3):
             for b in range(3):
                 for c in range(3):
-                    out += self._sig[i][a].multiply_operator(self._sig[j][b]).multiply_operator(self._sig[k][c]).scale(-coupling_array[a, i, b, j, c, k])
+                    out += self._sig[i][a].multiply_operator(self._sig[j][b]).multiply_operator(self._sig[k][c]).scale(coupling_array[a, i, b, j, c, k])
         return out
 
     def propagator_combined(self,
@@ -1568,7 +1559,7 @@ class ExactPropagator(Propagator):
             for i,j,k in triples_ijk:
                 force += self.force_sigma_3b(potential.sigma_3b, i, j, k)
         
-        prop = force.scale(- self.deltatau * self.symmetry_factor).exp()
+        prop = force.scale(- self.dt * self.symmetry_factor).exp()
 
         if spinorbit:
             if self._linear_spinorbit:
@@ -1629,7 +1620,7 @@ class HilbertPropagatorHS(Propagator):
         :return: The one-body propagator
         :rtype: HilbertOperator
         """
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = self.dt * self.symmetry_factor * coupling
         return operator.scale(-z).exp()        
 
     def twobody_sample(self, coupling:float, x: float, operator_i: HilbertOperator, operator_j: HilbertOperator) -> HilbertOperator:
@@ -1651,7 +1642,7 @@ class HilbertPropagatorHS(Propagator):
         :return: One sample of the two-body propagator
         :rtype: HilbertOperator
         """        
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = self.dt * self.symmetry_factor * coupling
         arg = csqrt(-z)*x
         if self.include_prefactors:
             prefactor = cexp(z)
@@ -1747,7 +1738,7 @@ class HilbertPropagatorHS(Propagator):
         for i,j in self._2b_idx:
                 if not coupling_array[i,j]==0.:
                     if self.include_prefactors:
-                        z = self.deltatau * self.symmetry_factor * 0.25 * coupling_array[i,j]
+                        z = self.dt * self.symmetry_factor * 0.25 * coupling_array[i,j]
                         out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-z)))
                     out.append( self.onebody(0.25*coupling_array[i,j], self._tau_op[i][2]) )
                     out.append( self.onebody(0.25*coupling_array[i,j], self._tau_op[j][2]) )
@@ -1775,14 +1766,14 @@ class HilbertPropagatorHS(Propagator):
         for i in self._1b_idx:
             for a in self._xyz:
                 if not coupling_array[a,i]==0.:
-                    z = 1.j*coupling_array[a,i] / (self.deltatau * self.symmetry_factor)
+                    z = 1.j*coupling_array[a,i] / (self.dt * self.symmetry_factor)
                     out.append( self.onebody(z,  self._sig_op[i][a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
                     if not coupling_array[a,i]==0.:
                         if not coupling_array[b,j]==0.:
-                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.deltatau * self.symmetry_factor)
+                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.dt * self.symmetry_factor)
                             out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                             idx += 1
         if self.include_prefactors:
@@ -1830,10 +1821,10 @@ class HilbertPropagatorRBM(Propagator):
         :return: factors N (normalization), W (weight), and S (sign)
         :rtype: tuple
         """
-        z = self.deltatau * self.symmetry_factor * coupling
-        n = cexp(-cabs(z))
-        w = carctanh(csqrt(ctanh(cabs(z))))
-        s = coupling/cabs(coupling)
+        z = self.dt * self.symmetry_factor * coupling
+        n = cexp(-abs(z))
+        w = carctanh(csqrt(ctanh(abs(z))))
+        s = coupling/abs(coupling)
         return n, w, s
     
     def _a3b_factors(self, coupling:float) -> tuple:
@@ -1844,7 +1835,7 @@ class HilbertPropagatorRBM(Propagator):
         :return: factors N (normalization), C (bias), W (weight), A1 (one-body), A2 (two-body)
         :rtype: tuple
         """
-        a3 = self.deltatau * self.symmetry_factor * coupling
+        a3 = self.dt * self.symmetry_factor * coupling
         log = lambda x: np.log(x, dtype=complex)
         if coupling>0:
             x = csqrt(cexp(8*a3) - 1)
@@ -1887,7 +1878,7 @@ class HilbertPropagatorRBM(Propagator):
         :return: The one-body propagator
         :rtype: HilbertOperator
         """
-        z = self.deltatau*self.symmetry_factor*coupling
+        z = self.dt*self.symmetry_factor*coupling
         return operator.scale(-z).exp()
 
     def twobody_sample(self, coupling: float, h: int, operator_i: HilbertOperator, operator_j: HilbertOperator) -> HilbertOperator:
@@ -1953,14 +1944,14 @@ class HilbertPropagatorRBM(Propagator):
         :type operator_k: HilbertOperator
         :return: The sample of the three-body RBM propagator
         :rtype: HilbertOperator
-        """        
+        """
         N, C, W, A1, A2 = self._a3b_factors(coupling)
         if self.include_prefactors:
-            prefactor = N*2*cexp(-3*cabs(A2)-h_list[0]*C)
+            prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
         else:
             prefactor = 1.0
-        W2 = carctanh(csqrt(ctanh(cabs(A2))))
-        S2 = A2/cabs(A2)
+        W2 = carctanh(csqrt(ctanh(abs(A2))))
+        S2 = A2/abs(A2)
         arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
         arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
         arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -2051,7 +2042,7 @@ class HilbertPropagatorRBM(Propagator):
         idx = 0
         for i,j in self._2b_idx:
             if not coupling_array[i,j]==0.:
-                z = self.deltatau * self.symmetry_factor * coupling_array[i,j] * 0.25
+                z = self.dt * self.symmetry_factor * coupling_array[i,j] * 0.25
                 if self.include_prefactors:
                     out.append(HilbertOperator(self.n_particles, self.isospin).scale(cexp(-z)))
                 out.append( self.onebody(0.25*coupling_array[i,j], self._tau_op[i][2]) )
@@ -2080,14 +2071,14 @@ class HilbertPropagatorRBM(Propagator):
         for i in self._1b_idx:
             for a in self._xyz:
                 if not coupling_array[a,i]==0.:
-                    z = 1.j*coupling_array[a,i] / (self.deltatau * self.symmetry_factor)
+                    z = 1.j*coupling_array[a,i] / (self.dt * self.symmetry_factor)
                     out.append( self.onebody(z,  self._sig_op[i][a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
                     if not coupling_array[a,i]==0.:
                         if not coupling_array[b,j]==0.:
-                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.deltatau * self.symmetry_factor)
+                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.dt * self.symmetry_factor)
                             out.append( self.twobody_sample(z, aux[idx], self._sig_op[i][a], self._sig_op[j][b]) )
                             idx += 1
         if self.include_prefactors:
@@ -2174,7 +2165,7 @@ class ProductPropagatorHS(Propagator):
         :rtype: ProductOperator
         """        
         out = ProductOperator(self.n_particles, self.isospin)
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = self.dt * self.symmetry_factor * coupling
         out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
     
@@ -2201,7 +2192,7 @@ class ProductPropagatorHS(Propagator):
         :return: The sample of the two-body product space propagator
         :rtype: ProductOperator
         """        
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = self.dt * self.symmetry_factor * coupling
         arg = csqrt(-z)*x
         if self.include_prefactors:
             prefactor = cexp(z)
@@ -2274,6 +2265,7 @@ class ProductPropagatorHS(Propagator):
             for a in self._xyz:
                 if not coupling_array[i,j]==0.:
                     out.append( self.twobody_sample(coupling_array[i,j], aux[idx], i, j, self._tau[a], self._tau[a]) )
+                    idx += 1
         return out
 
     def factors_coulomb(self, coupling_array: CouplingArray, aux: list) -> list[ProductOperator]:
@@ -2297,7 +2289,7 @@ class ProductPropagatorHS(Propagator):
             if not coupling_array[i,j]==0.:
                 if self.include_prefactors:
                     norm_op = ProductOperator(self.n_particles, self.isospin)
-                    z = self.deltatau * self.symmetry_factor * 0.25 * coupling_array[i,j]
+                    z = self.dt * self.symmetry_factor * 0.25 * coupling_array[i,j]
                     norm_op = norm_op.scale_all(cexp(-z))
                     out.append(norm_op)
                 out.append( self.onebody(0.25*coupling_array[i,j], i, self._tau[2]) )
@@ -2326,14 +2318,14 @@ class ProductPropagatorHS(Propagator):
         for i in self._1b_idx:
             for a in self._xyz:
                 if not coupling_array[a,i]==0.:
-                    z = 1.j * coupling_array[a,i] / (self.deltatau * self.symmetry_factor)
+                    z = 1.j * coupling_array[a,i] / (self.dt * self.symmetry_factor)
                     out.append( self.onebody(z, i, self._sig[a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
                     if not coupling_array[a,i]==0.:
                         if not coupling_array[b,j]==0.:
-                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.deltatau * self.symmetry_factor)
+                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.dt * self.symmetry_factor)
                             out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
                             idx += 1
         if self.include_prefactors:
@@ -2383,10 +2375,10 @@ class ProductPropagatorRBM(Propagator):
         :return: factors N (normalization), W (weight), and S (sign)
         :rtype: tuple
         """
-        z = self.deltatau * self.symmetry_factor * coupling
-        n = cexp(-cabs(z))
-        w = carctanh(csqrt(ctanh(cabs(z))))
-        s = coupling/cabs(coupling)
+        z = self.dt * self.symmetry_factor * coupling
+        n = cexp(-abs(z))
+        w = carctanh(csqrt(ctanh(abs(z))))
+        s = coupling/abs(coupling)
         return n, w, s
     
     def _a3b_factors(self, coupling:float) -> tuple:
@@ -2397,7 +2389,7 @@ class ProductPropagatorRBM(Propagator):
         :return: factors N (normalization), C (bias), W (weight), A1 (one-body), A2 (two-body)
         :rtype: tuple
         """
-        a3 = self.deltatau * self.symmetry_factor * coupling
+        a3 = self.dt * self.symmetry_factor * coupling
         log = lambda x: np.log(x, dtype=complex)
         if coupling>0:
             x = csqrt(cexp(8*a3) - 1)
@@ -2442,7 +2434,7 @@ class ProductPropagatorRBM(Propagator):
         :return: _description_
         :rtype: ProductOperator
         """        
-        z = self.deltatau * self.symmetry_factor * coupling
+        z = self.dt * self.symmetry_factor * coupling
         out = ProductOperator(self.n_particles)
         out.coefficients[i] = ccosh(z) * out.coefficients[i] - csinh(z) * onebody_matrix @ out.coefficients[i]
         return out
@@ -2507,12 +2499,12 @@ class ProductPropagatorRBM(Propagator):
         """            
         N, C, W, A1, A2 = self._a3b_factors(coupling)
         if self.include_prefactors:
-            prefactor = N*2*cexp(-3*cabs(A2)-h_list[0]*C)
+            prefactor = N*2*cexp(-3*abs(A2)-h_list[0]*C)
         else:
             prefactor = 1.0
         out = ProductOperator(self.n_particles, self.isospin)
-        W2 = carctanh(csqrt(ctanh(cabs(A2))))
-        S2 = A2/cabs(A2)
+        W2 = carctanh(csqrt(ctanh(abs(A2))))
+        S2 = A2/abs(A2)
         arg_i = W2*(2*h_list[1] - 1) + W2*(2*h_list[2] - 1) + A1 - h_list[0]*W
         arg_j = W2*S2*(2*h_list[1] -1) + W2*(2*h_list[3] - 1) + A1 - h_list[0]*W
         arg_k = W2*S2*(2*h_list[2] - 1) + W2*S2*(2*h_list[3] - 1) + A1 - h_list[0]*W
@@ -2603,7 +2595,7 @@ class ProductPropagatorRBM(Propagator):
         idx = 0
         for i,j in self._2b_idx:
             if not coupling_array[i,j]==0.:
-                z = self.deltatau * self.symmetry_factor * 0.25 * coupling_array[i,j]
+                z = self.dt * self.symmetry_factor * 0.25 * coupling_array[i,j]
                 if self.include_prefactors:
                     norm_op = ProductOperator(self.n_particles)
                     norm_op = norm_op.scale_all(cexp(-z))
@@ -2635,14 +2627,14 @@ class ProductPropagatorRBM(Propagator):
         for i in self._1b_idx:
             for a in self._xyz:
                 if not coupling_array[a,i]==0.:
-                    z = 1.j * coupling_array[a,i] / (self.deltatau * self.symmetry_factor)
+                    z = 1.j * coupling_array[a,i] / (self.dt * self.symmetry_factor)
                     out.append( self.onebody(z, i, self._sig[a])  )
         for i,j in self._2b_idx:
             for a in self._xyz:
                 for b in self._xyz:
                     if not coupling_array[a,i]==0.:
                         if not coupling_array[b,j]==0.:
-                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.deltatau * self.symmetry_factor)
+                            z = - 0.5 * coupling_array[a, i] * coupling_array[b, j] / (self.dt * self.symmetry_factor)
                             out.append( self.twobody_sample(z, aux[idx], i, j, self._sig[a], self._sig[b]) )
                             idx += 1
         if self.include_prefactors:

@@ -1,8 +1,8 @@
 from spinbox import *
 
 isospin = False
-ket = HilbertState(2, ketwise=True, isospin=isospin).randomize(100)
-bra = HilbertState(2, ketwise=False, isospin=isospin).randomize(101)
+ket = HilbertState(2, ketwise=True, isospin=isospin).random(100)
+bra = HilbertState(2, ketwise=False, isospin=isospin).random(101)
 print(bra * ket)
 
 

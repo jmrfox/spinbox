@@ -20,8 +20,8 @@ def eq(x,y,verbose=False):
 def test_overlaps_1():
     n_particles = 3
     isospin = True
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100)
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101)
+    s0 = ProductState(n_particles, isospin=isospin).random(100)
+    s1 = ProductState(n_particles, isospin=isospin).random(101)
     assert eq(1.0, s0.dagger().inner(s0))
     b_prod = s0.dagger().inner(s1)
     b_hilb = s0.dagger().to_full_basis().inner(s1.to_full_basis())
@@ -30,16 +30,16 @@ def test_overlaps_1():
 def test_overlaps_2():
     n_particles = 3
     isospin = True
-    s0 = HilbertState(n_particles, isospin=isospin).randomize(100)
-    s1 = HilbertState(n_particles, isospin=isospin).randomize(101)
+    s0 = HilbertState(n_particles, isospin=isospin).random(100)
+    s1 = HilbertState(n_particles, isospin=isospin).random(101)
     assert eq(1.0, s0.dagger().inner(s0))
     
     
 def test_2Pij_minus_1():
     n_particles = 3
     isospin = False
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100)
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101)
+    s0 = ProductState(n_particles, isospin=isospin).random(100)
+    s1 = ProductState(n_particles, isospin=isospin).random(101)
     s0_exch = s0.copy()
     temp = s0_exch.coefficients[0].copy()
     s0_exch.coefficients[0] = s0_exch.coefficients[1].copy()
@@ -55,8 +55,8 @@ def test_2Pij_minus_1():
 def test_densmat():
     n_particles = 3
     isospin = True
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100)
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101)
+    s0 = ProductState(n_particles, isospin=isospin).random(100)
+    s1 = ProductState(n_particles, isospin=isospin).random(101)
     r0 = s0.outer(s0.dagger())
     r1 = s1.outer(s1.dagger())
     assert eq(s0.dagger().inner(r1.multiply_state(s0)) , s1.dagger().inner(r0.multiply_state(s1)) )
@@ -67,12 +67,12 @@ def test_amplitudes_1():
     isospin = True
     dt = 0.01
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
+    ket = ProductState(n_particles, isospin=isospin).random().to_full_basis()
     bra = ket.copy().dagger()
     op = HilbertOperator(n_particles=n_particles, isospin=isospin).apply_sigma(0,0).apply_tau(1,1)
     b_hilb = bra.inner(op.multiply_state(ket))
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize()
+    ket = ProductState(n_particles, isospin=isospin).random()
     bra = ket.copy().dagger()
     op = ProductOperator(n_particles=n_particles, isospin=isospin).apply_sigma(0,0).apply_tau(1,1)
     b_prod = bra.inner(op.multiply_state(ket))
@@ -86,7 +86,7 @@ def test_hs_sigma():
     pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
+    ket = ProductState(n_particles, isospin=isospin).random().to_full_basis()
     bra = ket.copy().dagger()
     prop = HilbertPropagatorHS(n_particles, dt, isospin=isospin)
     aux = np.ones(prop.n_aux_sigma).flatten()
@@ -96,7 +96,7 @@ def test_hs_sigma():
         ket_prop = f.multiply_state(ket_prop)
     b_hilb = bra.inner(ket_prop)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize()
+    ket = ProductState(n_particles, isospin=isospin).random()
     bra = ket.copy().dagger()
     prop = ProductPropagatorHS(n_particles, dt, isospin=isospin)
     aux = np.ones(prop.n_aux_sigma).flatten()
@@ -115,7 +115,7 @@ def test_rbm_sigma():
     pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
+    ket = ProductState(n_particles, isospin=isospin).random().to_full_basis()
     bra = ket.copy().dagger()
     ket_prop = ket.copy()
     prop = HilbertPropagatorRBM(n_particles, dt, isospin=isospin)
@@ -125,7 +125,7 @@ def test_rbm_sigma():
         ket_prop = f.multiply_state(ket_prop)
     b_hilb = bra.inner(ket_prop)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize()
+    ket = ProductState(n_particles, isospin=isospin).random()
     bra = ket.copy().dagger()
     ket_prop = ket.copy()
     prop = ProductPropagatorRBM(n_particles, dt, isospin=isospin)

@@ -13,7 +13,7 @@ a,b,c = 0,0,0
 
 seed = 1
 
-dtau_factor = 0.01j/2
+dtau_factor = 0.01/2
 
 def a3b_factors(coupling):
     # a3 must be fully imaginary
@@ -60,8 +60,8 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     ident = HilbertOperator(n_particles, isospin=isospin)
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     tau = [[HilbertOperator(n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
-    bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
+    ket = ProductState(n_particles, isospin=isospin, ketwise=True).random(0)
+    bra = ProductState(n_particles, isospin=isospin, ketwise=False).random(1)
     ket = ket.to_full_basis()
     bra = bra.to_full_basis()
 
@@ -177,8 +177,8 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
     # exp( - dt/2 sig_1x sig_2x sig_3x)
     sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
     tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
-    bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
+    ket = ProductState(n_particles, isospin=isospin, ketwise=True).random(0)
+    bra = ProductState(n_particles, isospin=isospin, ketwise=False).random(1)
     
     op_i = sig[a] @ tau[a]
     op_j = sig[b] @ tau[b]
@@ -207,7 +207,7 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_rbm += bra * (op * ket.copy())
         b_rbm *= N3 * cexp(-3*abs(A2)) * 0.125
         
-        
+        A(2)
     elif mode==4: # sum using propagator class
         prop = ProductPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
@@ -245,7 +245,7 @@ def three_body_comms():
 def compare():
     n_particles = 3
     dt = 0.01
-    coupling = 3.14
+    coupling = -3.14
 
     b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=5)
     print("rbm = ", b_rbm)
@@ -265,8 +265,8 @@ def compare():
 if __name__=="__main__":
     n_particles = 3
     dt = 0.01
-    coupling = 3.14
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=2)
+    coupling = -3.14
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=5)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)

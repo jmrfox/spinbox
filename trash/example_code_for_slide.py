@@ -1,6 +1,6 @@
 from spinbox import *
 
-ket = ProductState(n_particles=5, isospin=True).randomize(seed=1729)
+ket = ProductState(n_particles=5, isospin=True).random(seed=1729)
 bra = ket.copy().dagger()
 
 potential = NuclearPotential(n_particles=5) # AV7 + Coulomb

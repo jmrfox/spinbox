@@ -8,7 +8,7 @@ maxiter = 100
 
 print("======== PRODUCT =======")
 # test for pure product state
-ket = ProductState(n_particles, isospin=isospin).randomize(seed)
+ket = ProductState(n_particles, isospin=isospin).random(seed)
 fit = ket.to_full_basis().nearest_product_state(seeds=seeds, maxiter=maxiter)
 print("product state:", ket)
 print("fit: ", fit)
@@ -19,7 +19,7 @@ print("VN entropy = ", ket.to_full_basis().entropy())
 
 print("======== ENTANGLED =======")
 # test for entangled state
-ket = HilbertState(n_particles, isospin=isospin).randomize(seed)
+ket = HilbertState(n_particles, isospin=isospin).random(seed)
 fit = ket.nearest_product_state(seeds=seeds, maxiter=maxiter).to_full_basis()
 print("hilbert state:", ket)
 print("nearest product state:", fit)

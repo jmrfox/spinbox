@@ -46,8 +46,8 @@ def gfmc_3b_1d(n_particles, dt, a3, mode=1):
     # exp( - dt/2 sig_1x sig_2x sig_3x)
     ident = HilbertOperator(n_particles, isospin=isospin)
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
-    bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
+    ket = ProductState(n_particles, isospin=isospin, ketwise=True).random(0)
+    bra = ProductState(n_particles, isospin=isospin, ketwise=False).random(1)
     ket = ket.to_full_basis()
     bra = bra.to_full_basis()
 
@@ -117,8 +117,8 @@ def afdmc_3b_1d(n_particles, dt, a3):
         ident = np.identity(4)
         sig = [kronecker_product([np.identity(2), pauli(a)]) for a in [0, 1, 2]]
         tau = [kronecker_product([pauli(a), np.identity(2)]) for a in [0, 1, 2]]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
-    bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
+    ket = ProductState(n_particles, isospin=isospin, ketwise=True).random(0)
+    bra = ProductState(n_particles, isospin=isospin, ketwise=False).random(1)
     
     prop_0 = ProductOperator(n_particles, isospin=isospin)
     prop_1 = ProductOperator(n_particles, isospin=isospin)
@@ -167,7 +167,7 @@ def gfmc_3bprop(n_particles, dt, seed):
     sig = [[HilbertOperator(n_particles, isospin=isospin).apply_sigma(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     if isospin:
         tau = [[HilbertOperator(n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
-    ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(seed=next(seeder)).to_full_basis()
+    ket = ProductState(n_particles, isospin=isospin, ketwise=True).random(seed=next(seeder)).to_full_basis()
     bra = ket.copy().dagger()
     
     asig3b = ThreeBodyCoupling(n_particles).generate(scale=100, seed=next(seeder))

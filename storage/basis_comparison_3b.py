@@ -1,40 +1,35 @@
 from spinbox import *
 
 n_particles = 3
-dt = 0.001
+dt = 0.01
 
-seed = itertools.count(0,1)
+global_seed = 5
 pot = NuclearPotential(n_particles)
-pot.sigma.random(10.0, seed=next(seed))
-pot.sigmatau.random(10.0, seed=next(seed))
-pot.tau.random(10.0, seed=next(seed))
-pot.coulomb.random(1.0, seed=next(seed))
-pot.spinorbit.random(dt, seed=next(seed))
-pot.sigma_3b.random(10.0, seed=next(seed))
+pot.random(seed=1729)
 
 def hilbert_bracket(controls):
-    seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed)).to_full_basis()
+    seeder = itertools.count(global_seed,1)
+    ket = ProductState(n_particles).random(seed=next(seeder)).to_full_basis()
     bra = ket.copy().dagger()
     
     prop = HilbertPropagatorRBM(n_particles, dt)
 
     integ = Integrator(pot, prop)
-    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed)) # use the integrator class to produce one sample of the aux field
+    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seeder)) # use the integrator class to produce one sample of the aux field
 
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
 
 
 def product_bracket(controls):
-    seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed))
+    seeder = itertools.count(global_seed,1)
+    ket = ProductState(n_particles).random(seed=next(seeder))
     bra = ket.copy().dagger()
 
     prop = ProductPropagatorRBM(n_particles, dt)
 
     integ = Integrator(pot, prop)
-    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seed))
+    integ.setup(n_samples=1, **controls, parallel=False, seed=next(seeder))
     
     b = integ.bracket(bra, ket, integ.aux_fields_samples[0])
     return b
@@ -42,11 +37,11 @@ def product_bracket(controls):
 
 if __name__ == "__main__":
     controls = {"sigma": True,
-                "sigmatau": True,
-                "tau": True,
-                "coulomb": True,
-                "spinorbit": True,
-                "sigma_3b": True,
+                "sigmatau": False,
+                "tau": False,
+                "coulomb": False,
+                "spinorbit": False,
+                "sigma_3b": False,
                 }
 
     b_hilbert = hilbert_bracket(controls)
