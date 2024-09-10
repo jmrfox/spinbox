@@ -8,7 +8,7 @@ import sys
 import numpy as np
 np.set_printoptions(linewidth=200, threshold=sys.maxsize)
 import matplotlib.pyplot as plt
-from scipy.linalg import expm
+from scipy.linalg import expm, logm
 from functools import reduce
 # from dataclasses import dataclass
 import itertools
@@ -357,13 +357,27 @@ class HilbertState:
         out.coefficients = np.zeros_like(self.coefficients)
         return out
     
+    def density(self) -> 'HilbertOperator':
+        """Calculate the density matrix for this state as an operator.
+
+        :return: the density matrix
+        :rtype: HilbertOperator
+        """
+        if self.ketwise:
+            dens = self.outer(self.copy().dagger())
+        else:
+            dens = self.dagger().outer(self.copy())
+        return dens
+        
     def entropy(self) -> complex:
         """Von Neumann entropy, a measure of entanglement.
 
         :return: VN entropy of the ``HilbertState``
         :rtype: complex
         """
-        return - np.sum(self.coefficients * np.log(self.coefficients))
+        dens = self.density().coefficients
+        log_dens = logm(dens)
+        return - np.trace(dens @ log_dens)
      
     def generate_basis_states(self) -> list:
         """Makes a list of corresponding basis vectors.
@@ -394,7 +408,7 @@ class HilbertState:
             return x[:n_params//2].reshape(shape) + 1.j*x[n_params//2:].reshape(shape)   
         def loss(x):
             fit.coefficients = x_to_coef(x)
-            overlap = self.dagger().inner(fit.to_manybody_basis())
+            overlap = self.dagger().inner(fit.to_full_basis())
             return (1 - np.real(overlap))**2 + np.imag(overlap)**2
         def norm(x):
             fit.coefficients = x_to_coef(x)
@@ -419,7 +433,7 @@ class HilbertState:
         overlap = 0.
         for seed in seeds:
             this_fit, _ = self.nearby_product_state(seed, maxiter=maxiter)
-            this_overlap = this_fit.to_manybody_basis().dagger().inner(self)
+            this_overlap = this_fit.to_full_basis().dagger().inner(self)
             if this_overlap>overlap:
                 overlap = this_overlap
                 fit = this_fit
@@ -688,7 +702,14 @@ class HilbertOperator:
             return self.multiply_operator(other)
         else:
             raise NotImplementedError("Unsupported multiply.")
+        
+    def trace(self) -> complex:
+        """Compute the trace of this operator
 
+        :return: the trace
+        :rtype: complex
+        """
+        return np.trace(self.coefficients)
 
 
 # ONE-BODY BASIS CLASSES
@@ -712,7 +733,7 @@ class ProductState:
     Tensor product states do not form a proper vector space (e.g. the sum of two is not guaranteed to be a tensor product)
     so methods with ``ProductState`` are restricted. Namely operations + and - do not exist.
     
-    The coefficients of the ``ProductState`` are kept in the one-body form and can be projected to the Hilbert basis using the ``to_manybody_basis`` method.
+    The coefficients of the ``ProductState`` are kept in the one-body form and can be projected to the Hilbert basis using the ``to_full_basis`` method.
     """  
     def __init__(self, n_particles: int, coefficients=None, ketwise=True, isospin=True):
         """Instances a new ``ProductState``
@@ -797,7 +818,7 @@ class ProductState:
         :return: < self | O(other) 
         :rtype: ProductState
         """        
-        assert isinstance(other, HilbertOperator)
+        assert isinstance(other, ProductOperator)
         assert not self.ketwise
         out = self.copy()
         out.coefficients = np.matmul(self.coefficients, other.coefficients, dtype='complex') 
@@ -824,7 +845,7 @@ class ProductState:
             out += str(ci) + "\n"
         return out
 
-    def to_manybody_basis(self) -> 'HilbertState':
+    def to_full_basis(self) -> 'HilbertState':
         """Projects to the many-body basis.
         
         :return: The Kronecker product of the ``ProductState``. 
@@ -1036,7 +1057,7 @@ class ProductOperator:
             out += f"Op {i} Re:\n" + re + f"\nOp {i} Im:\n" + im + "\n"
         return out
 
-    def to_manybody_basis(self) -> 'HilbertOperator':
+    def to_full_basis(self) -> 'HilbertOperator':
         """Projects to the many-body basis.
         
         :return: The Kronecker product of the ``ProductOperator``. 
@@ -1160,7 +1181,7 @@ class ProductOperator:
         out.coefficients = np.transpose(self.coefficients, axes=(0,2,1)).conj()
         return out        
         
-    def to_manybody_basis(self):
+    def to_full_basis(self):
         """Projects to the many-body basis.
         
         :return: The Kronecker product of the ``ProductOperator``. 

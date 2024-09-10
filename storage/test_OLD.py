@@ -14,8 +14,8 @@ def test_overlaps(isospin):
         return out
 
 
-    s0 = ProductState(n_particles, isospin=isospin).randomize(100).to_manybody_basis()
-    s1 = ProductState(n_particles, isospin=isospin).randomize(101).to_manybody_basis()
+    s0 = ProductState(n_particles, isospin=isospin).randomize(100).to_full_basis()
+    s1 = ProductState(n_particles, isospin=isospin).randomize(101).to_full_basis()
     hilbert_list = exam(s0, s1)
     s0 = ProductState(n_particles, isospin=isospin).randomize(100)
     s1 = ProductState(n_particles, isospin=isospin).randomize(101)
@@ -34,8 +34,8 @@ def test_overlaps_unsafe(isospin):
         out.append( s0.dagger() * s1  )
         return out
 
-    s0 = ProductState(n_particles, isospin=isospin, safe=False).randomize(100).to_manybody_basis()
-    s1 = ProductState(n_particles, isospin=isospin, safe=False).randomize(101).to_manybody_basis()
+    s0 = ProductState(n_particles, isospin=isospin, safe=False).randomize(100).to_full_basis()
+    s1 = ProductState(n_particles, isospin=isospin, safe=False).randomize(101).to_full_basis()
     hilbert_list = exam(s0, s1)
     s0 = ProductState(n_particles, isospin=isospin, safe=False).randomize(100)
     s1 = ProductState(n_particles, isospin=isospin, safe=False).randomize(101)
@@ -97,8 +97,8 @@ def test_product_basics(n_particles, isospin):
     print("|1><1| = \n", s1.outer(s1.dagger()) )
     print("|0><1| = \n", s0.outer(s1.dagger()) )
     print('PRODUCT TO MBB')
-    s0 = s0.to_manybody_basis()
-    s1 = s1.to_manybody_basis()
+    s0 = s0.to_full_basis()
+    s1 = s1.to_full_basis()
     print("<MBB|0> = \n", s0)
     print("<MBB|1> = \n", s1)
     print('INNER PRODUCTS')
@@ -135,7 +135,7 @@ def test_product_operators(n_particles, isospin):
 def test_hilbert_prop(n_particles, dt, isospin):
     seeder = itertools.count(0, 1)
     
-    ket = ProductState(n_particles, isospin=isospin).randomize(seed=next(seeder)).to_manybody_basis()
+    ket = ProductState(n_particles, isospin=isospin).randomize(seed=next(seeder)).to_full_basis()
     bra = ket.copy().dagger()
     
     pot = NuclearPotential(n_particles)

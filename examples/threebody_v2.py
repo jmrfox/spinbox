@@ -15,10 +15,11 @@ seed = 1
 
 dtau_factor = 0.01j/2
 
-def a3b_factors(a3):
+def a3b_factors(coupling):
     # a3 must be fully imaginary
     # e.g. - delta tau A / 2 = - i dt A / 2
-    if np.imag(a3)>0:
+    a3 = dtau_factor * coupling
+    if coupling>0:
         x = csqrt(cexp(8*a3) - 1)
         x = csqrt( 2*cexp(4*a3)*( cexp(4*a3)*x + cexp(8*a3) - 1  ) - x)
         x = x + cexp(6*a3) + cexp(2*a3)*csqrt(cexp(8*a3) - 1)
@@ -61,8 +62,8 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     tau = [[HilbertOperator(n_particles, isospin=isospin).apply_tau(i,a) for a in [0, 1, 2]] for i in range(n_particles)]
     ket = ProductState(n_particles, isospin=isospin, ketwise=True).randomize(0)
     bra = ProductState(n_particles, isospin=isospin, ketwise=False).randomize(1)
-    ket = ket.to_manybody_basis()
-    bra = bra.to_manybody_basis()
+    ket = ket.to_full_basis()
+    bra = bra.to_full_basis()
 
     op_i = sig[i][a] * tau[i][a]
     op_j = sig[j][b] * tau[j][b]
@@ -78,7 +79,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     if mode==1:    # rbm take 1: use 3b rbm and exact 2b
         ket_prop = ket.copy() # outside loops
         # 3b
-        N, C, W, A1, A2 = a3b_factors(dtau_factor * coupling)
+        N, C, W, A1, A2 = a3b_factors(coupling)
         ket_temp = ket_prop.copy().zero()  #right before h loop
         for h in [0.,1.]:
             ket_temp += (ident.scale(-h*C) + (op_i + op_j + op_k).scale(A1 - h*W)).exp().multiply_state(ket_prop)
@@ -91,7 +92,8 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
         ket_prop = ket.copy() # outside loops
         ## 3b
         ket_temp = ket_prop.copy().zero()  #right before h loop
-        N3, C3, W3, A1, A2 = a3b_factors(dtau_factor * coupling)
+        N3, C3, W3, A1, A2 = a3b_factors(coupling)
+        print(A2)
         for h in [0.,1.]:
             ket_temp += (ident.scale(-h*C3) + (op_i + op_j + op_k).scale((A1 - h*W3))).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N3)
@@ -125,7 +127,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             out = out.scale(cexp(-h[0]*c))
             return out
         
-        N3, C3, W3, A1, A2 = a3b_factors(dtau_factor * coupling)
+        N3, C3, W3, A1, A2 = a3b_factors(coupling)
         W2 = carctanh(csqrt(ctanh(cabs(A2))))
         h_list = itertools.product([0,1], repeat=4)
         ket_prop = ket.copy().zero()
@@ -147,11 +149,11 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     elif mode==4.5: 
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         
-        # h_list = itertools.product([0,1], repeat=4)
-        # h_list = 100*list(h_list)
+        h_list = itertools.product([0,1], repeat=4)
+        h_list = 100*list(h_list)
         
-        n_samples = 10000
-        h_list = np.random.randint(0,2,size=(n_samples, 4))
+        # n_samples = 10000
+        # h_list = np.random.randint(0,2,size=(n_samples, 4))
         
         b_array = []
         for h in tqdm(h_list):
@@ -196,7 +198,7 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
             out = out.scale_all(cexp(-h[0]*c))
             return out
         
-        N3, C3, W3, A1, A2 = a3b_factors(dtau_factor * coupling)
+        N3, C3, W3, A1, A2 = a3b_factors(coupling)
         W2 = carctanh(csqrt(ctanh(abs(A2))))
         h_list = itertools.product([0,1], repeat=4)
         b_rbm = 0.
@@ -264,7 +266,7 @@ if __name__=="__main__":
     n_particles = 3
     dt = 0.01
     coupling = 3.14
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=4.5)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=2)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)

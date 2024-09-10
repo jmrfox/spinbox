@@ -24,7 +24,7 @@ def test_overlaps_1():
     s1 = ProductState(n_particles, isospin=isospin).randomize(101)
     assert eq(1.0, s0.dagger().inner(s0))
     b_prod = s0.dagger().inner(s1)
-    b_hilb = s0.dagger().to_manybody_basis().inner(s1.to_manybody_basis())
+    b_hilb = s0.dagger().to_full_basis().inner(s1.to_full_basis())
     assert eq(b_prod,b_hilb)
 
 def test_overlaps_2():
@@ -67,7 +67,7 @@ def test_amplitudes_1():
     isospin = True
     dt = 0.01
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
+    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
     bra = ket.copy().dagger()
     op = HilbertOperator(n_particles=n_particles, isospin=isospin).apply_sigma(0,0).apply_tau(1,1)
     b_hilb = bra.inner(op.multiply_state(ket))
@@ -86,7 +86,7 @@ def test_hs_sigma():
     pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
+    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
     bra = ket.copy().dagger()
     prop = HilbertPropagatorHS(n_particles, dt, isospin=isospin)
     aux = np.ones(prop.n_aux_sigma).flatten()
@@ -115,7 +115,7 @@ def test_rbm_sigma():
     pot = NuclearPotential(n_particles)
     pot.sigma.random(1.0)
     ###
-    ket = ProductState(n_particles, isospin=isospin).randomize().to_manybody_basis()
+    ket = ProductState(n_particles, isospin=isospin).randomize().to_full_basis()
     bra = ket.copy().dagger()
     ket_prop = ket.copy()
     prop = HilbertPropagatorRBM(n_particles, dt, isospin=isospin)

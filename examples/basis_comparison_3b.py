@@ -14,7 +14,7 @@ pot.sigma_3b.random(10.0, seed=next(seed))
 
 def hilbert_bracket(controls):
     seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed)).to_manybody_basis()
+    ket = ProductState(n_particles).randomize(seed=next(seed)).to_full_basis()
     bra = ket.copy().dagger()
     
     prop = HilbertPropagatorRBM(n_particles, dt)

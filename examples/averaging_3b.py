@@ -23,7 +23,7 @@ def average_1d(n_particles,
 
     ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
     if full_basis:
-        ket = ket.to_manybody_basis()
+        ket = ket.to_full_basis()
         
     bra = ket.copy().dagger()
 
@@ -64,7 +64,7 @@ def average_1d(n_particles,
     if full_basis:
         b_exact = integ.exact(bra, ket)
     else:
-        b_exact = integ.exact(bra.to_manybody_basis(), ket.to_manybody_basis())
+        b_exact = integ.exact(bra.to_full_basis(), ket.to_full_basis())
     ratio = np.abs(b_m)/np.abs(b_exact) 
     abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
     
@@ -122,7 +122,7 @@ def average_nuclear(n_particles,
     seeder = itertools.count(seed, 1)
 
     if full_basis:
-        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_manybody_basis()
+        ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder)).to_full_basis()
     else:
         ket = ProductState(n_particles, ketwise=True, isospin=isospin).randomize(seed=next(seeder))
         
@@ -186,7 +186,7 @@ def average_nuclear(n_particles,
     if full_basis:
         b_exact = integ.exact(bra, ket)
     else:
-        b_exact = integ.exact(bra.to_manybody_basis(), ket.to_manybody_basis())
+        b_exact = integ.exact(bra.to_full_basis(), ket.to_full_basis())
     ratio = np.abs(b_m)/np.abs(b_exact) 
     abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
     

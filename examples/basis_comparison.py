@@ -14,7 +14,7 @@ pot.spinorbit.random(dt, seed=next(seed))
 
 def hilbert_bracket(method, controls):
     seed = itertools.count(0,1)
-    ket = ProductState(n_particles).randomize(seed=next(seed)).to_manybody_basis()
+    ket = ProductState(n_particles).randomize(seed=next(seed)).to_full_basis()
     bra = ket.copy().dagger()
     
     if method=='hs':
