@@ -152,11 +152,11 @@ def average_argonne(n_particles,
     bra = ket.copy().dagger()
 
     pot = NuclearPotential(n_particles)
-    pot.sigma.random(5.0, mean=-5., seed=next(seeder))
-    pot.sigmatau.random(5.0, mean=-5., seed=next(seeder))
-    pot.tau.random(5.0, mean=-5., seed=next(seeder))
-    pot.coulomb.random(1.0, mean=1., seed=next(seeder))
-    pot.spinorbit.random(dt, mean=-dt, seed=next(seeder))
+    pot.sigma.random(mean=-2., scale=2.0, seed=next(seeder))
+    pot.sigmatau.random(mean=-2., scale=2.0, seed=next(seeder))
+    pot.tau.random(mean=-2., scale=2.0, seed=next(seeder))
+    pot.coulomb.random(mean=-dt, scale=dt, seed=next(seeder))
+    pot.spinorbit.random(mean=-1., scale=1.0, seed=next(seeder))
 
     if full_basis:
         if method=='hs':
@@ -270,14 +270,14 @@ def main_1d():
 
 def main():
     args = {
-    "n_particles": 5,
-    "n_samples": 1000000,
-    "dt": 0.001,
-    "full_basis": False,
+    "n_particles": 2,
+    "n_samples": 100000,
+    "dt": 0.01,
+    "full_basis": True,
     "seed": 0,
-    "method": "rbm",
+    "method": "hs",
     "balance": True,
-    "mix": True,
+    "mix": False,
     "sigma": True,
     "sigmatau": False,
     "tau": False,

@@ -1265,7 +1265,7 @@ class CouplingArray:
     def __str__(self):
         return str(self.coefficients)
         
-    def generate_random(self,shape,scale=1.0,mean=0.0,seed=0):
+    def generate_normal(self,shape,mean=0.0,scale=1.0,seed=0):
         rng = np.random.default_rng(seed=seed)
         coefficients = scale*rng.standard_normal(size=shape)
         coefficients += mean*np.ones_like(coefficients)
@@ -1297,7 +1297,7 @@ class TwoBodyCoupling(CouplingArray):
                         self.coefficients[a,i,b,j]=self.coefficients[a,j,b,i]
     
     def random(self, mean, scale, seed=0):
-        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.coefficients = self.generate_normal(self.shape, mean, scale, seed)
         self.symmetrize()
         return self
     
@@ -1316,7 +1316,7 @@ class TwoBodyCouplingIsotropic(CouplingArray):
                 self.coefficients[i,j]=self.coefficients[j,i]
 
     def random(self, mean, scale, seed=0):
-        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.coefficients = self.generate_normal(self.shape, mean, scale, seed)
         self.symmetrize()
         return self
     
@@ -1331,7 +1331,7 @@ class OneBodyCoupling(CouplingArray):
         super().__init__(n_particles, shape, file)
         
     def random(self, mean, scale, seed=0):
-        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.coefficients = self.generate_normal(self.shape, mean, scale, seed)
         return self
     
 
@@ -1362,7 +1362,7 @@ class ThreeBodyCoupling(CouplingArray):
                                 self.coefficients[a,i,b,j,c,k]=self.coefficients[a,k,b,j,c,i]
 
     def random(self, mean, scale, seed=0):
-        self.coefficients = self.generate_random(self.shape, scale, mean, seed)
+        self.coefficients = self.generate_normal(self.shape, mean, scale, seed)
         self.symmetrize()
         return self
 

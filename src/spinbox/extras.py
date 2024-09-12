@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from numpy.random import default_rng
 
 
-def chistogram(X, filename, title, bins='fd', range=None):
+def chistogram(X, filename=None, title=None, bins='fd', range=None):
     """Complex histogram
 
     :param X: Set of complex numbers
@@ -23,13 +23,17 @@ def chistogram(X, filename, title, bins='fd', range=None):
     mre, sre = np.mean(Xre), np.std(Xre)
     mim, sim = np.mean(Xim), np.std(Xim)
     fig, axs = plt.subplots(2, figsize=(5,8))
-    fig.suptitle(title)
+    if title:
+        fig.suptitle(title)
     axs[0].hist(Xre, label='Re', alpha=0.5, bins=bins, range=range, color='red')
     axs[1].hist(Xim, label='Im', alpha=0.5, bins=bins, range=range, color='blue')
     axs[0].set_title(rf"Re : $\mu$ = {mre:.6f}, $\sigma$ = {sre:.6f}, $\epsilon$ = {sre/np.sqrt(n):.6f}")
     axs[1].set_title(rf"Im : $\mu$ = {mim:.6f}, $\sigma$ = {sim:.6f}, $\epsilon$ = {sim/np.sqrt(n):.6f}")
     plt.tight_layout()
-    plt.savefig(filename)
+    if filename:
+        plt.savefig(filename)
+    else:
+        plt.show()
 
 def pmat(x, heatmap=False, lims=None, print_zeros=False):
     """Print or plot a complex-valued matrix
