@@ -23,7 +23,6 @@ In `spinbox`, isospin symmetry is included by default and may be optionally turn
 - large-scale parallel integration over random variables, crucial for the AFDMC method
 - Hubbard-Stratonovich (HS) propagators, central to AFDMC
 - restricted Boltzmann machine (RBM) propagators, an alternative to HS <a href="https://arxiv.org/abs/2407.14632">that I wrote a paper on</a>
-  
 
 This package is open source so that anyone may use it and contribute to it. My hope is this is useful to other researchers doing QMC calculations.
 
