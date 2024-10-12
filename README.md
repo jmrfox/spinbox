@@ -17,7 +17,7 @@ Hence, robust tools that fill pedagogical roles are extremely valuable.
 **Why not use one of the many other Python packages for many-fermion calculations?**
 
 While a number of Python packages exist that are suited to quantum many-body calculations, the motivation of `spinbox` is relatively particular. In Diffusion Monte Carlo methods (DMC, GFMC, AFDMC), the central calculation is the so-called *propagation* of the particles. 
-While quantum wavefunctions are usually described by a probability density $\Psi(x)$, these QMC methods use an explicit set of samples of the probability density, $\{x_0, x_1, \dots, x_N\} \sim |\Psi(x)|^2$. Furthermore, the basis used may be highly constrained and require special treatment, such is the case in AFDMC. 
+While quantum wavefunctions are usually described by a probability density $\Psi(x)$, these QMC methods use an explicit set of samples of the probability density, $( x_0, x_1, \dots, x_N ) \sim |\Psi(x)|^2$. Furthermore, the basis used may be highly constrained and require special treatment, such is the case in AFDMC. 
 These traits are somewhat unusual, and other Python packages are typically not set up to do this easily.
 `spinbox` was designed specifically for these methods.
 Furthermore, the software has built-in options for nuclear systems assuming spin-isospin symmetry. Isospin is an additional "spin-like" variable particular to nuclear and sub-nuclear physics. Isospin can certainly be set up with other quantum mechanics libraries, but it is usually a nontrivial process to do so. 
