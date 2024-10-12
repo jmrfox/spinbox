@@ -25,4 +25,3 @@ In `spinbox`, isospin symmetry is included by default and may be optionally turn
 - restricted Boltzmann machine (RBM) propagators, an alternative to HS <a href="https://arxiv.org/abs/2407.14632">that I wrote a paper on</a>
 
 This package is open source so that anyone may use it and contribute to it. My hope is this is useful to other researchers doing QMC calculations.
-- Jordan
