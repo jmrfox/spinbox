@@ -129,7 +129,12 @@ def average_nuclear(n_particles,
     bra = ket.copy().dagger()
 
     pot = NuclearPotential(n_particles)
-    pot.random(seed=1729)
+    # pot.random(seed=next(seeder))
+    # pot.sigma_3b[0,0,0,1,0,2] = -10.0
+    # pot.sigma_3b[1,0,1,1,1,2] = -10.0
+    # pot.sigma_3b[2,0,2,1,2,2] = -10.0
+    pot.sigma_3b.random(-5,5, seed=next(seeder))
+    print(pot.sigma_3b.coefficients.flatten())
 
     if full_basis:
         if method=='hs':
@@ -247,10 +252,10 @@ def main():
     "n_particles": 3,
     "n_samples": 10000,
     "dt": 0.01,
-    "full_basis": False,
+    "full_basis": True,
     "seed": 0,
     "method": "rbm",
-    "balance": True,
+    "balance": False,
     "mix": True,
     "sigma": False,
     "sigmatau": False,
@@ -258,11 +263,11 @@ def main():
     "coulomb": False,
     "spinorbit": False,
     "sigma_3b": True,
-    "plot":True
+    "plot":False
     }
 
     out = average_nuclear(**args)
-    print_dict(out)
+    # print_dict(out)
     
     tag = int(time.time())
     with open(f"examples/outputs/averaging_{tag}.pkl","wb") as f:
@@ -312,7 +317,7 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    main_1d()
+    # main_1d()
     main()
     # experiment()
     

@@ -13,7 +13,7 @@ a,b,c = 0,0,0
 
 seed = 1
 
-dt = 0.01
+dt = 0.002
 
 def a3b_factors(coupling):
     # a3 must be fully imaginary
@@ -145,7 +145,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
         b_rbm = np.sum(b_array) / 16   # correct for sampling normalization 1/2**4
     
-    elif mode==4.5: 
+    elif mode==5: # "sampling" but the aux field cycles through all 16 values 
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         
         h_list = itertools.product([0,1], repeat=4)
@@ -159,7 +159,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
         b_rbm = np.mean(b_array) 
     
-    elif mode==5: # sample, no balance
+    elif mode==6: # sample, no balance
         n_samples = 10000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
@@ -169,8 +169,8 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_array[ih:ih+1] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
         b_rbm = np.mean(b_array)
     
-    elif mode==6: # sample, balance
-        n_samples = 100000
+    elif mode==7: # sample, balance h and 1-h
+        n_samples = 20000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
