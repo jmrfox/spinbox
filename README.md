@@ -1,5 +1,4 @@
-# spinbox
-## tools for many-fermion spin states in the context of Monte Carlo simulation
+# spinbox : tools for many-fermion spin states and Monte Carlo simulations of atomic nuclei
 
 At the front lines of research on the nuclear many-body problem are a large number of supercomputer-scale simulation codes. 
 These codes produce valuable results but can be hard to understand, especially for those without intimate knowledge of the relevant theoretical methods. 
