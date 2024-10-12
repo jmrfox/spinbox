@@ -22,7 +22,7 @@ In `spinbox`, isospin symmetry is included by default and may be optionally turn
 - classes for representing realistic nuclear two- and three-body Hamiltonians (e.g. Argonne V18, Illinois NNN)
 - large-scale parallel integration over random variables, crucial for the AFDMC method
 - Hubbard-Stratonovich (HS) propagators, central to AFDMC
-- restricted Boltzmann machine (RBM) propagators, an alternative to HS using discrete auxiliary fields (<a href="https://arxiv.org/abs/2407.14632">our paper on this subject</a>)
+- restricted Boltzmann machine (RBM) propagators, an alternative to HS using discrete auxiliary fields (<a href="https://arxiv.org/abs/2407.14632">that I wrote a paper on</a>)
   
 
 This package is open source so that anyone may use it and contribute to it. My hope is this is useful to other researchers doing QMC calculations.
