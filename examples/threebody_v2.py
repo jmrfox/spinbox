@@ -13,12 +13,12 @@ a,b,c = 0,0,0
 
 seed = 1
 
-dtau_factor = 0.01/2
+dt = 0.01
 
 def a3b_factors(coupling):
     # a3 must be fully imaginary
     # e.g. - delta tau A / 2 = - i dt A / 2
-    a3 = dtau_factor * coupling
+    a3 = dt * 0.5 * coupling
     if coupling>0:
         x = csqrt(cexp(8*a3) - 1)
         x = csqrt( 2*cexp(4*a3)*( cexp(4*a3)*x + cexp(8*a3) - 1  ) - x)
@@ -72,7 +72,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     # exact
     ket_prop = ket.copy()
     force = (op_i * op_j * op_k).scale(coupling)
-    ket_prop = force.scale(- dtau_factor).exp().multiply_state(ket_prop)
+    ket_prop = force.scale(- dt * 0.5).exp().multiply_state(ket_prop)
     b_exact = bra.inner(ket_prop)
 
     
@@ -98,7 +98,6 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             ket_temp += (ident.scale(-h*C3) + (op_i + op_j + op_k).scale((A1 - h*W3))).exp().multiply_state(ket_prop)
         ket_prop = ket_temp.copy().scale(N3)
         ## 2b
-        print("A2 = ", A2)
         N2, W2, S2 = a2b_factors(-A2)
         ## i,j
         ket_temp = ket_prop.copy().zero()
@@ -160,8 +159,18 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
         b_rbm = np.mean(b_array) 
     
-    elif mode==5: # sample using propagator class
+    elif mode==5: # sample, no balance
         n_samples = 10000
+        prop = HilbertPropagatorRBM(n_particles, dt, isospin)
+        rng = np.random.default_rng(seed=0)
+        h_list = rng.integers(0,2,size=(n_samples, 4))
+        b_array = np.zeros(n_samples, dtype=complex)
+        for ih,h in enumerate(tqdm(h_list)):
+            b_array[ih:ih+1] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
+        b_rbm = np.mean(b_array)
+    
+    elif mode==6: # sample, balance
+        n_samples = 100000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
@@ -207,13 +216,12 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
             b_rbm += bra * (op * ket.copy())
         b_rbm *= N3 * cexp(-3*abs(A2)) * 0.125
         
-        A(2)
     elif mode==4: # sum using propagator class
         prop = ProductPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
         b_array = []
         for h in h_list:
-            ket_temp = prop.threebody_sample(dtau_factor * coupling, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
+            ket_temp = prop.threebody_sample(dt * 0.5 * coupling, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
             b_array.append(bra * ket_temp)
         b_rbm = np.sum(b_array) / 16   # correct for sampling normalization 1/2**4
     
@@ -224,10 +232,10 @@ def afdmc_3b_1d(n_particles, dt, coupling, mode=1):
         h_list = rng.integers(0,2,size=(n_samples, 4))
         b_array = []
         for h in h_list:
-            ket_temp = prop.threebody_sample(dtau_factor * coupling, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
+            ket_temp = prop.threebody_sample(dt * 0.5 * coupling, h, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
             b_array.append(bra * ket_temp)
             h_flip = 1-h
-            ket_temp = prop.threebody_sample(dtau_factor * coupling, h_flip, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
+            ket_temp = prop.threebody_sample(dt * 0.5 * coupling, h_flip, i, j, k, op_i, op_j, op_k).multiply_state(ket.copy())
             b_array.append(bra * ket_temp)
         b_rbm = np.mean(b_array)
 
@@ -244,7 +252,6 @@ def three_body_comms():
 
 def compare():
     n_particles = 3
-    dt = 0.01
     coupling = -3.14
 
     b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=5)
@@ -264,9 +271,8 @@ def compare():
 
 if __name__=="__main__":
     n_particles = 3
-    dt = 0.01
     coupling = -3.14
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=5)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=6)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)

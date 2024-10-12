@@ -244,20 +244,20 @@ def main_1d():
 
 def main():
     args = {
-    "n_particles": 2,
-    "n_samples": 100000,
+    "n_particles": 3,
+    "n_samples": 10000,
     "dt": 0.01,
     "full_basis": False,
     "seed": 0,
     "method": "rbm",
     "balance": True,
     "mix": True,
-    "sigma": True,
+    "sigma": False,
     "sigmatau": False,
     "tau": False,
     "coulomb": False,
     "spinorbit": False,
-    "sigma_3b": False,
+    "sigma_3b": True,
     "plot":True
     }
 
@@ -312,7 +312,7 @@ def experiment():
         pkl.dump(out, f)
 
 if __name__ == "__main__":
-    # main_1d()
+    main_1d()
     main()
     # experiment()
     

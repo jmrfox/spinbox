@@ -1,11 +1,10 @@
 from spinbox import *
 
-n_particles = 2
+n_particles = 3
 dt = 0.001
 
 global_seed = 1
-pot = NuclearPotential(n_particles)
-pot.random(seed=1729)
+pot = NuclearPotential(n_particles).random(seed=global_seed+1000)
 
 def hilbert_bracket(method, controls):
     seeder = itertools.count(global_seed,1)
@@ -48,11 +47,11 @@ def product_bracket(method, controls):
 if __name__ == "__main__":
     method = 'rbm'
     
-    controls = {"sigma": True,
-                "sigmatau": True,
-                "tau": True,
-                "coulomb": True,
-                "spinorbit": True,
+    controls = {"sigma": False,
+                "sigmatau": False,
+                "tau": False,
+                "coulomb": False,
+                "spinorbit": False,
                 "sigma_3b": True,
                 }
     

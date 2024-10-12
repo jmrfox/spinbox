@@ -143,17 +143,18 @@ def pauli(arg) -> np.ndarray:
     return out
 
 
-def rlprod(factors:list):
-    """Multiplies a list of factors right to left
+# def rlprod(factors:list):
+#     """Multiplies a list of factors (left-to-right) by associating pairs right-to-left
+#     e.g.      ABCx = A(B(Cx)) 
 
-    Args:
-        factors (list): things to be multiplied
+#     Args:
+#         factors (list): things to be multiplied
 
-    """    
-    out = factors[-1]
-    for x in reversed(factors[:-1]):
-        out = x * out
-    return out
+#     """    
+#     out = factors[-1]
+#     for x in reversed(factors[:-1]):
+#         out = x * out
+#     return out
 
 
 def kronecker_product(matrices: list) -> np.ndarray:
