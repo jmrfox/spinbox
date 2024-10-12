@@ -11,8 +11,8 @@ In Diffusion Monte Carlo methods (DMC, GFMC, AFDMC), the central calculation is 
 Although quantum wavefunctions generally must be described by a probability distribution over a basis, DMC imbues particles (within one sample) with classical spatial coordinates. 
 This method is unusual, so other Python packages are typically not set up to do this easily.
 
-Furthermore, the software has built-in options for nuclear systems assuming spin-isospin symmetry, which can be set up with other libraries but is a nontrivial process to do so. 
-In `spinbox`, isospin symmetry is given by default, and may be optionally turned off.
+Furthermore, the software has built-in options for nuclear systems assuming spin-isospin symmetry. Isospin can certainly be set up with other quantum mechanics libraries, but it is a nontrivial process to do so. 
+In `spinbox`, isospin symmetry is included by default and may be optionally turned off.
 
 Features:
 - numerical representation of samples of the many-body wavefunctions, including  tensor-product states (used in AFDMC)
