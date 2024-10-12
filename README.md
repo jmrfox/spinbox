@@ -1,7 +1,7 @@
 # spinbox : tools for many-fermion spin states and Monte Carlo simulations of atomic nuclei
 
-At the front lines of research on the nuclear many-body problem are a large number of supercomputer-scale simulation codes. 
-These codes produce valuable results but can be hard to understand, especially for those without intimate knowledge of the relevant theoretical methods. 
+On the front lines of research in the nuclear many-body problem stand a number of supercomputer-scale simulation codes. 
+These codes produce invaluable results but can often be hard to understand, especially for those without intimate knowledge of the relevant theoretical methods. 
 Hence, robust tools that fill pedagogical roles are extremely valuable. 
 `spinbox` makes it easy for one to replicate and analyze the computational processes relevant to a Quantum Monte Carlo (QMC) simulation that may be difficult to understand, debug, or analyze due to the scale of the corresponding simulation software.
 
