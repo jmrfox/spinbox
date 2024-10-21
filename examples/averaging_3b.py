@@ -66,13 +66,13 @@ def average_1d(n_particles,
     else:
         b_exact = integ.exact(bra.to_full_basis(), ket.to_full_basis())
     ratio = np.abs(b_m)/np.abs(b_exact) 
-    abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
+    err = abs(1-np.abs(b_m)/np.abs(b_exact))
     
     print("<bra|ket> = ", bra.inner(ket) )
     print(f'<bra|G|ket> = {b_m} +/- {b_s}')
     print('exact = ',b_exact)
     print("ratio = ", ratio )
-    print("abs error = ", abs_error )
+    print("error = ", err )
     print("dt^2 = ", dt**2)
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
@@ -94,7 +94,7 @@ def average_1d(n_particles,
         "b_s": b_s,
         "b_exact": b_exact,
         "ratio": ratio,
-        "abs_error": abs_error,
+        "error": err,
         "parallel": parallel,
         "n_processes": n_processes,
         "time": time.time()-t0,
@@ -130,10 +130,10 @@ def average_nuclear(n_particles,
 
     pot = NuclearPotential(n_particles)
     # pot.random(seed=next(seeder))
-    # pot.sigma_3b[0,0,0,1,0,2] = -10.0
-    # pot.sigma_3b[1,0,1,1,1,2] = -10.0
+    pot.sigma_3b[0,0,0,1,0,2] = -10.0
+    pot.sigma_3b[1,0,1,1,1,2] = -10.0
     # pot.sigma_3b[2,0,2,1,2,2] = -10.0
-    pot.sigma_3b.random(-5,5, seed=next(seeder))
+    # pot.sigma_3b.random(-5,5, seed=next(seeder))
     print(pot.sigma_3b.coefficients.flatten())
 
     if full_basis:
@@ -188,13 +188,13 @@ def average_nuclear(n_particles,
     else:
         b_exact = integ.exact(bra.to_full_basis(), ket.to_full_basis())
     ratio = np.abs(b_m)/np.abs(b_exact) 
-    abs_error = abs(1-np.abs(b_m)/np.abs(b_exact))
+    err = abs(1-np.abs(b_m)/np.abs(b_exact))
     
     print("<bra|ket> = ", bra.inner(ket) )
     print(f'<bra|G|ket> = {b_m} +/- {b_s}')
     print('exact = ',b_exact)
     print("ratio = ", ratio )
-    print("abs error = ", abs_error )
+    print("error = ", err )
     print("dt^2 = ", dt**2)
     print("1/sqrt(N) = ", 1/np.sqrt(n_samples) )
 
@@ -224,7 +224,7 @@ def average_nuclear(n_particles,
            "b_s": b_s,
            "b_exact": b_exact,
            "ratio": ratio,
-           "abs_error": abs_error,
+           "error": err,
            "parallel": parallel,
            "n_processes": n_processes,
            "time": time.time()-t0,
@@ -250,9 +250,9 @@ def main_1d():
 def main():
     args = {
     "n_particles": 3,
-    "n_samples": 10000,
+    "n_samples": 100000,
     "dt": 0.01,
-    "full_basis": True,
+    "full_basis": False,
     "seed": 0,
     "method": "rbm",
     "balance": False,

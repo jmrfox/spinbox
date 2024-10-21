@@ -13,7 +13,7 @@ a,b,c = 0,0,0
 
 seed = 1
 
-dt = 0.002
+dt = 0.01
 
 def a3b_factors(coupling):
     # a3 must be fully imaginary
@@ -75,8 +75,10 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
     ket_prop = force.scale(- dt * 0.5).exp().multiply_state(ket_prop)
     b_exact = bra.inner(ket_prop)
 
+    h_list = None
     
     if mode==1:    # rbm take 1: use 3b rbm and exact 2b
+        print("Using the 1-body part with RBM (sum over h) and Pade for 2-body parts")
         ket_prop = ket.copy() # outside loops
         # 3b
         N, C, W, A1, A2 = a3b_factors(coupling)
@@ -89,6 +91,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
         b_rbm = bra.inner(ket_prop)
 
     elif mode==2: # rbm take 2: use 3b rbm and 2b rbm (x3)
+        print("Using the 1-body part with RBM (sum over h) and a 2-body RBM for each of the 2-body parts (sum over h', h'', h''')")
         ket_prop = ket.copy() # outside loops
         ## 3b
         ket_temp = ket_prop.copy().zero()  #right before h loop
@@ -117,6 +120,7 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
         b_rbm = bra.inner(ket_prop)
     
     elif mode==3:
+        print("Using the 3-body RBM, sum over h, h', h'', h''' ")
         def boltz_f(h, a1, a2, w1, w2, c):
             s2 = a2/cabs(a2)            
             g1 = op_i.scale(w2*(2*h[1]-1) + w2*(2*h[2]-1) + a1 - h[0]*w1).exp()
@@ -138,47 +142,53 @@ def gfmc_3b_1d(n_particles, dt, coupling, mode=1):
         
         
     elif mode==4: # sum using propagator class
+        print("Using the 3-body RBM, sum over h, h', h'', h''', with the HilbertPropagatorRBM ")
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         h_list = itertools.product([0,1], repeat=4)
+        print(h_list)
         b_array = []
         for h in h_list:
             b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
         b_rbm = np.sum(b_array) / 16   # correct for sampling normalization 1/2**4
     
-    elif mode==5: # "sampling" but the aux field cycles through all 16 values 
+    elif mode==5: 
+        print("RBM class, fake sampling 10K points, the aux field cycles through all 16 possible values (h, h', h'', h''')")
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         
+        n_samples = 1000
         h_list = itertools.product([0,1], repeat=4)
-        h_list = 100*list(h_list)
-        
-        # n_samples = 10000
-        # h_list = np.random.randint(0,2,size=(n_samples, 4))
-        
-        b_array = []
-        for h in tqdm(h_list):
-            b_array.append(bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket)
-        b_rbm = np.mean(b_array) 
+        h_list = (n_samples//16)*list(h_list)   # list of 10K samples perfectly balanced
+        print(h_list)
+        b_array = np.zeros(n_samples, dtype=complex)
+        for ih,h in enumerate(tqdm(h_list)):
+            b_array[ih] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
+        b_rbm = np.mean(b_array)
     
     elif mode==6: # sample, no balance
-        n_samples = 10000
+        print("RBM class, sampling, no balancing")
+        n_samples = 1000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
+        print(h_list)
         b_array = np.zeros(n_samples, dtype=complex)
         for ih,h in enumerate(tqdm(h_list)):
             b_array[ih:ih+1] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
         b_rbm = np.mean(b_array)
     
     elif mode==7: # sample, balance h and 1-h
-        n_samples = 20000
+        print("RBM class, sampling, balancing h with 1-h")
+        n_samples = 1000
         prop = HilbertPropagatorRBM(n_particles, dt, isospin)
         rng = np.random.default_rng(seed=0)
         h_list = rng.integers(0,2,size=(n_samples, 4))
+        print(h_list)
         b_array = np.zeros(2*n_samples, dtype=complex)
         for ih,h in enumerate(tqdm(h_list)):
             b_array[2*ih:2*ih+1] = bra * prop.threebody_sample(coupling, h, op_i, op_j, op_k) * ket
             b_array[2*ih+1:2*ih+2] = bra * prop.threebody_sample(coupling, 1-h, op_i, op_j, op_k) * ket
         b_rbm = np.mean(b_array)
+
     return b_exact, b_rbm
 
 
@@ -272,10 +282,8 @@ def compare():
 if __name__=="__main__":
     n_particles = 3
     coupling = -3.14
-    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=6)
+    b_exact, b_rbm = gfmc_3b_1d(n_particles, dt, coupling, mode=3)
     print("rbm = ", b_rbm)
     print("exact = ", b_exact)
     print("difference = ", b_exact - b_rbm)
     print("error = ", abs((b_exact - b_rbm)/b_exact) )
-    
-    # compare()
