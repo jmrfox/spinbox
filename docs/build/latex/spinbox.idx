@@ -1,0 +1,158 @@
+\indexentry{module@\spxentry{module}!spinbox.core@\spxentry{spinbox.core}|hyperpage}{1}
+\indexentry{spinbox.core@\spxentry{spinbox.core}!module@\spxentry{module}|hyperpage}{1}
+\indexentry{CoulombCoupling (class in spinbox.core)@\spxentry{CoulombCoupling}\spxextra{class in spinbox.core}|hyperpage}{1}
+\indexentry{random() (spinbox.core.CoulombCoupling method)@\spxentry{random()}\spxextra{spinbox.core.CoulombCoupling method}|hyperpage}{1}
+\indexentry{validate() (spinbox.core.CoulombCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.CoulombCoupling method}|hyperpage}{1}
+\indexentry{Coupling (class in spinbox.core)@\spxentry{Coupling}\spxextra{class in spinbox.core}|hyperpage}{1}
+\indexentry{copy() (spinbox.core.Coupling method)@\spxentry{copy()}\spxextra{spinbox.core.Coupling method}|hyperpage}{1}
+\indexentry{read() (spinbox.core.Coupling method)@\spxentry{read()}\spxextra{spinbox.core.Coupling method}|hyperpage}{1}
+\indexentry{ExactPropagator (class in spinbox.core)@\spxentry{ExactPropagator}\spxextra{class in spinbox.core}|hyperpage}{1}
+\indexentry{force\_coulomb() (spinbox.core.ExactPropagator method)@\spxentry{force\_coulomb()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{force\_coulomb\_onebody() (spinbox.core.ExactPropagator method)@\spxentry{force\_coulomb\_onebody()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{force\_sigma() (spinbox.core.ExactPropagator method)@\spxentry{force\_sigma()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{force\_sigma\_3b() (spinbox.core.ExactPropagator method)@\spxentry{force\_sigma\_3b()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{force\_sigmatau() (spinbox.core.ExactPropagator method)@\spxentry{force\_sigmatau()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{force\_tau() (spinbox.core.ExactPropagator method)@\spxentry{force\_tau()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{propagator\_combined() (spinbox.core.ExactPropagator method)@\spxentry{propagator\_combined()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{propagator\_spinorbit\_linear() (spinbox.core.ExactPropagator method)@\spxentry{propagator\_spinorbit\_linear()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{propagator\_spinorbit\_onebody() (spinbox.core.ExactPropagator method)@\spxentry{propagator\_spinorbit\_onebody()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{propagator\_spinorbit\_twobody() (spinbox.core.ExactPropagator method)@\spxentry{propagator\_spinorbit\_twobody()}\spxextra{spinbox.core.ExactPropagator method}|hyperpage}{2}
+\indexentry{HilbertOperator (class in spinbox.core)@\spxentry{HilbertOperator}\spxextra{class in spinbox.core}|hyperpage}{2}
+\indexentry{apply\_onebody\_operator() (spinbox.core.HilbertOperator method)@\spxentry{apply\_onebody\_operator()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{2}
+\indexentry{apply\_sigma() (spinbox.core.HilbertOperator method)@\spxentry{apply\_sigma()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{2}
+\indexentry{apply\_tau() (spinbox.core.HilbertOperator method)@\spxentry{apply\_tau()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{3}
+\indexentry{copy() (spinbox.core.HilbertOperator method)@\spxentry{copy()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{3}
+\indexentry{dagger() (spinbox.core.HilbertOperator method)@\spxentry{dagger()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{3}
+\indexentry{exp() (spinbox.core.HilbertOperator method)@\spxentry{exp()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{3}
+\indexentry{multiply\_operator() (spinbox.core.HilbertOperator method)@\spxentry{multiply\_operator()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{3}
+\indexentry{multiply\_state() (spinbox.core.HilbertOperator method)@\spxentry{multiply\_state()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{4}
+\indexentry{scale() (spinbox.core.HilbertOperator method)@\spxentry{scale()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{4}
+\indexentry{zero() (spinbox.core.HilbertOperator method)@\spxentry{zero()}\spxextra{spinbox.core.HilbertOperator method}|hyperpage}{4}
+\indexentry{HilbertPropagatorHS (class in spinbox.core)@\spxentry{HilbertPropagatorHS}\spxextra{class in spinbox.core}|hyperpage}{4}
+\indexentry{factors\_coulomb() (spinbox.core.HilbertPropagatorHS method)@\spxentry{factors\_coulomb()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{4}
+\indexentry{factors\_sigma() (spinbox.core.HilbertPropagatorHS method)@\spxentry{factors\_sigma()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{5}
+\indexentry{factors\_sigmatau() (spinbox.core.HilbertPropagatorHS method)@\spxentry{factors\_sigmatau()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{5}
+\indexentry{factors\_spinorbit() (spinbox.core.HilbertPropagatorHS method)@\spxentry{factors\_spinorbit()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{5}
+\indexentry{factors\_tau() (spinbox.core.HilbertPropagatorHS method)@\spxentry{factors\_tau()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{5}
+\indexentry{onebody() (spinbox.core.HilbertPropagatorHS method)@\spxentry{onebody()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{6}
+\indexentry{twobody\_sample() (spinbox.core.HilbertPropagatorHS method)@\spxentry{twobody\_sample()}\spxextra{spinbox.core.HilbertPropagatorHS method}|hyperpage}{6}
+\indexentry{HilbertPropagatorRBM (class in spinbox.core)@\spxentry{HilbertPropagatorRBM}\spxextra{class in spinbox.core}|hyperpage}{6}
+\indexentry{factors\_coulomb() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_coulomb()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{factors\_sigma() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_sigma()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{factors\_sigma\_3b() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_sigma\_3b()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{factors\_sigmatau() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_sigmatau()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{factors\_spinorbit() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_spinorbit()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{factors\_tau() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{factors\_tau()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{6}
+\indexentry{onebody() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{onebody()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{7}
+\indexentry{threebody\_sample() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{threebody\_sample()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{7}
+\indexentry{threebody\_sample\_partial() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{threebody\_sample\_partial()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{7}
+\indexentry{twobody\_sample() (spinbox.core.HilbertPropagatorRBM method)@\spxentry{twobody\_sample()}\spxextra{spinbox.core.HilbertPropagatorRBM method}|hyperpage}{7}
+\indexentry{HilbertState (class in spinbox.core)@\spxentry{HilbertState}\spxextra{class in spinbox.core}|hyperpage}{7}
+\indexentry{attach\_coordinates() (spinbox.core.HilbertState method)@\spxentry{attach\_coordinates()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{7}
+\indexentry{copy() (spinbox.core.HilbertState method)@\spxentry{copy()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{7}
+\indexentry{dagger() (spinbox.core.HilbertState method)@\spxentry{dagger()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{7}
+\indexentry{entropy() (spinbox.core.HilbertState method)@\spxentry{entropy()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{7}
+\indexentry{generate\_basis\_states() (spinbox.core.HilbertState method)@\spxentry{generate\_basis\_states()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{7}
+\indexentry{inner() (spinbox.core.HilbertState method)@\spxentry{inner()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{8}
+\indexentry{multiply\_operator() (spinbox.core.HilbertState method)@\spxentry{multiply\_operator()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{8}
+\indexentry{nearby\_product\_state() (spinbox.core.HilbertState method)@\spxentry{nearby\_product\_state()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{8}
+\indexentry{nearest\_product\_state() (spinbox.core.HilbertState method)@\spxentry{nearest\_product\_state()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{8}
+\indexentry{outer() (spinbox.core.HilbertState method)@\spxentry{outer()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{8}
+\indexentry{randomize() (spinbox.core.HilbertState method)@\spxentry{randomize()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{9}
+\indexentry{scale() (spinbox.core.HilbertState method)@\spxentry{scale()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{9}
+\indexentry{zero() (spinbox.core.HilbertState method)@\spxentry{zero()}\spxextra{spinbox.core.HilbertState method}|hyperpage}{9}
+\indexentry{Integrator (class in spinbox.core)@\spxentry{Integrator}\spxextra{class in spinbox.core}|hyperpage}{9}
+\indexentry{bracket() (spinbox.core.Integrator method)@\spxentry{bracket()}\spxextra{spinbox.core.Integrator method}|hyperpage}{9}
+\indexentry{exact() (spinbox.core.Integrator method)@\spxentry{exact()}\spxextra{spinbox.core.Integrator method}|hyperpage}{9}
+\indexentry{run() (spinbox.core.Integrator method)@\spxentry{run()}\spxextra{spinbox.core.Integrator method}|hyperpage}{9}
+\indexentry{setup() (spinbox.core.Integrator method)@\spxentry{setup()}\spxextra{spinbox.core.Integrator method}|hyperpage}{9}
+\indexentry{NuclearPotential (class in spinbox.core)@\spxentry{NuclearPotential}\spxextra{class in spinbox.core}|hyperpage}{9}
+\indexentry{read\_coulomb() (spinbox.core.NuclearPotential method)@\spxentry{read\_coulomb()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{9}
+\indexentry{read\_sigma() (spinbox.core.NuclearPotential method)@\spxentry{read\_sigma()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{9}
+\indexentry{read\_sigma\_3b() (spinbox.core.NuclearPotential method)@\spxentry{read\_sigma\_3b()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{9}
+\indexentry{read\_sigmatau() (spinbox.core.NuclearPotential method)@\spxentry{read\_sigmatau()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{9}
+\indexentry{read\_spinorbit() (spinbox.core.NuclearPotential method)@\spxentry{read\_spinorbit()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{10}
+\indexentry{read\_tau() (spinbox.core.NuclearPotential method)@\spxentry{read\_tau()}\spxextra{spinbox.core.NuclearPotential method}|hyperpage}{10}
+\indexentry{ProductOperator (class in spinbox.core)@\spxentry{ProductOperator}\spxextra{class in spinbox.core}|hyperpage}{10}
+\indexentry{apply\_onebody\_operator() (spinbox.core.ProductOperator method)@\spxentry{apply\_onebody\_operator()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{10}
+\indexentry{apply\_sigma() (spinbox.core.ProductOperator method)@\spxentry{apply\_sigma()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{10}
+\indexentry{apply\_tau() (spinbox.core.ProductOperator method)@\spxentry{apply\_tau()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{10}
+\indexentry{copy() (spinbox.core.ProductOperator method)@\spxentry{copy()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{10}
+\indexentry{dagger() (spinbox.core.ProductOperator method)@\spxentry{dagger()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{11}
+\indexentry{multiply\_operator() (spinbox.core.ProductOperator method)@\spxentry{multiply\_operator()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{11}
+\indexentry{multiply\_state() (spinbox.core.ProductOperator method)@\spxentry{multiply\_state()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{11}
+\indexentry{scale\_all() (spinbox.core.ProductOperator method)@\spxentry{scale\_all()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{11}
+\indexentry{scale\_one() (spinbox.core.ProductOperator method)@\spxentry{scale\_one()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{11}
+\indexentry{to\_list() (spinbox.core.ProductOperator method)@\spxentry{to\_list()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{12}
+\indexentry{to\_manybody\_basis() (spinbox.core.ProductOperator method)@\spxentry{to\_manybody\_basis()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{12}
+\indexentry{zero() (spinbox.core.ProductOperator method)@\spxentry{zero()}\spxextra{spinbox.core.ProductOperator method}|hyperpage}{12}
+\indexentry{ProductPropagatorHS (class in spinbox.core)@\spxentry{ProductPropagatorHS}\spxextra{class in spinbox.core}|hyperpage}{12}
+\indexentry{factors\_coulomb() (spinbox.core.ProductPropagatorHS method)@\spxentry{factors\_coulomb()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{factors\_sigma() (spinbox.core.ProductPropagatorHS method)@\spxentry{factors\_sigma()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{factors\_sigmatau() (spinbox.core.ProductPropagatorHS method)@\spxentry{factors\_sigmatau()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{factors\_spinorbit() (spinbox.core.ProductPropagatorHS method)@\spxentry{factors\_spinorbit()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{factors\_tau() (spinbox.core.ProductPropagatorHS method)@\spxentry{factors\_tau()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{onebody() (spinbox.core.ProductPropagatorHS method)@\spxentry{onebody()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{twobody\_sample() (spinbox.core.ProductPropagatorHS method)@\spxentry{twobody\_sample()}\spxextra{spinbox.core.ProductPropagatorHS method}|hyperpage}{12}
+\indexentry{ProductPropagatorRBM (class in spinbox.core)@\spxentry{ProductPropagatorRBM}\spxextra{class in spinbox.core}|hyperpage}{12}
+\indexentry{factors\_coulomb() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_coulomb()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{12}
+\indexentry{factors\_sigma() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_sigma()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{12}
+\indexentry{factors\_sigma\_3b() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_sigma\_3b()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{factors\_sigmatau() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_sigmatau()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{factors\_spinorbit() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_spinorbit()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{factors\_tau() (spinbox.core.ProductPropagatorRBM method)@\spxentry{factors\_tau()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{onebody() (spinbox.core.ProductPropagatorRBM method)@\spxentry{onebody()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{threebody\_sample() (spinbox.core.ProductPropagatorRBM method)@\spxentry{threebody\_sample()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{twobody\_sample() (spinbox.core.ProductPropagatorRBM method)@\spxentry{twobody\_sample()}\spxextra{spinbox.core.ProductPropagatorRBM method}|hyperpage}{13}
+\indexentry{ProductState (class in spinbox.core)@\spxentry{ProductState}\spxextra{class in spinbox.core}|hyperpage}{13}
+\indexentry{attach\_coordinates() (spinbox.core.ProductState method)@\spxentry{attach\_coordinates()}\spxextra{spinbox.core.ProductState method}|hyperpage}{13}
+\indexentry{copy() (spinbox.core.ProductState method)@\spxentry{copy()}\spxextra{spinbox.core.ProductState method}|hyperpage}{13}
+\indexentry{dagger() (spinbox.core.ProductState method)@\spxentry{dagger()}\spxextra{spinbox.core.ProductState method}|hyperpage}{13}
+\indexentry{generate\_basis\_states() (spinbox.core.ProductState method)@\spxentry{generate\_basis\_states()}\spxextra{spinbox.core.ProductState method}|hyperpage}{13}
+\indexentry{inner() (spinbox.core.ProductState method)@\spxentry{inner()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{normalize() (spinbox.core.ProductState method)@\spxentry{normalize()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{outer() (spinbox.core.ProductState method)@\spxentry{outer()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{randomize() (spinbox.core.ProductState method)@\spxentry{randomize()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{scale\_all() (spinbox.core.ProductState method)@\spxentry{scale\_all()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{scale\_one() (spinbox.core.ProductState method)@\spxentry{scale\_one()}\spxextra{spinbox.core.ProductState method}|hyperpage}{14}
+\indexentry{to\_list() (spinbox.core.ProductState method)@\spxentry{to\_list()}\spxextra{spinbox.core.ProductState method}|hyperpage}{15}
+\indexentry{to\_manybody\_basis() (spinbox.core.ProductState method)@\spxentry{to\_manybody\_basis()}\spxextra{spinbox.core.ProductState method}|hyperpage}{15}
+\indexentry{zero() (spinbox.core.ProductState method)@\spxentry{zero()}\spxextra{spinbox.core.ProductState method}|hyperpage}{15}
+\indexentry{Propagator (class in spinbox.core)@\spxentry{Propagator}\spxextra{class in spinbox.core}|hyperpage}{15}
+\indexentry{SigmaCoupling (class in spinbox.core)@\spxentry{SigmaCoupling}\spxextra{class in spinbox.core}|hyperpage}{15}
+\indexentry{random() (spinbox.core.SigmaCoupling method)@\spxentry{random()}\spxextra{spinbox.core.SigmaCoupling method}|hyperpage}{15}
+\indexentry{validate() (spinbox.core.SigmaCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.SigmaCoupling method}|hyperpage}{15}
+\indexentry{SigmaTauCoupling (class in spinbox.core)@\spxentry{SigmaTauCoupling}\spxextra{class in spinbox.core}|hyperpage}{15}
+\indexentry{random() (spinbox.core.SigmaTauCoupling method)@\spxentry{random()}\spxextra{spinbox.core.SigmaTauCoupling method}|hyperpage}{15}
+\indexentry{validate() (spinbox.core.SigmaTauCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.SigmaTauCoupling method}|hyperpage}{16}
+\indexentry{SpinOrbitCoupling (class in spinbox.core)@\spxentry{SpinOrbitCoupling}\spxextra{class in spinbox.core}|hyperpage}{16}
+\indexentry{random() (spinbox.core.SpinOrbitCoupling method)@\spxentry{random()}\spxextra{spinbox.core.SpinOrbitCoupling method}|hyperpage}{16}
+\indexentry{validate() (spinbox.core.SpinOrbitCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.SpinOrbitCoupling method}|hyperpage}{16}
+\indexentry{TauCoupling (class in spinbox.core)@\spxentry{TauCoupling}\spxextra{class in spinbox.core}|hyperpage}{16}
+\indexentry{random() (spinbox.core.TauCoupling method)@\spxentry{random()}\spxextra{spinbox.core.TauCoupling method}|hyperpage}{16}
+\indexentry{validate() (spinbox.core.TauCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.TauCoupling method}|hyperpage}{16}
+\indexentry{ThreeBodyCoupling (class in spinbox.core)@\spxentry{ThreeBodyCoupling}\spxextra{class in spinbox.core}|hyperpage}{16}
+\indexentry{random() (spinbox.core.ThreeBodyCoupling method)@\spxentry{random()}\spxextra{spinbox.core.ThreeBodyCoupling method}|hyperpage}{16}
+\indexentry{validate() (spinbox.core.ThreeBodyCoupling method)@\spxentry{validate()}\spxextra{spinbox.core.ThreeBodyCoupling method}|hyperpage}{16}
+\indexentry{carctanh() (in module spinbox.core)@\spxentry{carctanh()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{ccos() (in module spinbox.core)@\spxentry{ccos()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{ccosh() (in module spinbox.core)@\spxentry{ccosh()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{cexp() (in module spinbox.core)@\spxentry{cexp()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{csin() (in module spinbox.core)@\spxentry{csin()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{csinh() (in module spinbox.core)@\spxentry{csinh()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{csqrt() (in module spinbox.core)@\spxentry{csqrt()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{ctanh() (in module spinbox.core)@\spxentry{ctanh()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{interaction\_indices() (in module spinbox.core)@\spxentry{interaction\_indices()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{pauli() (in module spinbox.core)@\spxentry{pauli()}\spxextra{in module spinbox.core}|hyperpage}{16}
+\indexentry{read\_from\_file() (in module spinbox.core)@\spxentry{read\_from\_file()}\spxextra{in module spinbox.core}|hyperpage}{17}
+\indexentry{repeated\_kronecker\_product() (in module spinbox.core)@\spxentry{repeated\_kronecker\_product()}\spxextra{in module spinbox.core}|hyperpage}{17}
+\indexentry{module@\spxentry{module}!spinbox.extras@\spxentry{spinbox.extras}|hyperpage}{17}
+\indexentry{spinbox.extras@\spxentry{spinbox.extras}!module@\spxentry{module}|hyperpage}{17}
+\indexentry{chistogram() (in module spinbox.extras)@\spxentry{chistogram()}\spxextra{in module spinbox.extras}|hyperpage}{17}
+\indexentry{pmat() (in module spinbox.extras)@\spxentry{pmat()}\spxextra{in module spinbox.extras}|hyperpage}{17}
+\indexentry{sigma\_tau\_matrices\_product() (in module spinbox.extras)@\spxentry{sigma\_tau\_matrices\_product()}\spxextra{in module spinbox.extras}|hyperpage}{18}
+\indexentry{sigma\_tau\_operators\_hilbert() (in module spinbox.extras)@\spxentry{sigma\_tau\_operators\_hilbert()}\spxextra{in module spinbox.extras}|hyperpage}{18}
+\indexentry{spinor2() (in module spinbox.extras)@\spxentry{spinor2()}\spxextra{in module spinbox.extras}|hyperpage}{18}
+\indexentry{spinor4() (in module spinbox.extras)@\spxentry{spinor4()}\spxextra{in module spinbox.extras}|hyperpage}{18}
+\indexentry{module@\spxentry{module}!spinbox@\spxentry{spinbox}|hyperpage}{19}
+\indexentry{spinbox@\spxentry{spinbox}!module@\spxentry{module}|hyperpage}{19}

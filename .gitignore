@@ -1,8 +1,5 @@
-dist/
-build/
 __pycache__/
-examples/__pycache__/
-spinbox/__pycache__/
+research/__pycache__/
+tutorials/__pycache__/
 src/spinbox/__pycache__/
-.idea/
-.vscode/
+

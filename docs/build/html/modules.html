@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+
+<html lang="en" data-content_root="./">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>spinbox &#8212; spinbox 0.1 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=87629129" />
+    <script src="_static/documentation_options.js?v=2709fde1"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="spinbox package" href="spinbox.html" />
+    <link rel="prev" title="Welcome to spinbox’s documentation!" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spinbox.html" title="spinbox package"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to spinbox’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spinbox 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">spinbox</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="spinbox">
+<h1>spinbox<a class="headerlink" href="#spinbox" title="Link to this heading">¶</a></h1>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="spinbox.html">spinbox package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spinbox.html#submodules">Submodules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="spinbox.html#module-spinbox.core">spinbox.core module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.CoulombCoupling"><code class="docutils literal notranslate"><span class="pre">CoulombCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.CoulombCoupling.random"><code class="docutils literal notranslate"><span class="pre">CoulombCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.CoulombCoupling.validate"><code class="docutils literal notranslate"><span class="pre">CoulombCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.Coupling"><code class="docutils literal notranslate"><span class="pre">Coupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Coupling.copy"><code class="docutils literal notranslate"><span class="pre">Coupling.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Coupling.read"><code class="docutils literal notranslate"><span class="pre">Coupling.read()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator"><code class="docutils literal notranslate"><span class="pre">ExactPropagator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_coulomb"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_coulomb_onebody"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_coulomb_onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_sigma"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_sigma_3b"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_sigma_3b()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_sigmatau"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.force_tau"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.force_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.propagator_combined"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.propagator_combined()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.propagator_spinorbit_linear"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.propagator_spinorbit_linear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.propagator_spinorbit_onebody"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.propagator_spinorbit_onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ExactPropagator.propagator_spinorbit_twobody"><code class="docutils literal notranslate"><span class="pre">ExactPropagator.propagator_spinorbit_twobody()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator"><code class="docutils literal notranslate"><span class="pre">HilbertOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.apply_onebody_operator"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.apply_onebody_operator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.apply_sigma"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.apply_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.apply_tau"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.apply_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.copy"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.dagger"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.dagger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.exp"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.exp()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.multiply_operator"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.multiply_operator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.multiply_state"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.multiply_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.scale"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.scale()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertOperator.zero"><code class="docutils literal notranslate"><span class="pre">HilbertOperator.zero()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.factors_coulomb"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.factors_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.factors_sigma"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.factors_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.factors_sigmatau"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.factors_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.factors_spinorbit"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.factors_spinorbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.factors_tau"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.factors_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.onebody"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorHS.twobody_sample"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorHS.twobody_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_coulomb"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_sigma"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_sigma_3b"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_sigma_3b()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_sigmatau"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_spinorbit"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_spinorbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.factors_tau"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.factors_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.onebody"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.threebody_sample"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.threebody_sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.threebody_sample_partial"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.threebody_sample_partial()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertPropagatorRBM.twobody_sample"><code class="docutils literal notranslate"><span class="pre">HilbertPropagatorRBM.twobody_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState"><code class="docutils literal notranslate"><span class="pre">HilbertState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.attach_coordinates"><code class="docutils literal notranslate"><span class="pre">HilbertState.attach_coordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.copy"><code class="docutils literal notranslate"><span class="pre">HilbertState.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.dagger"><code class="docutils literal notranslate"><span class="pre">HilbertState.dagger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.entropy"><code class="docutils literal notranslate"><span class="pre">HilbertState.entropy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.generate_basis_states"><code class="docutils literal notranslate"><span class="pre">HilbertState.generate_basis_states()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.inner"><code class="docutils literal notranslate"><span class="pre">HilbertState.inner()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.multiply_operator"><code class="docutils literal notranslate"><span class="pre">HilbertState.multiply_operator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.nearby_product_state"><code class="docutils literal notranslate"><span class="pre">HilbertState.nearby_product_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.nearest_product_state"><code class="docutils literal notranslate"><span class="pre">HilbertState.nearest_product_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.outer"><code class="docutils literal notranslate"><span class="pre">HilbertState.outer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.randomize"><code class="docutils literal notranslate"><span class="pre">HilbertState.randomize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.scale"><code class="docutils literal notranslate"><span class="pre">HilbertState.scale()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.HilbertState.zero"><code class="docutils literal notranslate"><span class="pre">HilbertState.zero()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.Integrator"><code class="docutils literal notranslate"><span class="pre">Integrator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Integrator.bracket"><code class="docutils literal notranslate"><span class="pre">Integrator.bracket()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Integrator.exact"><code class="docutils literal notranslate"><span class="pre">Integrator.exact()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Integrator.run"><code class="docutils literal notranslate"><span class="pre">Integrator.run()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.Integrator.setup"><code class="docutils literal notranslate"><span class="pre">Integrator.setup()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential"><code class="docutils literal notranslate"><span class="pre">NuclearPotential</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_coulomb"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_sigma"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_sigma_3b"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_sigma_3b()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_sigmatau"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_spinorbit"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_spinorbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.NuclearPotential.read_tau"><code class="docutils literal notranslate"><span class="pre">NuclearPotential.read_tau()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator"><code class="docutils literal notranslate"><span class="pre">ProductOperator</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.apply_onebody_operator"><code class="docutils literal notranslate"><span class="pre">ProductOperator.apply_onebody_operator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.apply_sigma"><code class="docutils literal notranslate"><span class="pre">ProductOperator.apply_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.apply_tau"><code class="docutils literal notranslate"><span class="pre">ProductOperator.apply_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.copy"><code class="docutils literal notranslate"><span class="pre">ProductOperator.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.dagger"><code class="docutils literal notranslate"><span class="pre">ProductOperator.dagger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.multiply_operator"><code class="docutils literal notranslate"><span class="pre">ProductOperator.multiply_operator()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.multiply_state"><code class="docutils literal notranslate"><span class="pre">ProductOperator.multiply_state()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.scale_all"><code class="docutils literal notranslate"><span class="pre">ProductOperator.scale_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.scale_one"><code class="docutils literal notranslate"><span class="pre">ProductOperator.scale_one()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.to_list"><code class="docutils literal notranslate"><span class="pre">ProductOperator.to_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.to_manybody_basis"><code class="docutils literal notranslate"><span class="pre">ProductOperator.to_manybody_basis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductOperator.zero"><code class="docutils literal notranslate"><span class="pre">ProductOperator.zero()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.factors_coulomb"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.factors_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.factors_sigma"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.factors_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.factors_sigmatau"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.factors_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.factors_spinorbit"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.factors_spinorbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.factors_tau"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.factors_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.onebody"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorHS.twobody_sample"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorHS.twobody_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_coulomb"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_coulomb()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_sigma"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_sigma()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_sigma_3b"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_sigma_3b()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_sigmatau"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_sigmatau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_spinorbit"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_spinorbit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.factors_tau"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.factors_tau()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.onebody"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.onebody()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.threebody_sample"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.threebody_sample()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductPropagatorRBM.twobody_sample"><code class="docutils literal notranslate"><span class="pre">ProductPropagatorRBM.twobody_sample()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState"><code class="docutils literal notranslate"><span class="pre">ProductState</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.attach_coordinates"><code class="docutils literal notranslate"><span class="pre">ProductState.attach_coordinates()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.copy"><code class="docutils literal notranslate"><span class="pre">ProductState.copy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.dagger"><code class="docutils literal notranslate"><span class="pre">ProductState.dagger()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.generate_basis_states"><code class="docutils literal notranslate"><span class="pre">ProductState.generate_basis_states()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.inner"><code class="docutils literal notranslate"><span class="pre">ProductState.inner()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.normalize"><code class="docutils literal notranslate"><span class="pre">ProductState.normalize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.outer"><code class="docutils literal notranslate"><span class="pre">ProductState.outer()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.randomize"><code class="docutils literal notranslate"><span class="pre">ProductState.randomize()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.scale_all"><code class="docutils literal notranslate"><span class="pre">ProductState.scale_all()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.scale_one"><code class="docutils literal notranslate"><span class="pre">ProductState.scale_one()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.to_list"><code class="docutils literal notranslate"><span class="pre">ProductState.to_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.to_manybody_basis"><code class="docutils literal notranslate"><span class="pre">ProductState.to_manybody_basis()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ProductState.zero"><code class="docutils literal notranslate"><span class="pre">ProductState.zero()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.Propagator"><code class="docutils literal notranslate"><span class="pre">Propagator</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaCoupling"><code class="docutils literal notranslate"><span class="pre">SigmaCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaCoupling.random"><code class="docutils literal notranslate"><span class="pre">SigmaCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaCoupling.validate"><code class="docutils literal notranslate"><span class="pre">SigmaCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaTauCoupling"><code class="docutils literal notranslate"><span class="pre">SigmaTauCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaTauCoupling.random"><code class="docutils literal notranslate"><span class="pre">SigmaTauCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SigmaTauCoupling.validate"><code class="docutils literal notranslate"><span class="pre">SigmaTauCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.SpinOrbitCoupling"><code class="docutils literal notranslate"><span class="pre">SpinOrbitCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SpinOrbitCoupling.random"><code class="docutils literal notranslate"><span class="pre">SpinOrbitCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.SpinOrbitCoupling.validate"><code class="docutils literal notranslate"><span class="pre">SpinOrbitCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.TauCoupling"><code class="docutils literal notranslate"><span class="pre">TauCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.TauCoupling.random"><code class="docutils literal notranslate"><span class="pre">TauCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.TauCoupling.validate"><code class="docutils literal notranslate"><span class="pre">TauCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ThreeBodyCoupling"><code class="docutils literal notranslate"><span class="pre">ThreeBodyCoupling</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ThreeBodyCoupling.random"><code class="docutils literal notranslate"><span class="pre">ThreeBodyCoupling.random()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="spinbox.html#spinbox.core.ThreeBodyCoupling.validate"><code class="docutils literal notranslate"><span class="pre">ThreeBodyCoupling.validate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.carctanh"><code class="docutils literal notranslate"><span class="pre">carctanh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ccos"><code class="docutils literal notranslate"><span class="pre">ccos()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ccosh"><code class="docutils literal notranslate"><span class="pre">ccosh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.cexp"><code class="docutils literal notranslate"><span class="pre">cexp()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.csin"><code class="docutils literal notranslate"><span class="pre">csin()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.csinh"><code class="docutils literal notranslate"><span class="pre">csinh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.csqrt"><code class="docutils literal notranslate"><span class="pre">csqrt()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.ctanh"><code class="docutils literal notranslate"><span class="pre">ctanh()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.interaction_indices"><code class="docutils literal notranslate"><span class="pre">interaction_indices()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.pauli"><code class="docutils literal notranslate"><span class="pre">pauli()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.read_from_file"><code class="docutils literal notranslate"><span class="pre">read_from_file()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.core.repeated_kronecker_product"><code class="docutils literal notranslate"><span class="pre">repeated_kronecker_product()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spinbox.html#module-spinbox.extras">spinbox.extras module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.chistogram"><code class="docutils literal notranslate"><span class="pre">chistogram()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.pmat"><code class="docutils literal notranslate"><span class="pre">pmat()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.sigma_tau_matrices_product"><code class="docutils literal notranslate"><span class="pre">sigma_tau_matrices_product()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.sigma_tau_operators_hilbert"><code class="docutils literal notranslate"><span class="pre">sigma_tau_operators_hilbert()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.spinor2"><code class="docutils literal notranslate"><span class="pre">spinor2()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="spinbox.html#spinbox.extras.spinor4"><code class="docutils literal notranslate"><span class="pre">spinor4()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="spinbox.html#module-spinbox">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="index.html"
+                          title="previous chapter">Welcome to spinbox’s documentation!</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="spinbox.html"
+                          title="next chapter">spinbox package</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/modules.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<search id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="Related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="spinbox.html" title="spinbox package"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to spinbox’s documentation!"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">spinbox 0.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">spinbox</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+    &#169; Copyright 2024, Jordan M. R. Fox.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,1452 @@
+This is pdfTeX, Version 3.141592653-2.6-1.40.24 (MiKTeX 22.8) (preloaded format=pdflatex 2022.8.16)  13 AUG 2024 20:31
+entering extended mode
+ restricted \write18 enabled.
+ %&-line parsing enabled.
+**./spinbox.tex
+(spinbox.tex
+LaTeX2e <2022-06-01> patch level 5
+L3 programming layer <2022-08-05> (sphinxmanual.cls
+Document Class: sphinxmanual 2019/12/01 v2.3.0 Document class (Sphinx manual)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\report.cls
+Document Class: report 2021/10/04 v1.4n Standard LaTeX document class
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\size10.clo
+File: size10.clo 2021/10/04 v1.4n Standard LaTeX file (size option)
+)
+\c@part=\count185
+\c@chapter=\count186
+\c@section=\count187
+\c@subsection=\count188
+\c@subsubsection=\count189
+\c@paragraph=\count190
+\c@subparagraph=\count191
+\c@figure=\count192
+\c@table=\count193
+\abovecaptionskip=\skip47
+\belowcaptionskip=\skip48
+\bibindent=\dimen138
+)
+LaTeX Info: Redefining \and on input line 35.
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\inputenc.sty
+Package: inputenc 2021/02/14 v1.3d Input encoding file
+\inpenc@prehook=\toks16
+\inpenc@posthook=\toks17
+)
+   defining Unicode char U+00A0 (decimal 160)
+   defining Unicode char U+2500 (decimal 9472)
+   defining Unicode char U+2502 (decimal 9474)
+   defining Unicode char U+2514 (decimal 9492)
+   defining Unicode char U+251C (decimal 9500)
+   defining Unicode char U+2572 (decimal 9586)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/cmap\cmap.sty
+Package: cmap 2021/02/06 v1.0j CMap support: searchable PDF
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\fontenc.sty
+Package: fontenc 2021/04/29 v2.0v Standard LaTeX package
+<<t1.cmap>>)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsmath.sty
+Package: amsmath 2022/04/08 v2.17n AMS math features
+\@mathmargin=\skip49
+
+For additional information on amsmath, use the `?' option.
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amstext.sty
+Package: amstext 2021/08/26 v2.01 AMS text
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsgen.sty
+File: amsgen.sty 1999/11/30 v2.0 generic functions
+\@emptytoks=\toks18
+\ex@=\dimen139
+)) (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsbsy.st
+y
+Package: amsbsy 1999/11/29 v1.2d Bold Symbols
+\pmbraise@=\dimen140
+) (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsmath\amsopn.sty
+Package: amsopn 2022/04/08 v2.04 operator names
+)
+\inf@bad=\count194
+LaTeX Info: Redefining \frac on input line 234.
+\uproot@=\count195
+\leftroot@=\count196
+LaTeX Info: Redefining \overline on input line 399.
+LaTeX Info: Redefining \colon on input line 410.
+\classnum@=\count197
+\DOTSCASE@=\count198
+LaTeX Info: Redefining \ldots on input line 496.
+LaTeX Info: Redefining \dots on input line 499.
+LaTeX Info: Redefining \cdots on input line 620.
+\Mathstrutbox@=\box51
+\strutbox@=\box52
+LaTeX Info: Redefining \big on input line 722.
+LaTeX Info: Redefining \Big on input line 723.
+LaTeX Info: Redefining \bigg on input line 724.
+LaTeX Info: Redefining \Bigg on input line 725.
+\big@size=\dimen141
+LaTeX Font Info:    Redeclaring font encoding OML on input line 743.
+LaTeX Font Info:    Redeclaring font encoding OMS on input line 744.
+\macc@depth=\count199
+LaTeX Info: Redefining \bmod on input line 905.
+LaTeX Info: Redefining \pmod on input line 910.
+LaTeX Info: Redefining \smash on input line 940.
+LaTeX Info: Redefining \relbar on input line 970.
+LaTeX Info: Redefining \Relbar on input line 971.
+\c@MaxMatrixCols=\count266
+\dotsspace@=\muskip16
+\c@parentequation=\count267
+\dspbrk@lvl=\count268
+\tag@help=\toks19
+\row@=\count269
+\column@=\count270
+\maxfields@=\count271
+\andhelp@=\toks20
+\eqnshift@=\dimen142
+\alignsep@=\dimen143
+\tagshift@=\dimen144
+\tagwidth@=\dimen145
+\totwidth@=\dimen146
+\lineht@=\dimen147
+\@envbody=\toks21
+\multlinegap=\skip50
+\multlinetaggap=\skip51
+\mathdisplay@stack=\toks22
+LaTeX Info: Redefining \[ on input line 2953.
+LaTeX Info: Redefining \] on input line 2954.
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amssymb.sty
+Package: amssymb 2013/01/14 v3.01 AMS font symbols
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\amsfonts.st
+y
+Package: amsfonts 2013/01/14 v3.01 Basic AMSFonts support
+\symAMSa=\mathgroup4
+\symAMSb=\mathgroup5
+LaTeX Font Info:    Redeclaring math symbol \hbar on input line 98.
+LaTeX Font Info:    Overwriting math alphabet `\mathfrak' in version `bold'
+(Font)                  U/euf/m/n --> U/euf/b/n on input line 106.
+))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/babel\babel.sty
+Package: babel 2022/07/20 3.78 The Babel package
+\babel@savecnt=\count272
+\U@D=\dimen148
+\l@unhyphenated=\language79
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/babel\txtbabel.def
+)
+\bbl@readstream=\read2
+\bbl@dirlevel=\count273
+
+*************************************
+* Local config file bblopts.cfg used
+*
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/arabi\bblopts.cfg
+File: bblopts.cfg 2005/09/08 v0.1 add Arabic and Farsi to "declared" options of
+ babel
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/babel-english\englis
+h.ldf
+Language: english 2017/06/06 v3.3r English support from the babel system
+Package babel Info: Hyphen rules for 'canadian' set to \l@english
+(babel)             (\language0). Reported on input line 102.
+Package babel Info: Hyphen rules for 'australian' set to \l@ukenglish
+(babel)             (\language73). Reported on input line 105.
+Package babel Info: Hyphen rules for 'newzealand' set to \l@ukenglish
+(babel)             (\language73). Reported on input line 108.
+))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/babel/locale/en\ba
+bel-english.tex
+Package babel Info: Importing font and identification data for english
+(babel)             from babel-en.ini. Reported on input line 11.
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\tgtermes.st
+y
+Package: tgtermes 2009/09/27 v1.2 TeX Gyre Termes as default roman family
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/kvoptions\kvoptions.
+sty
+Package: kvoptions 2022-06-15 v3.15 Key value format for package options (HO)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics\keyval.sty
+Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
+\KV@toks@=\toks23
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/ltxcmds\ltxcmds.st
+y
+Package: ltxcmds 2020-05-10 v1.25 LaTeX kernel commands for general use (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/kvsetkeys\kvsetkey
+s.sty
+Package: kvsetkeys 2019/12/15 v1.18 Key value parser (HO)
+)))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\tgheros.sty
+Package: tgheros 2009/09/27 v1.2 TeX Gyre Heros as default sans serif family
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fncychap\fncychap.st
+y
+Package: fncychap 2007/07/30 v1.34 LaTeX package (Revised chapters)
+\RW=\skip52
+\mylen=\skip53
+\myhi=\skip54
+\px=\skip55
+\py=\skip56
+\pyy=\skip57
+\pxx=\skip58
+\c@AlphaCnt=\count274
+\c@AlphaDecCnt=\count275
+) (sphinx.sty
+Package: sphinx 2024/07/01 v7.4.0 Sphinx LaTeX package (sphinx-doc)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/xcolor\xcolor.sty
+Package: xcolor 2022/06/12 v2.14 LaTeX color extensions (UK)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\color.c
+fg
+File: color.cfg 2016/01/02 v1.6 sample color configuration
+)
+Package xcolor Info: Driver file: pdftex.def on input line 227.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics-def\pdftex.
+def
+File: pdftex.def 2020/10/05 v1.2a Graphics/color driver for pdftex
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex-dev/graphics\mathcol
+or.ltx)
+Package xcolor Info: Model `cmy' substituted by `cmy0' on input line 1353.
+Package xcolor Info: Model `hsb' substituted by `rgb' on input line 1357.
+Package xcolor Info: Model `RGB' extended on input line 1369.
+Package xcolor Info: Model `HTML' substituted by `rgb' on input line 1371.
+Package xcolor Info: Model `Hsb' substituted by `hsb' on input line 1372.
+Package xcolor Info: Model `tHsb' substituted by `hsb' on input line 1373.
+Package xcolor Info: Model `HSB' substituted by `hsb' on input line 1374.
+Package xcolor Info: Model `Gray' substituted by `gray' on input line 1375.
+Package xcolor Info: Model `wave' substituted by `hsb' on input line 1376.
+) (sphinxoptionshyperref.sty
+File: sphinxoptionshyperref.sty 2021/01/27 hyperref
+) (sphinxoptionsgeometry.sty
+File: sphinxoptionsgeometry.sty 2021/01/27 geometry
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\textcomp.sty
+Package: textcomp 2020/02/02 v2.0n Standard LaTeX package
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/float\float.sty
+Package: float 2001/11/08 v1.3d Float enhancements (AL)
+\c@float@type=\count276
+\float@exts=\toks24
+\float@box=\box53
+\@float@everytoks=\toks25
+\@floatcapt=\box54
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/wrapfig\wrapfig.sty
+\wrapoverhang=\dimen149
+\WF@size=\dimen150
+\c@WF@wrappedlines=\count277
+\WF@box=\box55
+\WF@everypar=\toks26
+Package: wrapfig 2003/01/31  v 3.6
+) (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/capt-of\capt-of.st
+y
+Package: capt-of 2009/12/29 v0.2 standard captions outside of floats
+) (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tools\multicol.sty
+Package: multicol 2021/10/28 v1.9b multicolumn formatting (FMi)
+\c@tracingmulticols=\count278
+\mult@box=\box56
+\multicol@leftmargin=\dimen151
+\c@unbalance=\count279
+\c@collectmore=\count280
+\doublecol@number=\count281
+\multicoltolerance=\count282
+\multicolpretolerance=\count283
+\full@width=\dimen152
+\page@free=\dimen153
+\premulticols=\dimen154
+\postmulticols=\dimen155
+\multicolsep=\skip59
+\multicolbaselineskip=\skip60
+\partial@page=\box57
+\last@line=\box58
+\maxbalancingoverflow=\dimen156
+\mult@rightbox=\box59
+\mult@grightbox=\box60
+\mult@firstbox=\box61
+\mult@gfirstbox=\box62
+\@tempa=\box63
+\@tempa=\box64
+\@tempa=\box65
+\@tempa=\box66
+\@tempa=\box67
+\@tempa=\box68
+\@tempa=\box69
+\@tempa=\box70
+\@tempa=\box71
+\@tempa=\box72
+\@tempa=\box73
+\@tempa=\box74
+\@tempa=\box75
+\@tempa=\box76
+\@tempa=\box77
+\@tempa=\box78
+\@tempa=\box79
+\@tempa=\box80
+\@tempa=\box81
+\@tempa=\box82
+\@tempa=\box83
+\@tempa=\box84
+\@tempa=\box85
+\@tempa=\box86
+\@tempa=\box87
+\@tempa=\box88
+\@tempa=\box89
+\@tempa=\box90
+\@tempa=\box91
+\@tempa=\box92
+\@tempa=\box93
+\@tempa=\box94
+\@tempa=\box95
+\@tempa=\box96
+\@tempa=\box97
+\@tempa=\box98
+\c@minrows=\count284
+\c@columnbadness=\count285
+\c@finalcolumnbadness=\count286
+\last@try=\dimen157
+\multicolovershoot=\dimen158
+\multicolundershoot=\dimen159
+\mult@nat@firstbox=\box99
+\colbreak@box=\box100
+\mc@col@check@num=\count287
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphicx.st
+y
+Package: graphicx 2021/09/16 v1.2d Enhanced LaTeX Graphics (DPC,SPQR)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics\graphics.st
+y
+Package: graphics 2022/03/10 v1.4e Standard LaTeX Graphics (DPC,SPQR)
+ (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics\trig.sty
+Package: trig 2021/08/11 v1.11 sin cos tan (DPC)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/graphics-cfg\graphic
+s.cfg
+File: graphics.cfg 2016/06/04 v1.11 sample graphics configuration
+)
+Package graphics Info: Driver file: pdftex.def on input line 107.
+)
+\Gin@req@height=\dimen160
+\Gin@req@width=\dimen161
+) (sphinxlatexgraphics.sty
+File: sphinxlatexgraphics.sty 2021/01/27 graphics
+\spx@image@maxheight=\dimen162
+\spx@image@box=\box101
+) (sphinxpackageboxes.sty
+Package: sphinxpackageboxes 2024/07/01 v7.4.0 advanced colored boxes
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/pict2e\pict2e.sty
+Package: pict2e 2020/09/30 v0.4b Improved picture commands (HjG,RN,JT)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/pict2e\pict2e.cfg
+File: pict2e.cfg 2016/02/05 v0.1u pict2e configuration for teTeX/TeXLive
+)
+Package pict2e Info: Driver file: pdftex.def on input line 112.
+Package pict2e Info: Driver file for pict2e: p2e-pdftex.def on input line 114.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/pict2e\p2e-pdftex.de
+f
+File: p2e-pdftex.def 2016/02/05 v0.1u Driver-dependant file (RN,HjG,JT)
+)
+\pIIe@GRAPH=\toks27
+\@arclen=\dimen163
+\@arcrad=\dimen164
+\pIIe@tempdima=\dimen165
+\pIIe@tempdimb=\dimen166
+\pIIe@tempdimc=\dimen167
+\pIIe@tempdimd=\dimen168
+\pIIe@tempdime=\dimen169
+\pIIe@tempdimf=\dimen170
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/ellipse\ellipse.sty
+Package: ellipse 2004/11/05 v1.0 .dtx ellipse file
+)
+\@tempdimd=\dimen171
+\spx@tempboxa=\box102
+\spx@tempboxb=\box103
+\spx@boxes@border@top=\dimen172
+\spx@boxes@border@right=\dimen173
+\spx@boxes@border@bottom=\dimen174
+\spx@boxes@border@left=\dimen175
+\spx@boxes@padding@top=\dimen176
+\spx@boxes@padding@right=\dimen177
+\spx@boxes@padding@bottom=\dimen178
+\spx@boxes@padding@left=\dimen179
+\spx@boxes@shadow@xoffset=\dimen180
+\spx@boxes@shadow@yoffset=\dimen181
+\spx@boxes@radius@topleft@x=\dimen182
+\spx@boxes@radius@topright@x=\dimen183
+\spx@boxes@radius@bottomright@x=\dimen184
+\spx@boxes@radius@bottomleft@x=\dimen185
+\spx@boxes@radius@topleft@y=\dimen186
+\spx@boxes@radius@topright@y=\dimen187
+\spx@boxes@radius@bottomright@y=\dimen188
+\spx@boxes@radius@bottomleft@y=\dimen189
+) (sphinxlatexadmonitions.sty
+File: sphinxlatexadmonitions.sty 2024/07/01 v7.4.0 admonitions
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/framed\framed.sty
+Package: framed 2011/10/22 v 0.96: framed or shaded text with page breaks
+\OuterFrameSep=\skip61
+\fb@frw=\dimen190
+\fb@frh=\dimen191
+\FrameRule=\dimen192
+\FrameSep=\dimen193
+)
+\spx@notice@border=\dimen194
+\c@sphinxtodo=\count288
+)
+(sphinxlatexliterals.sty
+File: sphinxlatexliterals.sty 2024/07/01 v7.4.0 code-blocks and parsed literals
+
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fancyvrb\fancyvrb.st
+y
+Package: fancyvrb 2022/06/06 4.5 verbatim text (tvz,hv)
+\FV@CodeLineNo=\count289
+\FV@InFile=\read3
+\FV@TabBox=\box104
+\c@FancyVerbLine=\count290
+\FV@StepNumber=\count291
+\FV@OutFile=\write3
+) (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\alltt.sty
+Package: alltt 2021/01/29 v2.0g defines alltt environment
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/upquote\upquote.sty
+Package: upquote 2012/04/19 v1.3 upright-quote and grave-accent glyphs in verba
+tim
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/needspace\needspace.
+sty
+Package: needspace 2010/09/12 v1.3d reserve vertical space
+)
+\sphinxcontinuationbox=\box105
+\sphinxvisiblespacebox=\box106
+\sphinxVerbatim@TitleBox=\box107
+\sphinxVerbatim@ContentsBox=\box108
+) (sphinxlatexshadowbox.sty
+File: sphinxlatexshadowbox.sty 2023/03/19 sphinxShadowBox
+) (sphinxlatexcontainers.sty
+File: sphinxlatexcontainers.sty 2021/05/03 containers
+)
+(sphinxhighlight.sty
+Package: sphinxhighlight 2022/06/30 stylesheet for highlighting with pygments
+) (sphinxlatextables.sty
+File: sphinxlatextables.sty 2024/07/01 v7.4.0 tables
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tabulary\tabulary.st
+y
+Package: tabulary 2024/06/04 v0.11 tabulary package (DPC)
+ (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tools\array.sty
+Package: array 2021/10/04 v2.5f Tabular extension package (FMi)
+\col@sep=\dimen195
+\ar@mcellbox=\box109
+\extrarowheight=\dimen196
+\NC@list=\toks28
+\extratabsurround=\skip62
+\backup@length=\skip63
+\ar@cellbox=\box110
+)
+
+LaTeX Warning: You have requested, on input line 20, version
+               `2024/05/23' of package array,
+               but only version
+               `2021/10/04 v2.5f Tabular extension package (FMi)'
+               is available.
+
+\TY@count=\count292
+\TY@linewidth=\dimen197
+\tymin=\dimen198
+\tymax=\dimen199
+\TY@tablewidth=\dimen256
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tools\longtable.sty
+Package: longtable 2021-09-01 v4.17 Multi-page Table package (DPC)
+\LTleft=\skip64
+\LTright=\skip65
+\LTpre=\skip66
+\LTpost=\skip67
+\LTchunksize=\count293
+\LTcapwidth=\dimen257
+\LT@head=\box111
+\LT@firsthead=\box112
+\LT@foot=\box113
+\LT@lastfoot=\box114
+\LT@gbox=\box115
+\LT@cols=\count294
+\LT@rows=\count295
+\c@LT@tables=\count296
+\c@LT@chunks=\count297
+\LT@p@ftn=\toks29
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/varwidth\varwidth.st
+y
+Package: varwidth 2009/03/30 ver 0.92;  Variable-width minipages
+\@vwid@box=\box116
+\sift@deathcycles=\count298
+\@vwid@loff=\dimen258
+\@vwid@roff=\dimen259
+)
+\sphinx@TY@tablewidth=\dimen260
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/colortbl\colortbl.st
+y
+Package: colortbl 2024/07/06 v1.0i Color table columns (DPC)
+\everycr=\toks30
+\minrowclearance=\skip68
+\rownum=\count299
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/booktabs\booktabs.st
+y
+Package: booktabs 2020/01/12 v1.61803398 Publication quality tables
+\heavyrulewidth=\dimen261
+\lightrulewidth=\dimen262
+\cmidrulewidth=\dimen263
+\belowrulesep=\dimen264
+\belowbottomsep=\dimen265
+\aboverulesep=\dimen266
+\abovetopsep=\dimen267
+\cmidrulesep=\dimen268
+\cmidrulekern=\dimen269
+\defaultaddspace=\dimen270
+\@cmidla=\count300
+\@cmidlb=\count301
+\@aboverulesep=\dimen271
+\@belowrulesep=\dimen272
+\@thisruleclass=\count302
+\@lastruleclass=\count303
+\@thisrulewidth=\dimen273
+)) (sphinxlatexnumfig.sty
+File: sphinxlatexnumfig.sty 2021/01/27 numbering
+) (sphinxlatexlists.sty
+File: sphinxlatexlists.sty 2021/12/20 lists
+\spx@lineitemlabel=\toks31
+)
+\c@sphinxscope=\count304
+ (sphinxpackagefootnote.sty
+Package: sphinxpackagefootnote 2024/05/17 v7.3.x Sphinx custom footnotehyper pa
+ckage (Sphinx team)
+\FNH@notes=\box117
+\FNH@toks=\toks32
+\FNH@width=\dimen274
+\c@sphinxfootnotemark=\count305
+)
+(sphinxlatexindbibtoc.sty
+File: sphinxlatexindbibtoc.sty 2021/01/27 index, bib., toc
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\makeidx.sty
+Package: makeidx 2021/10/04 v1.0m Standard LaTeX package
+))
+(sphinxlatexstylepage.sty
+File: sphinxlatexstylepage.sty 2021/01/27 page styling
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/parskip\parskip.sty
+Rollback for package 'parskip' requested -> version 'v1'.
+         This corresponds to the release introduced on 2001-04-09.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/parskip\parskip-2001
+-04-09.sty
+Package: parskip 2001/04/09 non-zero parskip adjustments
+))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fancyhdr\fancyhdr.st
+y
+Package: fancyhdr 2022/05/18 v4.0.3 Extensive control of page headers and foote
+rs
+\f@nch@headwidth=\skip69
+\f@nch@O@elh=\skip70
+\f@nch@O@erh=\skip71
+\f@nch@O@olh=\skip72
+\f@nch@O@orh=\skip73
+\f@nch@O@elf=\skip74
+\f@nch@O@erf=\skip75
+\f@nch@O@olf=\skip76
+\f@nch@O@orf=\skip77
+)) (sphinxlatexstyleheadings.sty
+File: sphinxlatexstyleheadings.sty 2023/02/11 headings
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/titlesec\titlesec.st
+y
+Package: titlesec 2023/10/27 v2.16 Sectioning titles
+\ttl@box=\box118
+\beforetitleunit=\skip78
+\aftertitleunit=\skip79
+\ttl@plus=\dimen275
+\ttl@minus=\dimen276
+\ttl@toksa=\toks33
+\titlewidth=\dimen277
+\titlewidthlast=\dimen278
+\titlewidthfirst=\dimen279
+)) (sphinxlatexstyletext.sty
+File: sphinxlatexstyletext.sty 2024/07/01 v7.4.0 text styling
+) (sphinxlatexobjects.sty
+File: sphinxlatexobjects.sty 2023/07/23 documentation environments
+\sphinxsignaturesep=\skip80
+\sphinxsignaturelistskip=\skip81
+\py@argswidth=\skip82
+\lineblockindentation=\skip83
+\DUlineblockindent=\skip84
+))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.st
+y
+Package: geometry 2020/01/02 v5.9 Page Geometry
+ (C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/iftex\ifvtex.sty
+Package: ifvtex 2019/10/25 v1.7 ifvtex legacy package. Use iftex instead.
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/iftex\iftex.sty
+Package: iftex 2022/02/03 v1.0f TeX engine tests
+))
+\Gm@cnth=\count306
+\Gm@cntv=\count307
+\c@Gm@tempcnt=\count308
+\Gm@bindingoffset=\dimen280
+\Gm@wd@mp=\dimen281
+\Gm@odd@mp=\dimen282
+\Gm@even@mp=\dimen283
+\Gm@layoutwidth=\dimen284
+\Gm@layoutheight=\dimen285
+\Gm@layouthoffset=\dimen286
+\Gm@layoutvoffset=\dimen287
+\Gm@dimlist=\toks34
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/geometry\geometry.cf
+g))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hyperref.st
+y
+Package: hyperref 2022-06-20 v7.00s Hypertext links for LaTeX
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/pdftexcmds\pdftexc
+mds.sty
+Package: pdftexcmds 2020-06-27 v0.33 Utility functions of pdfTeX for LuaTeX (HO
+)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/infwarerr\infwarer
+r.sty
+Package: infwarerr 2019/12/03 v1.5 Providing info/warning/error messages (HO)
+)
+Package pdftexcmds Info: \pdf@primitive is available.
+Package pdftexcmds Info: \pdf@ifprimitive is available.
+Package pdftexcmds Info: \pdfdraftmode found.
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/kvdefinekeys\kvdef
+inekeys.sty
+Package: kvdefinekeys 2019-12-19 v1.6 Define keys (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/pdfescape\pdfescap
+e.sty
+Package: pdfescape 2019/12/09 v1.15 Implements pdfTeX's escape features (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hycolor\hycolor.sty
+Package: hycolor 2020-01-27 v1.10 Color options for hyperref/bookmark (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/letltxmacro\letltxma
+cro.sty
+Package: letltxmacro 2019/12/03 v1.6 Let assignment for LaTeX macros (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/auxhook\auxhook.sty
+Package: auxhook 2019-12-17 v1.6 Hooks for auxiliary files (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\nameref.sty
+Package: nameref 2022-05-17 v2.50 Cross-referencing by name of section
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/refcount\refcount.st
+y
+Package: refcount 2019/12/15 v3.6 Data extraction from label references (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/gettitlestring\get
+titlestring.sty
+Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
+)
+\c@section@level=\count309
+)
+\@linkdim=\dimen288
+\Hy@linkcounter=\count310
+\Hy@pagecounter=\count311
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\pd1enc.def
+File: pd1enc.def 2022-06-20 v7.00s Hyperref: PDFDocEncoding definition (HO)
+Now handling font encoding PD1 ...
+... no UTF-8 mapping file for font encoding PD1
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/intcalc\intcalc.st
+y
+Package: intcalc 2019/12/15 v1.3 Expandable calculations with integers (HO)
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/etexcmds\etexcmds.
+sty
+Package: etexcmds 2019/12/15 v1.7 Avoid name clashes with e-TeX commands (HO)
+)
+\Hy@SavedSpaceFactor=\count312
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\puenc.def
+File: puenc.def 2022-06-20 v7.00s Hyperref: PDF Unicode definition (HO)
+Now handling font encoding PU ...
+... no UTF-8 mapping file for font encoding PU
+)
+Package hyperref Info: Option `unicode' set `true' on input line 4045.
+Package hyperref Info: Option `colorlinks' set `true' on input line 4045.
+Package hyperref Info: Option `breaklinks' set `true' on input line 4045.
+Package hyperref Info: Hyper figures OFF on input line 4162.
+Package hyperref Info: Link nesting OFF on input line 4167.
+Package hyperref Info: Hyper index ON on input line 4170.
+Package hyperref Info: Plain pages OFF on input line 4177.
+Package hyperref Info: Backreferencing OFF on input line 4182.
+Package hyperref Info: Implicit mode ON; LaTeX internals redefined.
+Package hyperref Info: Bookmarks ON on input line 4408.
+\c@Hy@tempcnt=\count313
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/url\url.sty
+\Urlmuskip=\muskip17
+Package: url 2013/09/16  ver 3.4  Verb mode for urls, etc.
+)
+LaTeX Info: Redefining \url on input line 4746.
+\XeTeXLinkMargin=\dimen289
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/bitset\bitset.sty
+Package: bitset 2019/12/09 v1.3 Handle bit-vector datatype (HO)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/bigintcalc\bigintc
+alc.sty
+Package: bigintcalc 2019/12/15 v1.5 Expandable calculations on big integers (HO
+)
+))
+\Fld@menulength=\count314
+\Field@Width=\dimen290
+\Fld@charsize=\dimen291
+Package hyperref Info: Hyper figures OFF on input line 6024.
+Package hyperref Info: Link nesting OFF on input line 6029.
+Package hyperref Info: Hyper index ON on input line 6032.
+Package hyperref Info: backreferencing OFF on input line 6039.
+Package hyperref Info: Link coloring ON on input line 6042.
+Package hyperref Info: Link coloring with OCG OFF on input line 6049.
+Package hyperref Info: PDF/A mode OFF on input line 6054.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\atbegshi-ltx.st
+y
+Package: atbegshi-ltx 2021/01/10 v1.0c Emulation of the original atbegshi
+package with kernel methods
+)
+\Hy@abspage=\count315
+\c@Item=\count316
+\c@Hfootnote=\count317
+)
+Package hyperref Info: Driver (autodetected): hpdftex.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/hyperref\hpdftex.def
+File: hpdftex.def 2022-06-20 v7.00s Hyperref driver for pdfTeX
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/base\atveryend-ltx.s
+ty
+Package: atveryend-ltx 2020/08/19 v1.0a Emulation of the original atveryend pac
+kage
+with kernel methods
+)
+\Fld@listcount=\count318
+\c@bookmark@seq@number=\count319
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/rerunfilecheck\rerun
+filecheck.sty
+Package: rerunfilecheck 2022-07-10 v1.10 Rerun checks for auxiliary files (HO)
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/generic/uniquecounter\uniq
+uecounter.sty
+Package: uniquecounter 2019/12/15 v1.4 Provide unlimited unique counter (HO)
+)
+Package uniquecounter Info: New unique counter `rerunfilecheck' on input line 2
+85.
+)
+\Hy@SectionHShift=\skip85
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/oberdiek\hypcap.sty
+Package: hypcap 2016/05/16 v1.12 Adjusting the anchors of captions (HO)
+) (sphinxmessages.sty
+Package: sphinxmessages 2019/01/04 v2.0 Localized LaTeX macros (Sphinx team)
+)
+\@indexfile=\write4
+\openout4 = `spinbox.idx'.
+
+
+Writing index file spinbox.idx
+LaTeX Font Info:    Trying to load font information for T1+qtm on input line 73
+.
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\t1qtm.fd
+File: t1qtm.fd 2009/09/25 v1.2 font definition file for T1/qtm
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/l3backend\l3backend-
+pdftex.def
+File: l3backend-pdftex.def 2022-08-05 L3 backend support: PDF output (pdfTeX)
+\l__color_backend_stack_int=\count320
+\l__pdf_internal_box=\box119
+) (spinbox.aux)
+\openout1 = `spinbox.aux'.
+
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for TS1/cmr/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 73.
+LaTeX Font Info:    ... okay on input line 73.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/context/base/mkii\supp-pdf
+.mkii
+[Loading MPS to PDF converter (version 2006.09.02).]
+\scratchcounter=\count321
+\scratchdimen=\dimen292
+\scratchbox=\box120
+\nofMPsegments=\count322
+\nofMParguments=\count323
+\everyMPshowfont=\toks35
+\MPscratchCnt=\count324
+\MPscratchDim=\dimen293
+\MPnumerator=\count325
+\makeMPintoPDFobject=\count326
+\everyMPtoPDFconversion=\toks36
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/epstopdf-pkg\epstopd
+f-base.sty
+Package: epstopdf-base 2020-01-24 v2.11 Base part for package epstopdf
+Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
+85.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/00miktex\epstopdf-sy
+s.cfg
+File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
+))
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fontawesome5\fontawe
+some5.sty
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/l3kernel\expl3.sty
+Package: expl3 2022-08-05 L3 programming layer (loader) 
+)
+Package: fontawesome5 2022/05/02 v5.15.4 Font Awesome 5
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/l3keys2e\
+l3keys2e.sty
+Package: l3keys2e 2022-06-22 LaTeX2e option processing using LaTeX3 keys
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/l3packages/xparse\xp
+arse.sty
+Package: xparse 2022-06-22 L3 Experimental document command parser
+)
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fontawesome5\fontawe
+some5-generic-helper.sty
+Package: fontawesome5-generic-helper 2022/05/02 v5.15.4 non-uTeX helper for fon
+tawesome5
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/fontawesome5\fontawe
+some5-mapping.def)))
+\c@literalblock=\count327
+
+*geometry* driver: auto-detecting
+*geometry* detected driver: pdftex
+*geometry* verbose mode - [ preamble ] result:
+* driver: pdftex
+* paper: letterpaper
+* layout: <same size as paper>
+* layoutoffset:(h,v)=(0.0pt,0.0pt)
+* modes: twoside 
+* h-part:(L,W,R)=(72.26999pt, 469.75502pt, 72.26999pt)
+* v-part:(T,H,B)=(72.26999pt, 650.43001pt, 72.26999pt)
+* \paperwidth=614.295pt
+* \paperheight=794.96999pt
+* \textwidth=469.75502pt
+* \textheight=650.43001pt
+* \oddsidemargin=0.0pt
+* \evensidemargin=0.0pt
+* \topmargin=-37.0pt
+* \headheight=12.0pt
+* \headsep=25.0pt
+* \topskip=10.0pt
+* \footskip=30.0pt
+* \marginparwidth=36.135pt
+* \marginparsep=11.0pt
+* \columnsep=10.0pt
+* \skip\footins=9.0pt plus 4.0pt minus 2.0pt
+* \hoffset=0.0pt
+* \voffset=0.0pt
+* \mag=1000
+* \@twocolumnfalse
+* \@twosidetrue
+* \@mparswitchtrue
+* \@reversemarginfalse
+* (1in=72.27pt=25.4mm, 1cm=28.453pt)
+
+Package hyperref Info: Link coloring ON on input line 73.
+(spinbox.out) (spinbox.out)
+\@outlinefile=\write5
+\openout5 = `spinbox.out'.
+
+Package hyperref Info: Option `pageanchor' set `false' on input line 81.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\spacefactor' on input line 81.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@m' on input line 81.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\spacefactor' on input line 81.
+
+
+Package hyperref Warning: Token not allowed in a PDF string (Unicode):
+(hyperref)                removing `\@m' on input line 81.
+
+LaTeX Font Info:    Trying to load font information for T1+qhv on input line 81
+.
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\t1qhv.fd
+File: t1qhv.fd 2009/09/25 v1.2 font definition file for T1/qhv
+)<<ot1.cmap>><<oml.cmap>><<oms.cmap>><<omx.cmap>>
+LaTeX Font Info:    Trying to load font information for U+msa on input line 81.
+
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
+File: umsa.fd 2013/01/14 v3.01 AMS symbols A
+)
+LaTeX Font Info:    Trying to load font information for U+msb on input line 81.
+
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
+File: umsb.fd 2013/01/14 v3.01 AMS symbols B
+)
+[1
+
+{C:/Users/MainUser/AppData/Local/MiKTeX/fonts/map/pdftex/pdftex.map}]
+[2
+
+
+] (spinbox.toc)
+\tf@toc=\write6
+\openout6 = `spinbox.toc'.
+
+ [1
+
+] [2
+
+]
+Chapter 1.
+LaTeX Font Info:    Trying to load font information for T1+txtt on input line 1
+08.
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/txfonts\t1txtt.fd
+File: t1txtt.fd 2000/12/15 v3.1
+)
+LaTeX Font Info:    Font shape `T1/txtt/b/n' in size <10> not available
+(Font)              Font shape `T1/txtt/bx/n' tried instead on input line 108.
+LaTeX Font Info:    Font shape `T1/txtt/m/it' in size <10> not available
+(Font)              Font shape `T1/txtt/m/sl' tried instead on input line 111.
+
+[1
+
+]
+LaTeX Font Info:    Trying to load font information for TS1+qtm on input line 3
+41.
+
+(C:\Users\MainUser\AppData\Local\Programs\MiKTeX\tex/latex/tex-gyre\ts1qtm.fd
+File: ts1qtm.fd 2009/09/25 v1.2 font definition file for TS1/qtm
+)
+[2] [3] [4] [5] [6] [7] [8] [9] [10] [11] [12] [13] [14] [15] [16] [17]
+[18] [19] [20
+
+]
+Chapter 2.
+[21] [22
+
+] [23
+
+
+] (spinbox.ind [24
+
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 8--10
+[]\T1/txtt/m/n/10 apply_onebody_operator() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin
+-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 10--12
+[]\T1/txtt/m/n/10 apply_onebody_operator() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin
+-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 13--14
+[]\T1/txtt/m/n/10 apply_sigma() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.P
+roductOperator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 16--17
+[]\T1/txtt/m/n/10 attach_coordinates() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box
+.core.HilbertState
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 17--18
+[]\T1/txtt/m/n/10 attach_coordinates() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box
+.core.ProductState
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 58--60
+[]\T1/txtt/m/n/10 factors_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 58--60
+\T1/qtm/m/it/10 box.core.HilbertPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 60--62
+[]\T1/txtt/m/n/10 factors_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 60--62
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 62--64
+[]\T1/txtt/m/n/10 factors_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 62--64
+\T1/qtm/m/it/10 box.core.ProductPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 64--66
+[]\T1/txtt/m/n/10 factors_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 64--66
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 5970) in paragraph at lines 66--68
+[]\T1/txtt/m/n/10 factors_sigma() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core
+.HilbertPropagatorHS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 68--70
+[]\T1/txtt/m/n/10 factors_sigma() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 68--70
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 72--74
+[]\T1/txtt/m/n/10 factors_sigma() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 72--74
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--76
+[]\T1/txtt/m/n/10 factors_sigma_3b() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 74--76
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 76--78
+[]\T1/txtt/m/n/10 factors_sigma_3b() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 76--78
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 78--80
+[]\T1/txtt/m/n/10 factors_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 78--80
+\T1/qtm/m/it/10 box.core.HilbertPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 80--82
+[]\T1/txtt/m/n/10 factors_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 80--82
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+[25
+
+]
+Underfull \hbox (badness 10000) in paragraph at lines 82--84
+[]\T1/txtt/m/n/10 factors_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 82--84
+\T1/qtm/m/it/10 box.core.ProductPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 84--86
+[]\T1/txtt/m/n/10 factors_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 84--86
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 86--88
+[]\T1/txtt/m/n/10 factors_spinorbit() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 86--88
+\T1/qtm/m/it/10 box.core.HilbertPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 88--90
+[]\T1/txtt/m/n/10 factors_spinorbit() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 88--90
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 90--92
+[]\T1/txtt/m/n/10 factors_spinorbit() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 90--92
+\T1/qtm/m/it/10 box.core.ProductPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 92--94
+[]\T1/txtt/m/n/10 factors_spinorbit() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 92--94
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 94--95
+[]\T1/txtt/m/n/10 factors_tau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.H
+ilbertPropagatorHS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 95--96
+[]\T1/txtt/m/n/10 factors_tau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.H
+ilbertPropagatorRBM
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 96--97
+[]\T1/txtt/m/n/10 factors_tau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.P
+roductPropagatorHS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 99--100
+[]\T1/txtt/m/n/10 force_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core
+.ExactPropagator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 100--102
+[]\T1/txtt/m/n/10 force_coulomb_onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 102--103
+[]\T1/txtt/m/n/10 force_sigma() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.E
+xactPropagator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 103--104
+[]\T1/txtt/m/n/10 force_sigma_3b() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.cor
+e.ExactPropagator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 104--105
+[]\T1/txtt/m/n/10 force_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.cor
+e.ExactPropagator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 111--113
+[]\T1/txtt/m/n/10 generate_basis_states() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+
+ []
+
+
+Underfull \hbox (badness 7012) in paragraph at lines 134--136
+[]\T1/txtt/m/n/10 multiply_operator() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.
+core.HilbertOperator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 136--137
+[]\T1/txtt/m/n/10 multiply_operator() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.
+core.HilbertState
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 139--140
+[]\T1/txtt/m/n/10 multiply_state() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.cor
+e.HilbertOperator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 140--141
+[]\T1/txtt/m/n/10 multiply_state() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.cor
+e.ProductOperator
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 144--146
+[]\T1/txtt/m/n/10 nearby_product_state() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-b
+ox.core.HilbertState
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 153--154
+[]\T1/txtt/m/n/10 onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.Hilbe
+rtPropagatorHS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 154--155
+[]\T1/txtt/m/n/10 onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.Hilbe
+rtPropagatorRBM
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 155--156
+[]\T1/txtt/m/n/10 onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.Produ
+ctPropagatorHS
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 156--157
+[]\T1/txtt/m/n/10 onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.Produ
+ctPropagatorRBM
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 169--171
+[]\T1/txtt/m/n/10 propagator_combined() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 171--173
+[]\T1/txtt/m/n/10 propagator_spinorbit_linear() \T1/qtm/m/n/10 (\T1/qtm/m/it/10
+ spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 173--175
+[]\T1/txtt/m/n/10 propagator_spinorbit_onebody() \T1/qtm/m/n/10 (\T1/qtm/m/it/1
+0 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 175--177
+[]\T1/txtt/m/n/10 propagator_spinorbit_twobody() \T1/qtm/m/n/10 (\T1/qtm/m/it/1
+0 spin-
+ []
+
+[26]
+Underfull \hbox (badness 6173) in paragraph at lines 185--186
+[]\T1/txtt/m/n/10 random() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.ThreeB
+odyCoupling method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 189--190
+[]\T1/txtt/m/n/10 read_coulomb() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core.
+NuclearPotential
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 192--193
+[]\T1/txtt/m/n/10 read_sigma_3b() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core
+.NuclearPotential
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 193--194
+[]\T1/txtt/m/n/10 read_sigmatau() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.core
+.NuclearPotential
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 194--195
+[]\T1/txtt/m/n/10 read_spinorbit() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.cor
+e.NuclearPotential
+ []
+
+
+Underfull \hbox (badness 6173) in paragraph at lines 196--197
+[]\T1/txtt/m/n/10 repeated_kronecker_product() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 
+in mod-ule spin-
+ []
+
+
+Underfull \hbox (badness 6173) in paragraph at lines 208--210
+[]\T1/txtt/m/n/10 sigma_tau_matrices_product() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 
+in mod-ule spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 227--229
+[]\T1/txtt/m/n/10 threebody_sample() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 227--229
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 229--231
+[]\T1/txtt/m/n/10 threebody_sample() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 229--231
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 231--233
+[]\T1/txtt/m/n/10 threebody_sample_partial() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 sp
+in-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 231--233
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 238--239
+[]\T1/txtt/m/n/10 to_manybody_basis() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-box.
+core.ProductState
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 241--243
+[]\T1/txtt/m/n/10 twobody_sample() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 241--243
+\T1/qtm/m/it/10 box.core.HilbertPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 243--245
+[]\T1/txtt/m/n/10 twobody_sample() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 243--245
+\T1/qtm/m/it/10 box.core.ProductPropagatorHS method\T1/qtm/m/n/10 ),
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 245--247
+[]\T1/txtt/m/n/10 twobody_sample() \T1/qtm/m/n/10 (\T1/qtm/m/it/10 spin-
+ []
+
+
+Underfull \hbox (badness 10000) in paragraph at lines 245--247
+\T1/qtm/m/it/10 box.core.ProductPropagatorRBM method\T1/qtm/m/n/10 ),
+ []
+
+[27]) (spinbox.aux)
+Package rerunfilecheck Info: File `spinbox.out' has not changed.
+(rerunfilecheck)             Checksum: 7180425C1EF4E1D0830766DA03E70980;1145.
+ ) 
+Here is how much of TeX's memory you used:
+ 19657 strings out of 477992
+ 358957 string characters out of 2826050
+ 649514 words of memory out of 3000000
+ 37814 multiletter control sequences out of 15000+600000
+ 527576 words of font info for 75 fonts, out of 8000000 for 9000
+ 1142 hyphenation exceptions out of 8191
+ 70i,17n,76p,1159b,815s stack positions out of 10000i,1000n,20000p,200000b,80000s
+{C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre/q-e
+c.enc}{C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/tex-gyre
+/q-ts1.enc}<C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+amsfonts/cm/cmbx10.pfb><C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/public/amsfonts/cm/cmex10.pfb><C:/Users/MainUser/AppData/Local/Programs/Mi
+KTeX/fonts/type1/public/amsfonts/cm/cmmi10.pfb><C:/Users/MainUser/AppData/Local
+/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/MainUser/Ap
+pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr10.pfb><C:/Users/
+MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr7.pfb>
+<C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm
+/cmsy10.pfb><C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public
+/amsfonts/cm/cmsy7.pfb><C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/t
+ype1/public/tex-gyre/qhvb.pfb><C:/Users/MainUser/AppData/Local/Programs/MiKTeX/
+fonts/type1/public/tex-gyre/qhvbi.pfb><C:/Users/MainUser/AppData/Local/Programs
+/MiKTeX/fonts/type1/public/tex-gyre/qhvr.pfb><C:/Users/MainUser/AppData/Local/P
+rograms/MiKTeX/fonts/type1/public/tex-gyre/qtmb.pfb><C:/Users/MainUser/AppData/
+Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qtmr.pfb><C:/Users/MainUser/A
+ppData/Local/Programs/MiKTeX/fonts/type1/public/tex-gyre/qtmri.pfb><C:/Users/Ma
+inUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/txfonts/t1xbtt.pfb><C:/
+Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/txfonts/t1xtt.p
+fb><C:/Users/MainUser/AppData/Local/Programs/MiKTeX/fonts/type1/public/txfonts/
+t1xtt.pfb>
+Output written on spinbox.pdf (31 pages, 387287 bytes).
+PDF statistics:
+ 784 PDF objects out of 1000 (max. 8388607)
+ 193 named destinations out of 1000 (max. 500000)
+ 93 words of extra memory for PDF output out of 10000 (max. 10000000)
+

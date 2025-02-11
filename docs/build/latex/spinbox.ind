@@ -1,0 +1,264 @@
+\begin{sphinxtheindex}
+\let\bigletter\sphinxstyleindexlettergroup
+\let\spxpagem \sphinxstyleindexpagemain
+\let\spxentry \sphinxstyleindexentry
+\let\spxextra \sphinxstyleindexextra
+
+  \bigletter A
+  \item \spxentry{apply\_onebody\_operator()}\spxextra{spinbox.core.HilbertOperator method}, 
+		\hyperpage{2}
+  \item \spxentry{apply\_onebody\_operator()}\spxextra{spinbox.core.ProductOperator method}, 
+		\hyperpage{10}
+  \item \spxentry{apply\_sigma()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{2}
+  \item \spxentry{apply\_sigma()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{10}
+  \item \spxentry{apply\_tau()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{3}
+  \item \spxentry{apply\_tau()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{10}
+  \item \spxentry{attach\_coordinates()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{7}
+  \item \spxentry{attach\_coordinates()}\spxextra{spinbox.core.ProductState method}, \hyperpage{13}
+
+  \indexspace
+  \bigletter B
+  \item \spxentry{bracket()}\spxextra{spinbox.core.Integrator method}, \hyperpage{9}
+
+  \indexspace
+  \bigletter C
+  \item \spxentry{carctanh()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{ccos()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{ccosh()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{cexp()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{chistogram()}\spxextra{in module spinbox.extras}, \hyperpage{17}
+  \item \spxentry{copy()}\spxextra{spinbox.core.Coupling method}, \hyperpage{1}
+  \item \spxentry{copy()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{3}
+  \item \spxentry{copy()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{7}
+  \item \spxentry{copy()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{10}
+  \item \spxentry{copy()}\spxextra{spinbox.core.ProductState method}, \hyperpage{13}
+  \item \spxentry{CoulombCoupling}\spxextra{class in spinbox.core}, \hyperpage{1}
+  \item \spxentry{Coupling}\spxextra{class in spinbox.core}, \hyperpage{1}
+  \item \spxentry{csin()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{csinh()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{csqrt()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{ctanh()}\spxextra{in module spinbox.core}, \hyperpage{16}
+
+  \indexspace
+  \bigletter D
+  \item \spxentry{dagger()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{3}
+  \item \spxentry{dagger()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{7}
+  \item \spxentry{dagger()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{11}
+  \item \spxentry{dagger()}\spxextra{spinbox.core.ProductState method}, \hyperpage{13}
+
+  \indexspace
+  \bigletter E
+  \item \spxentry{entropy()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{7}
+  \item \spxentry{exact()}\spxextra{spinbox.core.Integrator method}, \hyperpage{9}
+  \item \spxentry{ExactPropagator}\spxextra{class in spinbox.core}, \hyperpage{1}
+  \item \spxentry{exp()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{3}
+
+  \indexspace
+  \bigletter F
+  \item \spxentry{factors\_coulomb()}\spxextra{spinbox.core.HilbertPropagatorHS method}, 
+		\hyperpage{4}
+  \item \spxentry{factors\_coulomb()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{6}
+  \item \spxentry{factors\_coulomb()}\spxextra{spinbox.core.ProductPropagatorHS method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_coulomb()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_sigma()}\spxextra{spinbox.core.HilbertPropagatorHS method}, 
+		\hyperpage{5}
+  \item \spxentry{factors\_sigma()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{6}
+  \item \spxentry{factors\_sigma()}\spxextra{spinbox.core.ProductPropagatorHS method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_sigma()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_sigma\_3b()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{6}
+  \item \spxentry{factors\_sigma\_3b()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+  \item \spxentry{factors\_sigmatau()}\spxextra{spinbox.core.HilbertPropagatorHS method}, 
+		\hyperpage{5}
+  \item \spxentry{factors\_sigmatau()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{6}
+  \item \spxentry{factors\_sigmatau()}\spxextra{spinbox.core.ProductPropagatorHS method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_sigmatau()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+  \item \spxentry{factors\_spinorbit()}\spxextra{spinbox.core.HilbertPropagatorHS method}, 
+		\hyperpage{5}
+  \item \spxentry{factors\_spinorbit()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{6}
+  \item \spxentry{factors\_spinorbit()}\spxextra{spinbox.core.ProductPropagatorHS method}, 
+		\hyperpage{12}
+  \item \spxentry{factors\_spinorbit()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+  \item \spxentry{factors\_tau()}\spxextra{spinbox.core.HilbertPropagatorHS method}, \hyperpage{5}
+  \item \spxentry{factors\_tau()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, \hyperpage{6}
+  \item \spxentry{factors\_tau()}\spxextra{spinbox.core.ProductPropagatorHS method}, \hyperpage{12}
+  \item \spxentry{factors\_tau()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+  \item \spxentry{force\_coulomb()}\spxextra{spinbox.core.ExactPropagator method}, \hyperpage{2}
+  \item \spxentry{force\_coulomb\_onebody()}\spxextra{spinbox.core.ExactPropagator method}, 
+		\hyperpage{2}
+  \item \spxentry{force\_sigma()}\spxextra{spinbox.core.ExactPropagator method}, \hyperpage{2}
+  \item \spxentry{force\_sigma\_3b()}\spxextra{spinbox.core.ExactPropagator method}, \hyperpage{2}
+  \item \spxentry{force\_sigmatau()}\spxextra{spinbox.core.ExactPropagator method}, \hyperpage{2}
+  \item \spxentry{force\_tau()}\spxextra{spinbox.core.ExactPropagator method}, \hyperpage{2}
+
+  \indexspace
+  \bigletter G
+  \item \spxentry{generate\_basis\_states()}\spxextra{spinbox.core.HilbertState method}, 
+		\hyperpage{7}
+  \item \spxentry{generate\_basis\_states()}\spxextra{spinbox.core.ProductState method}, 
+		\hyperpage{13}
+
+  \indexspace
+  \bigletter H
+  \item \spxentry{HilbertOperator}\spxextra{class in spinbox.core}, \hyperpage{2}
+  \item \spxentry{HilbertPropagatorHS}\spxextra{class in spinbox.core}, \hyperpage{4}
+  \item \spxentry{HilbertPropagatorRBM}\spxextra{class in spinbox.core}, \hyperpage{6}
+  \item \spxentry{HilbertState}\spxextra{class in spinbox.core}, \hyperpage{7}
+
+  \indexspace
+  \bigletter I
+  \item \spxentry{inner()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{8}
+  \item \spxentry{inner()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+  \item \spxentry{Integrator}\spxextra{class in spinbox.core}, \hyperpage{9}
+  \item \spxentry{interaction\_indices()}\spxextra{in module spinbox.core}, \hyperpage{16}
+
+  \indexspace
+  \bigletter M
+  \item \spxentry{module}
+    \subitem \spxentry{spinbox}, \hyperpage{19}
+    \subitem \spxentry{spinbox.core}, \hyperpage{1}
+    \subitem \spxentry{spinbox.extras}, \hyperpage{17}
+  \item \spxentry{multiply\_operator()}\spxextra{spinbox.core.HilbertOperator method}, 
+		\hyperpage{3}
+  \item \spxentry{multiply\_operator()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{8}
+  \item \spxentry{multiply\_operator()}\spxextra{spinbox.core.ProductOperator method}, 
+		\hyperpage{11}
+  \item \spxentry{multiply\_state()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{4}
+  \item \spxentry{multiply\_state()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{11}
+
+  \indexspace
+  \bigletter N
+  \item \spxentry{nearby\_product\_state()}\spxextra{spinbox.core.HilbertState method}, 
+		\hyperpage{8}
+  \item \spxentry{nearest\_product\_state()}\spxextra{spinbox.core.HilbertState method}, 
+		\hyperpage{8}
+  \item \spxentry{normalize()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+  \item \spxentry{NuclearPotential}\spxextra{class in spinbox.core}, \hyperpage{9}
+
+  \indexspace
+  \bigletter O
+  \item \spxentry{onebody()}\spxextra{spinbox.core.HilbertPropagatorHS method}, \hyperpage{6}
+  \item \spxentry{onebody()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, \hyperpage{7}
+  \item \spxentry{onebody()}\spxextra{spinbox.core.ProductPropagatorHS method}, \hyperpage{12}
+  \item \spxentry{onebody()}\spxextra{spinbox.core.ProductPropagatorRBM method}, \hyperpage{13}
+  \item \spxentry{outer()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{8}
+  \item \spxentry{outer()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+
+  \indexspace
+  \bigletter P
+  \item \spxentry{pauli()}\spxextra{in module spinbox.core}, \hyperpage{16}
+  \item \spxentry{pmat()}\spxextra{in module spinbox.extras}, \hyperpage{17}
+  \item \spxentry{ProductOperator}\spxextra{class in spinbox.core}, \hyperpage{10}
+  \item \spxentry{ProductPropagatorHS}\spxextra{class in spinbox.core}, \hyperpage{12}
+  \item \spxentry{ProductPropagatorRBM}\spxextra{class in spinbox.core}, \hyperpage{12}
+  \item \spxentry{ProductState}\spxextra{class in spinbox.core}, \hyperpage{13}
+  \item \spxentry{Propagator}\spxextra{class in spinbox.core}, \hyperpage{15}
+  \item \spxentry{propagator\_combined()}\spxextra{spinbox.core.ExactPropagator method}, 
+		\hyperpage{2}
+  \item \spxentry{propagator\_spinorbit\_linear()}\spxextra{spinbox.core.ExactPropagator method}, 
+		\hyperpage{2}
+  \item \spxentry{propagator\_spinorbit\_onebody()}\spxextra{spinbox.core.ExactPropagator method}, 
+		\hyperpage{2}
+  \item \spxentry{propagator\_spinorbit\_twobody()}\spxextra{spinbox.core.ExactPropagator method}, 
+		\hyperpage{2}
+
+  \indexspace
+  \bigletter R
+  \item \spxentry{random()}\spxextra{spinbox.core.CoulombCoupling method}, \hyperpage{1}
+  \item \spxentry{random()}\spxextra{spinbox.core.SigmaCoupling method}, \hyperpage{15}
+  \item \spxentry{random()}\spxextra{spinbox.core.SigmaTauCoupling method}, \hyperpage{15}
+  \item \spxentry{random()}\spxextra{spinbox.core.SpinOrbitCoupling method}, \hyperpage{16}
+  \item \spxentry{random()}\spxextra{spinbox.core.TauCoupling method}, \hyperpage{16}
+  \item \spxentry{random()}\spxextra{spinbox.core.ThreeBodyCoupling method}, \hyperpage{16}
+  \item \spxentry{randomize()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{9}
+  \item \spxentry{randomize()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+  \item \spxentry{read()}\spxextra{spinbox.core.Coupling method}, \hyperpage{1}
+  \item \spxentry{read\_coulomb()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{9}
+  \item \spxentry{read\_from\_file()}\spxextra{in module spinbox.core}, \hyperpage{17}
+  \item \spxentry{read\_sigma()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{9}
+  \item \spxentry{read\_sigma\_3b()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{9}
+  \item \spxentry{read\_sigmatau()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{9}
+  \item \spxentry{read\_spinorbit()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{10}
+  \item \spxentry{read\_tau()}\spxextra{spinbox.core.NuclearPotential method}, \hyperpage{10}
+  \item \spxentry{repeated\_kronecker\_product()}\spxextra{in module spinbox.core}, \hyperpage{17}
+  \item \spxentry{run()}\spxextra{spinbox.core.Integrator method}, \hyperpage{9}
+
+  \indexspace
+  \bigletter S
+  \item \spxentry{scale()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{4}
+  \item \spxentry{scale()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{9}
+  \item \spxentry{scale\_all()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{11}
+  \item \spxentry{scale\_all()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+  \item \spxentry{scale\_one()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{11}
+  \item \spxentry{scale\_one()}\spxextra{spinbox.core.ProductState method}, \hyperpage{14}
+  \item \spxentry{setup()}\spxextra{spinbox.core.Integrator method}, \hyperpage{9}
+  \item \spxentry{sigma\_tau\_matrices\_product()}\spxextra{in module spinbox.extras}, 
+		\hyperpage{18}
+  \item \spxentry{sigma\_tau\_operators\_hilbert()}\spxextra{in module spinbox.extras}, 
+		\hyperpage{18}
+  \item \spxentry{SigmaCoupling}\spxextra{class in spinbox.core}, \hyperpage{15}
+  \item \spxentry{SigmaTauCoupling}\spxextra{class in spinbox.core}, \hyperpage{15}
+  \item \spxentry{spinbox}
+    \subitem \spxentry{module}, \hyperpage{19}
+  \item \spxentry{spinbox.core}
+    \subitem \spxentry{module}, \hyperpage{1}
+  \item \spxentry{spinbox.extras}
+    \subitem \spxentry{module}, \hyperpage{17}
+  \item \spxentry{spinor2()}\spxextra{in module spinbox.extras}, \hyperpage{18}
+  \item \spxentry{spinor4()}\spxextra{in module spinbox.extras}, \hyperpage{18}
+  \item \spxentry{SpinOrbitCoupling}\spxextra{class in spinbox.core}, \hyperpage{16}
+
+  \indexspace
+  \bigletter T
+  \item \spxentry{TauCoupling}\spxextra{class in spinbox.core}, \hyperpage{16}
+  \item \spxentry{threebody\_sample()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{7}
+  \item \spxentry{threebody\_sample()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+  \item \spxentry{threebody\_sample\_partial()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{7}
+  \item \spxentry{ThreeBodyCoupling}\spxextra{class in spinbox.core}, \hyperpage{16}
+  \item \spxentry{to\_list()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{12}
+  \item \spxentry{to\_list()}\spxextra{spinbox.core.ProductState method}, \hyperpage{15}
+  \item \spxentry{to\_manybody\_basis()}\spxextra{spinbox.core.ProductOperator method}, 
+		\hyperpage{12}
+  \item \spxentry{to\_manybody\_basis()}\spxextra{spinbox.core.ProductState method}, \hyperpage{15}
+  \item \spxentry{twobody\_sample()}\spxextra{spinbox.core.HilbertPropagatorHS method}, 
+		\hyperpage{6}
+  \item \spxentry{twobody\_sample()}\spxextra{spinbox.core.HilbertPropagatorRBM method}, 
+		\hyperpage{7}
+  \item \spxentry{twobody\_sample()}\spxextra{spinbox.core.ProductPropagatorHS method}, 
+		\hyperpage{12}
+  \item \spxentry{twobody\_sample()}\spxextra{spinbox.core.ProductPropagatorRBM method}, 
+		\hyperpage{13}
+
+  \indexspace
+  \bigletter V
+  \item \spxentry{validate()}\spxextra{spinbox.core.CoulombCoupling method}, \hyperpage{1}
+  \item \spxentry{validate()}\spxextra{spinbox.core.SigmaCoupling method}, \hyperpage{15}
+  \item \spxentry{validate()}\spxextra{spinbox.core.SigmaTauCoupling method}, \hyperpage{16}
+  \item \spxentry{validate()}\spxextra{spinbox.core.SpinOrbitCoupling method}, \hyperpage{16}
+  \item \spxentry{validate()}\spxextra{spinbox.core.TauCoupling method}, \hyperpage{16}
+  \item \spxentry{validate()}\spxextra{spinbox.core.ThreeBodyCoupling method}, \hyperpage{16}
+
+  \indexspace
+  \bigletter Z
+  \item \spxentry{zero()}\spxextra{spinbox.core.HilbertOperator method}, \hyperpage{4}
+  \item \spxentry{zero()}\spxextra{spinbox.core.HilbertState method}, \hyperpage{9}
+  \item \spxentry{zero()}\spxextra{spinbox.core.ProductOperator method}, \hyperpage{12}
+  \item \spxentry{zero()}\spxextra{spinbox.core.ProductState method}, \hyperpage{15}
+
+\end{sphinxtheindex}
