@@ -72,16 +72,18 @@ def carctanh(x):
 
 
 def interaction_indices(n: int, m=2) -> list:
-    """returns a list of all possible m-plets of n objects (labelled 0 to n-1)
-    default: m=2, giving all possible pairs
-    for m=1, returns a range(0, n-1)
-    :param n: number of items
+    """
+    Returns a list of all possible m-plets of n objects (labelled 0 to n-1).
+
+    By default, m=2, giving all possible pairs. For m=1, returns a range(0, n-1).
+
+    :param n: Number of items.
     :type n: int
-    :param m: size of tuplet, defaults to 2
+    :param m: Size of tuplet, defaults to 2.
     :type m: int, optional
-    :return: list of possible m-plets of n items
+    :return: List of possible m-plets of n items.
     :rtype: list
-    """  # """
+    """
     if m == 1:
         return np.arange(n)
     else:
@@ -90,6 +92,9 @@ def interaction_indices(n: int, m=2) -> list:
 
 def read_from_file(filename: str, complex=False, shape=None, order="F") -> np.ndarray:
     """Read numbers from a text file
+
+    Complex numbers are printed as tuples (e.g. (1.0, 2.0) for 1+2j) in Fortran. Setting complex=True will convert these to complex numbers.
+
 
     :param filename: input file name
     :type filename: str
@@ -163,11 +168,11 @@ def pauli(arg) -> np.ndarray:
 
 def kronecker_product(matrices: list) -> np.ndarray:
     """
-    returns the kronecker (i.e. tensor) product of a list of arrays
-    :param matrices: list of matrix factors
-    :type matrices: list
-    :return: Kronecker product of input list
-    "rtype: np.ndarray
+    Returns the Kronecker (i.e., tensor) product of a list of arrays.
+
+    :param matrices: List of matrix factors.
+    :return: Kronecker product of input list.
+    :rtype: np.ndarray
     """
     return np.array(reduce(np.kron, matrices), dtype=complex)
 
@@ -188,8 +193,9 @@ class HilbertState:
     """A spin state in the "Hilbert" basis, a linear combination of tensor product states.
 
     States must be defined with a number of particles.
+
     If ``isospin`` is False, then the one-body basis is only spin up/down. If True, then it is (spin up/down x isospin up/down).
-    ``ketwise`` detemines if it is a bra or a ket.
+    ``ketwise`` detemines is `True` for kets, `False` for bras.
 
     """
 

@@ -24,3 +24,7 @@ In `spinbox`, isospin symmetry is included by default and may be optionally turn
 
 
 This package is open source so that anyone may use it and contribute to it.
+
+## Documentation
+
+Documentation is made with `sphinx`. If you have it, you should be able to go into the `docs` directory and run `make html`, for example. The resulting docs would appear in `docs/build/html`.

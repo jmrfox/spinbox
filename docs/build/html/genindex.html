@@ -5,10 +5,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Index &#8212; spinbox 0.1 documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=649a27d8" />
-    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=87629129" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=d75fae25" />
+    <link rel="stylesheet" type="text/css" href="_static/sphinxdoc.css?v=34905f61" />
     <script src="_static/documentation_options.js?v=2709fde1"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="#" />
     <link rel="search" title="Search" href="search.html" /> 
@@ -45,6 +45,7 @@
  | <a href="#G"><strong>G</strong></a>
  | <a href="#H"><strong>H</strong></a>
  | <a href="#I"><strong>I</strong></a>
+ | <a href="#K"><strong>K</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
  | <a href="#O"><strong>O</strong></a>
@@ -52,7 +53,6 @@
  | <a href="#R"><strong>R</strong></a>
  | <a href="#S"><strong>S</strong></a>
  | <a href="#T"><strong>T</strong></a>
- | <a href="#V"><strong>V</strong></a>
  | <a href="#Z"><strong>Z</strong></a>
  
 </div>
@@ -109,7 +109,7 @@
 </li>
       <li><a href="spinbox.html#spinbox.extras.chistogram">chistogram() (in module spinbox.extras)</a>
 </li>
-      <li><a href="spinbox.html#spinbox.core.Coupling.copy">copy() (spinbox.core.Coupling method)</a>
+      <li><a href="spinbox.html#spinbox.core.CouplingArray.copy">copy() (spinbox.core.CouplingArray method)</a>
 
       <ul>
         <li><a href="spinbox.html#spinbox.core.HilbertOperator.copy">(spinbox.core.HilbertOperator method)</a>
@@ -123,9 +123,7 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.CoulombCoupling">CoulombCoupling (class in spinbox.core)</a>
-</li>
-      <li><a href="spinbox.html#spinbox.core.Coupling">Coupling (class in spinbox.core)</a>
+      <li><a href="spinbox.html#spinbox.core.CouplingArray">CouplingArray (class in spinbox.core)</a>
 </li>
       <li><a href="spinbox.html#spinbox.core.csin">csin() (in module spinbox.core)</a>
 </li>
@@ -152,20 +150,30 @@
 </li>
       </ul></li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spinbox.html#spinbox.core.HilbertState.density">density() (spinbox.core.HilbertState method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="E">E</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.HilbertState.entropy">entropy() (spinbox.core.HilbertState method)</a>
-</li>
       <li><a href="spinbox.html#spinbox.core.Integrator.exact">exact() (spinbox.core.Integrator method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spinbox.html#spinbox.core.ExactPropagator">ExactPropagator (class in spinbox.core)</a>
 </li>
+      <li><a href="spinbox.html#spinbox.core.HilbertState.exchange">exchange() (spinbox.core.HilbertState method)</a>
+
+      <ul>
+        <li><a href="spinbox.html#spinbox.core.ProductState.exchange">(spinbox.core.ProductState method)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spinbox.html#spinbox.core.HilbertOperator.exp">exp() (spinbox.core.HilbertOperator method)</a>
+</li>
+      <li><a href="spinbox.html#spinbox.core.ProductOperator.exp_onebody">exp_onebody() (spinbox.core.ProductOperator method)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -256,6 +264,10 @@
 </li>
       </ul></li>
   </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spinbox.html#spinbox.core.CouplingArray.generate_normal">generate_normal() (spinbox.core.CouplingArray method)</a>
+</li>
+  </ul></td>
 </tr></table>
 
 <h2 id="H">H</h2>
@@ -292,6 +304,14 @@
   </ul></td>
 </tr></table>
 
+<h2 id="K">K</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spinbox.html#spinbox.core.kronecker_product">kronecker_product() (in module spinbox.core)</a>
+</li>
+  </ul></td>
+</tr></table>
+
 <h2 id="M">M</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -306,8 +326,6 @@
         <li><a href="spinbox.html#module-spinbox.extras">spinbox.extras</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spinbox.html#spinbox.core.HilbertOperator.multiply_operator">multiply_operator() (spinbox.core.HilbertOperator method)</a>
 
       <ul>
@@ -315,7 +333,11 @@
 </li>
         <li><a href="spinbox.html#spinbox.core.ProductOperator.multiply_operator">(spinbox.core.ProductOperator method)</a>
 </li>
+        <li><a href="spinbox.html#spinbox.core.ProductState.multiply_operator">(spinbox.core.ProductState method)</a>
+</li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spinbox.html#spinbox.core.HilbertOperator.multiply_state">multiply_state() (spinbox.core.HilbertOperator method)</a>
 
       <ul>
@@ -356,6 +378,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="spinbox.html#spinbox.core.OneBodyCoupling">OneBodyCoupling (class in spinbox.core)</a>
+</li>
       <li><a href="spinbox.html#spinbox.core.HilbertState.outer">outer() (spinbox.core.HilbertState method)</a>
 
       <ul>
@@ -398,27 +422,23 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.CoulombCoupling.random">random() (spinbox.core.CoulombCoupling method)</a>
+      <li><a href="spinbox.html#spinbox.core.HilbertState.random">random() (spinbox.core.HilbertState method)</a>
 
       <ul>
-        <li><a href="spinbox.html#spinbox.core.SigmaCoupling.random">(spinbox.core.SigmaCoupling method)</a>
+        <li><a href="spinbox.html#spinbox.core.NuclearPotential.random">(spinbox.core.NuclearPotential method)</a>
 </li>
-        <li><a href="spinbox.html#spinbox.core.SigmaTauCoupling.random">(spinbox.core.SigmaTauCoupling method)</a>
+        <li><a href="spinbox.html#spinbox.core.OneBodyCoupling.random">(spinbox.core.OneBodyCoupling method)</a>
 </li>
-        <li><a href="spinbox.html#spinbox.core.SpinOrbitCoupling.random">(spinbox.core.SpinOrbitCoupling method)</a>
-</li>
-        <li><a href="spinbox.html#spinbox.core.TauCoupling.random">(spinbox.core.TauCoupling method)</a>
+        <li><a href="spinbox.html#spinbox.core.ProductState.random">(spinbox.core.ProductState method)</a>
 </li>
         <li><a href="spinbox.html#spinbox.core.ThreeBodyCoupling.random">(spinbox.core.ThreeBodyCoupling method)</a>
 </li>
-      </ul></li>
-      <li><a href="spinbox.html#spinbox.core.HilbertState.randomize">randomize() (spinbox.core.HilbertState method)</a>
-
-      <ul>
-        <li><a href="spinbox.html#spinbox.core.ProductState.randomize">(spinbox.core.ProductState method)</a>
+        <li><a href="spinbox.html#spinbox.core.TwoBodyCoupling.random">(spinbox.core.TwoBodyCoupling method)</a>
+</li>
+        <li><a href="spinbox.html#spinbox.core.TwoBodyCouplingIsotropic.random">(spinbox.core.TwoBodyCouplingIsotropic method)</a>
 </li>
       </ul></li>
-      <li><a href="spinbox.html#spinbox.core.Coupling.read">read() (spinbox.core.Coupling method)</a>
+      <li><a href="spinbox.html#spinbox.core.CouplingArray.read">read() (spinbox.core.CouplingArray method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -435,8 +455,6 @@
       <li><a href="spinbox.html#spinbox.core.NuclearPotential.read_spinorbit">read_spinorbit() (spinbox.core.NuclearPotential method)</a>
 </li>
       <li><a href="spinbox.html#spinbox.core.NuclearPotential.read_tau">read_tau() (spinbox.core.NuclearPotential method)</a>
-</li>
-      <li><a href="spinbox.html#spinbox.core.repeated_kronecker_product">repeated_kronecker_product() (in module spinbox.core)</a>
 </li>
       <li><a href="spinbox.html#spinbox.core.Integrator.run">run() (spinbox.core.Integrator method)</a>
 </li>
@@ -470,12 +488,6 @@
 </li>
       <li><a href="spinbox.html#spinbox.extras.sigma_tau_operators_hilbert">sigma_tau_operators_hilbert() (in module spinbox.extras)</a>
 </li>
-      <li><a href="spinbox.html#spinbox.core.SigmaCoupling">SigmaCoupling (class in spinbox.core)</a>
-</li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.SigmaTauCoupling">SigmaTauCoupling (class in spinbox.core)</a>
-</li>
       <li>
     spinbox
 
@@ -483,6 +495,8 @@
         <li><a href="spinbox.html#module-spinbox">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     spinbox.core
 
@@ -501,26 +515,34 @@
 </li>
       <li><a href="spinbox.html#spinbox.extras.spinor4">spinor4() (in module spinbox.extras)</a>
 </li>
-      <li><a href="spinbox.html#spinbox.core.SpinOrbitCoupling">SpinOrbitCoupling (class in spinbox.core)</a>
+      <li><a href="spinbox.html#spinbox.core.ThreeBodyCoupling.symmetrize">symmetrize() (spinbox.core.ThreeBodyCoupling method)</a>
+
+      <ul>
+        <li><a href="spinbox.html#spinbox.core.TwoBodyCoupling.symmetrize">(spinbox.core.TwoBodyCoupling method)</a>
 </li>
+        <li><a href="spinbox.html#spinbox.core.TwoBodyCouplingIsotropic.symmetrize">(spinbox.core.TwoBodyCouplingIsotropic method)</a>
+</li>
+      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.TauCoupling">TauCoupling (class in spinbox.core)</a>
-</li>
       <li><a href="spinbox.html#spinbox.core.HilbertPropagatorRBM.threebody_sample">threebody_sample() (spinbox.core.HilbertPropagatorRBM method)</a>
 
       <ul>
         <li><a href="spinbox.html#spinbox.core.ProductPropagatorRBM.threebody_sample">(spinbox.core.ProductPropagatorRBM method)</a>
 </li>
       </ul></li>
-      <li><a href="spinbox.html#spinbox.core.HilbertPropagatorRBM.threebody_sample_partial">threebody_sample_partial() (spinbox.core.HilbertPropagatorRBM method)</a>
-</li>
       <li><a href="spinbox.html#spinbox.core.ThreeBodyCoupling">ThreeBodyCoupling (class in spinbox.core)</a>
 </li>
+      <li><a href="spinbox.html#spinbox.core.ProductOperator.to_full_basis">to_full_basis() (spinbox.core.ProductOperator method)</a>
+
+      <ul>
+        <li><a href="spinbox.html#spinbox.core.ProductState.to_full_basis">(spinbox.core.ProductState method)</a>
+</li>
+      </ul></li>
       <li><a href="spinbox.html#spinbox.core.ProductOperator.to_list">to_list() (spinbox.core.ProductOperator method)</a>
 
       <ul>
@@ -529,12 +551,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.ProductOperator.to_manybody_basis">to_manybody_basis() (spinbox.core.ProductOperator method)</a>
-
-      <ul>
-        <li><a href="spinbox.html#spinbox.core.ProductState.to_manybody_basis">(spinbox.core.ProductState method)</a>
+      <li><a href="spinbox.html#spinbox.core.HilbertOperator.trace">trace() (spinbox.core.HilbertOperator method)</a>
 </li>
-      </ul></li>
       <li><a href="spinbox.html#spinbox.core.HilbertPropagatorHS.twobody_sample">twobody_sample() (spinbox.core.HilbertPropagatorHS method)</a>
 
       <ul>
@@ -545,26 +563,10 @@
         <li><a href="spinbox.html#spinbox.core.ProductPropagatorRBM.twobody_sample">(spinbox.core.ProductPropagatorRBM method)</a>
 </li>
       </ul></li>
-  </ul></td>
-</tr></table>
-
-<h2 id="V">V</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="spinbox.html#spinbox.core.CoulombCoupling.validate">validate() (spinbox.core.CoulombCoupling method)</a>
-
-      <ul>
-        <li><a href="spinbox.html#spinbox.core.SigmaCoupling.validate">(spinbox.core.SigmaCoupling method)</a>
+      <li><a href="spinbox.html#spinbox.core.TwoBodyCoupling">TwoBodyCoupling (class in spinbox.core)</a>
 </li>
-        <li><a href="spinbox.html#spinbox.core.SigmaTauCoupling.validate">(spinbox.core.SigmaTauCoupling method)</a>
+      <li><a href="spinbox.html#spinbox.core.TwoBodyCouplingIsotropic">TwoBodyCouplingIsotropic (class in spinbox.core)</a>
 </li>
-        <li><a href="spinbox.html#spinbox.core.SpinOrbitCoupling.validate">(spinbox.core.SpinOrbitCoupling method)</a>
-</li>
-        <li><a href="spinbox.html#spinbox.core.TauCoupling.validate">(spinbox.core.TauCoupling method)</a>
-</li>
-        <li><a href="spinbox.html#spinbox.core.ThreeBodyCoupling.validate">(spinbox.core.ThreeBodyCoupling method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -621,7 +623,7 @@
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2024, Jordan M. R. Fox.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>
