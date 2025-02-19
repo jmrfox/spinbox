@@ -1,34 +1,29 @@
 # spinbox
 # tools for many-body spin systems in a Monte Carlo context
-# jordan m r fox 2024
+# jordan m r fox
+# begun 2023 at argonne national laboratory, physics, theory
 
 __version__ = "0.1.0"
 
 import sys
-import numpy as np
-
-np.set_printoptions(linewidth=200, threshold=sys.maxsize)
-import matplotlib.pyplot as plt
-from scipy.linalg import expm, logm
 from functools import reduce
-
-# from dataclasses import dataclass
 import itertools
 from multiprocessing.pool import Pool
 from tqdm import tqdm
 
-## i tried to put in numba at one point but couldn't get it working right :/
-# from numba import int8, int32, float64, boolean
-# from numba import types, typed
-# from numba.experimental import jitclass
+import matplotlib.pyplot as plt
 
+import numpy as np
+from scipy.linalg import expm
+
+np.set_printoptions(linewidth=200, threshold=sys.maxsize)
 
 ###
 
 # functions
 # redefine basic fxns to be complex (maybe unnecessary, but better safe than sorry)
 # numpy.sqrt will raise warning (NOT an error) if you give it a negative number, so i'm not taking any chances
-# these use numpy instead of math to be safe with ndarrays
+# these use numpy instead of math to be safe with numpy ndarrays
 
 
 def csqrt(x):
